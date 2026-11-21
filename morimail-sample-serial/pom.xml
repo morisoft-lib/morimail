@@ -29,6 +29,10 @@
       <artifactId>morimail</artifactId>
     </dependency>
     <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.morisoft</groupId>
       <artifactId>morimail</artifactId>
       <type>test-jar</type>
