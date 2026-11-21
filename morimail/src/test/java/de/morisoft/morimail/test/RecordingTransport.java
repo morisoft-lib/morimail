@@ -1,6 +1,7 @@
 package de.morisoft.morimail.test;
 
 import de.morisoft.morimail.InvalidMailException;
+import de.morisoft.morimail.MailException;
 import de.morisoft.morimail.MailMessage;
 import de.morisoft.morimail.MailTransport;
 import de.morisoft.morimail.TokenProvider;
@@ -42,6 +43,24 @@ public final class RecordingTransport implements MailTransport {
         synchronized (this) {
             sent.add(message);
         }
+    }
+
+    /**
+     * Queues failures for the next sends (stub, implemented in the GREEN step).
+     *
+     * @param failures the failures
+     */
+    public synchronized void failNext(MailException... failures) {
+        // Not implemented yet.
+    }
+
+    /**
+     * Returns the number of send calls (stub, implemented in the GREEN step).
+     *
+     * @return the count
+     */
+    public synchronized int attempts() {
+        return 0;
     }
 
     /**
