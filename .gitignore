@@ -22,3 +22,15 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Build output, IDE files, local data
+target/
+out/
+.idea/
+*.iml
+*.jsonl
+account.properties
+*.pfx
+
+# GSD review tool raw logs (workstation paths, session ids): never commit
+.review-diagnostics/
