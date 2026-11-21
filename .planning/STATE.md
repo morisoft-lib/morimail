@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Library Core
-status: executing
-stopped_at: Completed 01-05-PLAN.md
-last_updated: "2026-11-21T13:15:56.145Z"
+status: verifying
+stopped_at: Completed 01-06-PLAN.md
+last_updated: "2026-11-21T13:20:58.916Z"
 last_activity: 2026-11-21
 last_activity_desc: Phase 01 execution started
-state_head: 6236a2c151a348d1e13009921bec2030c1b1c459
+state_head: 6fdebcf811c6f0e6941366a866d333bdf9fdd1af
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-11-21)
 
 Phase: 01 (Library Core) — EXECUTING
 Plan: 6 of 6
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-21 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P03 | 2 min | 2 tasks | 14 files |
 | Phase 01 P04 | 12min | 2 tasks | 12 files |
 | Phase 01 P05 | 25 min | 3 tasks | 7 files |
+| Phase 01 P06 | 5 min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,7 @@ Recent decisions affecting current work:
 - [Phase 01]: template(t, data) copies the data map with new HashMap at call time (Map.copyOf rejects present null values)
 - [Phase 01]: Attachment checks and content-type resolution happen in build(), so repeated build() calls re-check the files
 - [Phase 01]: Null Path or Attachment passed to attach throws NullPointerException at call time; a null Attachment.file is reported by build()
+- [Phase 01]: RecordingTransport checks failFor, then the failNext queue, then records; registry wraps ServiceConfigurationError with a fixed message and keeps the error as cause
 
 ### Pending Todos
 
@@ -107,6 +109,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T13:15:56.107Z
-Stopped at: Completed 01-05-PLAN.md
+Last session: 2026-11-21T13:20:58.878Z
+Stopped at: Completed 01-06-PLAN.md
 Resume file: None

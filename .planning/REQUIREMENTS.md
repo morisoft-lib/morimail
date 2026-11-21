@@ -39,17 +39,17 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Accounts, Registry and Mailer (CORE)
 
-- [ ] **CORE-01**: The SPI is `MailTransport` (`validate`, `send`), `TransportProvider` (`id`, `create(options, auth)`, auth may be null) and `@FunctionalInterface TokenProvider`. None of them contains anything Graph-specific (§2, §5).
+- [x] **CORE-01**: The SPI is `MailTransport` (`validate`, `send`), `TransportProvider` (`id`, `create(options, auth)`, auth may be null) and `@FunctionalInterface TokenProvider`. None of them contains anything Graph-specific (§2, §5).
 - [x] **CORE-02**: `TokenProvider` has a default method `freshAccessToken(scope, rejectedToken)` that delegates to `accessToken`, so a transport can get a new token after a 401 without importing `entra`. This is recorded as a deviation from §7.3 **[decided]**.
-- [ ] **CORE-03**: The registry combines an explicit built-in list with `ServiceLoader`. An external provider whose ID duplicates another provider's fails with `IllegalStateException` when the registry loads (§2).
-- [ ] **CORE-04**: `MailAccount.builder(id).transport(..).auth(..).option(..).defaultFrom(..).build()` resolves the transport through the registry. An unknown ID fails with `IllegalArgumentException` listing the available IDs. Options are passed through unread by the core (§2, §5.1).
-- [ ] **CORE-05**: `Mailer.of(accounts...)` holds accounts by ID. `validate(mail)` applies `defaultFrom` and runs the transport's `validate`; `send(mail)` does the same, then sends. An unknown account ID raises `PermanentMailException` (§5.1, §5.2).
-- [ ] **CORE-06**: `Mailer`, `MailAccount` and transports are safe for concurrent use, as stated in the Javadoc (§11).
-- [ ] **CORE-07**: `RecordingTransport` lives in the library's test sources, ships as a test-jar, registers through `ServiceLoader` as `recording`, stores sent messages in memory per instance and can script failures (§10.1).
+- [x] **CORE-03**: The registry combines an explicit built-in list with `ServiceLoader`. An external provider whose ID duplicates another provider's fails with `IllegalStateException` when the registry loads (§2).
+- [x] **CORE-04**: `MailAccount.builder(id).transport(..).auth(..).option(..).defaultFrom(..).build()` resolves the transport through the registry. An unknown ID fails with `IllegalArgumentException` listing the available IDs. Options are passed through unread by the core (§2, §5.1).
+- [x] **CORE-05**: `Mailer.of(accounts...)` holds accounts by ID. `validate(mail)` applies `defaultFrom` and runs the transport's `validate`; `send(mail)` does the same, then sends. An unknown account ID raises `PermanentMailException` (§5.1, §5.2).
+- [x] **CORE-06**: `Mailer`, `MailAccount` and transports are safe for concurrent use, as stated in the Javadoc (§11).
+- [x] **CORE-07**: `RecordingTransport` lives in the library's test sources, ships as a test-jar, registers through `ServiceLoader` as `recording`, stores sent messages in memory per instance and can script failures (§10.1).
 
 ### Errors (ERR)
 
-- [ ] **ERR-01**: The checked hierarchy is `MailException`, which has `TransientMailException` (`Optional<Duration> retryAfter`), `PermanentMailException` (with `InvalidMailException` and `SenderRejectedException` beneath it) and `AuthRequiredException` (§5.2).
+- [x] **ERR-01**: The checked hierarchy is `MailException`, which has `TransientMailException` (`Optional<Duration> retryAfter`), `PermanentMailException` (with `InvalidMailException` and `SenderRejectedException` beneath it) and `AuthRequiredException` (§5.2).
 - [x] **ERR-02**: `MailTransport.send` Javadoc and the README state that a normal return means accepted, not delivered, and that retrying after a timeout can deliver a mail twice (at-least-once) **[decided]**.
 
 ### Entra Token Client (ENTRA)
@@ -189,14 +189,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TMPL-02 | Phase 1 | Complete |
 | TMPL-03 | Phase 1 | Complete |
 | TMPL-04 | Phase 1 | Complete |
-| CORE-01 | Phase 1 | Pending |
+| CORE-01 | Phase 1 | Complete |
 | CORE-02 | Phase 1 | Complete |
-| CORE-03 | Phase 1 | Pending |
-| CORE-04 | Phase 1 | Pending |
-| CORE-05 | Phase 1 | Pending |
-| CORE-06 | Phase 1 | Pending |
-| CORE-07 | Phase 1 | Pending |
-| ERR-01 | Phase 1 | Pending |
+| CORE-03 | Phase 1 | Complete |
+| CORE-04 | Phase 1 | Complete |
+| CORE-05 | Phase 1 | Complete |
+| CORE-06 | Phase 1 | Complete |
+| CORE-07 | Phase 1 | Complete |
+| ERR-01 | Phase 1 | Complete |
 | ERR-02 | Phase 1 | Complete |
 | ENTRA-01 | Phase 3 | Pending |
 | ENTRA-02 | Phase 3 | Pending |
