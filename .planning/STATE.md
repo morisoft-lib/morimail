@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Serial-Mail Sample
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-11-21T17:53:49.703Z"
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-11-21T17:58:59.160Z"
 last_activity: 2026-11-21
 last_activity_desc: Phase 02 execution started
-state_head: 22ac797eb25705726c28e9bafec207e824fae78e
+state_head: 1fe9fd64a843544e420ddfd07cece1217c4ac626
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 8
+  completed_plans: 9
   percent: 25
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-21)
 ## Current Position
 
 Phase: 02 (Serial-Mail Sample) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-11-21 — Phase 02 execution started
 
@@ -64,6 +64,7 @@ Progress: [███░░░░░░░] 25%
 | Phase 01 P06 | 5 min | 3 tasks | 10 files |
 | Phase 01 P07 | 2 min | 1 tasks | 1 files |
 | Phase 02 P01 | 15 min | 3 tasks | 10 files |
+| Phase 02 P02 | 12 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 01]: G-01-1 closed by Temurin 17 CI run 44912211934 (all three steps green, no Javadoc warning); UAT complete, SECURITY.md threats_open 0, phase complete 2026-11-21
 - [Phase 02]: A header-only recipients.csv yields no Campaign, so the command never indexes an empty row list
 - [Phase 02]: Jackson stays transitive through morimail; the sample POM gains only picocli
+- [Phase 02]: A broken header (semicolon, no email column, repeated column) still runs the placeholder check but not the row analysis
+- [Phase 02]: Duplicate addresses compare with toLowerCase(Locale.ROOT); blank addresses are left to build()
 
 ### Pending Todos
 
@@ -113,6 +116,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T17:53:49.613Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-11-21T17:58:59.065Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
