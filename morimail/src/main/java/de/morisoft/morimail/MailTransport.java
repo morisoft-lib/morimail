@@ -19,7 +19,8 @@ public interface MailTransport {
      * Hands one message to the service.
      *
      * <p>Returning normally means the service accepted the message, not that it was delivered.
-     * A send that ended in a timeout may still have been accepted, so retrying after a timeout can deliver the same mail twice: delivery is at-least-once.
+     * A send that ended in a timeout may still have been accepted, so retrying after a timeout can
+     * deliver the same mail twice: delivery is at-least-once.
      *
      * <p>A failure is reported as a {@link TransientMailException} (retry later), a
      * {@link PermanentMailException} (do not retry this mail) or an {@link AuthRequiredException}

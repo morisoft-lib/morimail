@@ -7,7 +7,7 @@ import java.util.Optional;
  * The send failed for now and may succeed later: retry, possibly after the delay from
  * {@link #retryAfter()}.
  *
- * <p>The message, the cause and any value given to the constructor are fixed at construction, and an instance may be passed to another thread once it has been thrown; like every {@link Throwable} it is not immutable (for example {@code setStackTrace} and {@code addSuppressed} change it).
+ * <p>Immutable apart from {@link Throwable} state; safe to pass between threads once thrown.
  */
 public class TransientMailException extends MailException {
 
