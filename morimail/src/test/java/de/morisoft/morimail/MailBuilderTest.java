@@ -484,6 +484,28 @@ class MailBuilderTest {
         assertThat(attachment.file()).isEqualTo(file);
     }
 
+    @Test
+    void rejectsBlankOrBrokenAttachmentFilename() throws Exception {
+        Path file = file("plain.dat");
+        for (String bad : List.of("", "  ", "a\r\nb.pdf", "a\nb.pdf")) {
+            assertThatThrownBy(() -> valid().attach(new Attachment(bad, null, file, null)).build())
+                    .isInstanceOf(InvalidMailException.class)
+                    .hasMessageContaining("attachments[0]")
+                    .hasMessageContaining("filename");
+        }
+    }
+
+    @Test
+    void rejectsBrokenAttachmentContentType() throws Exception {
+        Path file = file("plain.dat");
+        for (String bad : List.of("text", "/plain", "text/plain\r\nX: y")) {
+            assertThatThrownBy(() -> valid().attach(file, bad).build())
+                    .isInstanceOf(InvalidMailException.class)
+                    .hasMessageContaining("attachments[0]")
+                    .hasMessageContaining("contentType");
+        }
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"data.unknownext", "noextension"})
     void unknownOrMissingExtensionFallsBackToOctetStream(String name) throws Exception {

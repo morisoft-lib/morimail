@@ -415,6 +415,13 @@ public record Mail(String accountId, MailMessage message) {
                         ? attachment.filename() : fileName.toString();
                 String contentType = attachment.contentType() != null
                         ? attachment.contentType() : contentTypeOf(file, filename);
+                if (filename.isBlank() || MailAddress.hasLineBreak(filename)) {
+                    throw new InvalidMailException(
+                            field + "filename is blank or contains a line break");
+                }
+                if (MailAddress.hasLineBreak(contentType) || contentType.indexOf('/') < 1) {
+                    throw new InvalidMailException(field + "contentType is not a media type");
+                }
                 resolved.add(new Attachment(filename, contentType, file, null));
             }
             return resolved;
