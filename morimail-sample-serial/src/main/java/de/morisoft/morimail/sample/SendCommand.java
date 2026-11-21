@@ -1,12 +1,15 @@
 package de.morisoft.morimail.sample;
 
 import de.morisoft.morimail.Attachment;
+import de.morisoft.morimail.AuthRequiredException;
 import de.morisoft.morimail.InvalidMailException;
 import de.morisoft.morimail.Mail;
 import de.morisoft.morimail.MailException;
 import de.morisoft.morimail.MailMessage;
 import de.morisoft.morimail.Mailer;
 import de.morisoft.morimail.PermanentMailException;
+import de.morisoft.morimail.SenderRejectedException;
+import de.morisoft.morimail.TransientMailException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -66,6 +69,13 @@ final class SendCommand implements Callable<Integer> {
             description = "The journal file. Default: journal.jsonl in the campaign directory.")
     Path journalFile;
 
+    /** The wait before a retry when the transport gives no retryAfter. */
+    static final Duration DEFAULT_RETRY_WAIT = Duration.ofSeconds(30);
+    /** The longest wait before a retry, whatever the transport asks for. */
+    static final Duration MAX_RETRY_WAIT = Duration.ofMinutes(5);
+    /** One attempt plus three retries. */
+    static final int MAX_ATTEMPTS = 4;
+
     private final Function<AccountFile, Mailer> mailerFactory;
     private final Consumer<Duration> sleep;
 
@@ -77,6 +87,20 @@ final class SendCommand implements Callable<Integer> {
     /** The time between two send attempts for a rate in mails per minute, rounded up. */
     static Duration spacing(int rate) {
         return Duration.ofMillis((60_000L + rate - 1) / rate);
+    }
+
+    /** The display form of a failure: its simple class name, a colon and its message. */
+    private static String describe(MailException e) {
+        return e.getClass().getSimpleName() + ": " + e.getMessage();
+    }
+
+    private static String counts(int accepted, int skipped, int failed) {
+        return "accepted " + accepted + ", skipped " + skipped + ", failed " + failed;
+    }
+
+    /** Whole seconds of a wait, rounded up, for display only. */
+    static long seconds(Duration wait) {
+        return (wait.toMillis() + 999) / 1000;
     }
 
     @Override
@@ -230,20 +254,48 @@ final class SendCommand implements Callable<Integer> {
                     out.println(prefix + " skipped (journal)");
                     continue;
                 }
-                if (sentAny) {
-                    sleep.accept(spacing);
-                }
-                sentAny = true;
-                try {
-                    mailer.send(mails.get(i));
-                    journal.append(key, email, "accepted", null);
-                    accepted++;
-                    out.println(prefix + " accepted");
-                } catch (MailException e) {
-                    journal.append(key, email, "failed", e);
-                    failed++;
-                    out.println(prefix + " failed: " + e.getClass().getSimpleName() + ": "
-                            + e.getMessage());
+                Duration nextWait = spacing;
+                for (int attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                    if (sentAny) {
+                        sleep.accept(nextWait);
+                    }
+                    sentAny = true;
+                    try {
+                        mailer.send(mails.get(i));
+                        journal.append(key, email, "accepted", null);
+                        accepted++;
+                        out.println(prefix + " accepted");
+                        break;
+                    } catch (SenderRejectedException | AuthRequiredException e) {
+                        journal.append(key, email, "failed", e);
+                        failed++;
+                        out.println(prefix + " failed: " + describe(e));
+                        err.println("Stopped: " + describe(e));
+                        out.println(counts(accepted, skipped, failed));
+                        out.flush();
+                        err.flush();
+                        return 3;
+                    } catch (TransientMailException e) {
+                        if (attempt == MAX_ATTEMPTS) {
+                            journal.append(key, email, "failed", e);
+                            failed++;
+                            out.println(prefix + " failed: " + describe(e));
+                            break;
+                        }
+                        Duration retry = e.retryAfter().orElse(DEFAULT_RETRY_WAIT);
+                        if (retry.compareTo(MAX_RETRY_WAIT) > 0) {
+                            retry = MAX_RETRY_WAIT;
+                        }
+                        nextWait = retry.compareTo(spacing) > 0 ? retry : spacing;
+                        journal.append(key, email, "transient", e);
+                        out.println(prefix + " transient, retry " + attempt + "/"
+                                + (MAX_ATTEMPTS - 1) + " in " + seconds(nextWait) + "s");
+                    } catch (MailException e) {
+                        journal.append(key, email, "failed", e);
+                        failed++;
+                        out.println(prefix + " failed: " + describe(e));
+                        break;
+                    }
                 }
             }
         } catch (IOException e) {
@@ -251,7 +303,7 @@ final class SendCommand implements Callable<Integer> {
                     + ". The last mail may have been sent; a rerun sends it again.");
             exit = 1;
         }
-        out.println("accepted " + accepted + ", skipped " + skipped + ", failed " + failed);
+        out.println(counts(accepted, skipped, failed));
         out.flush();
         err.flush();
         return exit != 0 || failed > 0 ? 1 : 0;
