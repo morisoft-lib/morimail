@@ -5,7 +5,9 @@ import de.morisoft.morimail.MailException;
 import de.morisoft.morimail.MailMessage;
 import de.morisoft.morimail.MailTransport;
 import de.morisoft.morimail.TokenProvider;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 
@@ -13,14 +15,21 @@ import java.util.Map;
  * A transport that keeps accepted messages in memory instead of sending them. It is a test
  * fixture, shipped in the test-jar of the library.
  *
- * <p>This class is thread-safe: all mutable state is guarded by one lock, the instance itself.
- * The registry builds one instance per account. Only messages the transport accepted are kept.
+ * <p>This class is thread-safe: all mutable state is guarded by one lock, the instance itself,
+ * and no I/O happens inside the lock. The registry builds one instance per account. Only messages
+ * the transport accepted are kept in {@link #sent()}; {@link #attempts()} counts every call of
+ * {@link #send(MailMessage)}, failed ones included.
+ *
+ * <p>A test scripts failures with {@link #failNext(MailException...)}: each queued failure is
+ * thrown by one later send, in the order given.
  */
 public final class RecordingTransport implements MailTransport {
 
     private final Map<String, Object> options;
     private final TokenProvider auth;
     private final List<MailMessage> sent = new ArrayList<>();
+    private final Deque<MailException> failures = new ArrayDeque<>();
+    private int attempts;
 
     /**
      * Creates a transport.
@@ -39,28 +48,32 @@ public final class RecordingTransport implements MailTransport {
     }
 
     @Override
-    public void send(MailMessage message) {
-        synchronized (this) {
-            sent.add(message);
+    public synchronized void send(MailMessage message) throws MailException {
+        attempts++;
+        MailException failure = failures.poll();
+        if (failure != null) {
+            throw failure;
         }
+        sent.add(message);
     }
 
     /**
-     * Queues failures for the next sends (stub, implemented in the GREEN step).
+     * Queues failures. Each later send consumes and throws one of them, in the order given; once
+     * the queue is empty, sends are accepted again.
      *
-     * @param failures the failures
+     * @param failures the failures to throw, first in line first
      */
     public synchronized void failNext(MailException... failures) {
-        // Not implemented yet.
+        this.failures.addAll(List.of(failures));
     }
 
     /**
-     * Returns the number of send calls (stub, implemented in the GREEN step).
+     * Returns how many times {@link #send(MailMessage)} was called, failed calls included.
      *
-     * @return the count
+     * @return the number of send calls
      */
     public synchronized int attempts() {
-        return 0;
+        return attempts;
     }
 
     /**
