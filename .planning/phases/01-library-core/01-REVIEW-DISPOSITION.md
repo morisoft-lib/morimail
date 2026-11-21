@@ -5,7 +5,7 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Address validation accepts characters that break MIME headers (recipient injection)"
   - id: WR-02
     severity: warning
@@ -13,7 +13,7 @@ findings:
     title: "Explicit `Attachment` filename and content type are not validated"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`Mailer.send` and `Mailer.validate` throw a raw `NullPointerException` for a directly constructed `Mail` with a null account ID"
   - id: WR-04
     severity: warning
@@ -21,7 +21,7 @@ findings:
     title: "CI job has no `timeout-minutes`"
   - id: WR-05
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`fileDeletedAfterBuildStillSends` pins a contract that only the fixture satisfies"
   - id: IN-01
     severity: info
@@ -29,48 +29,48 @@ findings:
     title: "Initial commit carries a different author identity"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "`TransientMailException` constructor overloads are ambiguous with a literal `null`, and there is no cause+delay form"
   - id: IN-03
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Exception and fixture Javadoc carries a copy-pasted thread-safety paragraph"
   - id: IN-04
     severity: info
-    disposition: open
+    disposition: fixed
     title: "`MailMessage` and `Attachment` default `toString()` print full bodies, recipients and paths"
   - id: IN-05
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Subject line-break handling is inconsistent between literal and rendered subjects"
   - id: IN-06
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Provider failures other than `ServiceConfigurationError` are not wrapped, and a null transport is not rejected"
   - id: IN-07
     severity: info
     disposition: fixed
     title: "Maven wrapper downloads the distribution without a checksum"
-open: 8
+open: 0
 total: 12
-recorded: 2026-11-21T13:35:07.461Z
+recorded: 2026-11-21T13:35:19.671Z
 ---
 
 # Phase 01: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
+| WR-01 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-03 | warning | open | - |
+| WR-03 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-04 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-05 | warning | open | - |
+| WR-05 | warning | fixed | 01-REVIEW-FIX.md |
 | IN-01 | info | skipped | 01-REVIEW-FIX.md |
-| IN-02 | info | open | - |
-| IN-03 | info | open | - |
-| IN-04 | info | open | - |
-| IN-05 | info | open | - |
-| IN-06 | info | open | - |
+| IN-02 | info | fixed | 01-REVIEW-FIX.md |
+| IN-03 | info | fixed | 01-REVIEW-FIX.md |
+| IN-04 | info | fixed | 01-REVIEW-FIX.md |
+| IN-05 | info | fixed | 01-REVIEW-FIX.md |
+| IN-06 | info | fixed | 01-REVIEW-FIX.md |
 | IN-07 | info | fixed | 01-REVIEW-FIX.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
