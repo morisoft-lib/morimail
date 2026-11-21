@@ -24,7 +24,7 @@ status: partial
 
 ## Fixed Issues
 
-### WR-01: Address validation accepts characters that break MIME headers
+### WR-01: Address validation accepts characters that break MIME headers (recipient injection)
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/MailAddress.java`, `morimail/src/test/java/de/morisoft/morimail/MailBuilderTest.java`, `morimail/src/test/java/de/morisoft/morimail/MailModelTest.java`
 **Commit:** 4badb84
@@ -38,7 +38,7 @@ status: partial
 **Status:** fixed: requires human verification (validation rule)
 **Applied fix:** `resolveAttachments` throws `InvalidMailException` for a blank filename or one with CR/LF, and for a content type with CR/LF or without a `/` after at least one character. Path separators in the filename are not rejected: the review's fix text covers line breaks and blank names only. Two new tests.
 
-### WR-03: `Mailer.send`/`validate` throw a raw `NullPointerException` for a null account id
+### WR-03: `Mailer.send` and `Mailer.validate` throw a raw `NullPointerException` for a directly constructed `Mail` with a null account ID
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/Mailer.java`, `morimail/src/test/java/de/morisoft/morimail/MailerTest.java`
 **Commit:** 5a4b88a
@@ -51,37 +51,37 @@ status: partial
 **Commit:** 4a5a21b
 **Applied fix:** Added `timeout-minutes: 15` to the `build` job. The optional `push:` branch restriction was left alone (not asked for by the spec).
 
-### WR-05: `fileDeletedAfterBuildStillSends` pins a contract only the fixture satisfies
+### WR-05: `fileDeletedAfterBuildStillSends` pins a contract that only the fixture satisfies
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/MailTransport.java`, `docs/architecture.md`, `morimail/src/test/java/de/morisoft/morimail/MailBuilderTest.java`
 **Commit:** 72a4244
 **Applied fix:** Renamed the test to `recordingTransportDoesNotReadAttachmentFiles`. `MailTransport.send` Javadoc and a new "Contracts" section in `docs/architecture.md` say that an attachment file unreadable at send time is reported as `InvalidMailException` that names the file and never carries its content.
 
-### IN-02: `TransientMailException` accepts a negative retry delay
+### IN-02: `TransientMailException` constructor overloads are ambiguous with a literal `null`, and there is no cause+delay form
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/TransientMailException.java`, `morimail/src/test/java/de/morisoft/morimail/ErrorHierarchyTest.java`
 **Commit:** 17d59c2
 **Applied fix:** The `(String, Duration)` constructor throws `IllegalArgumentException` for a negative duration. The overloads are unchanged. New test.
 
-### IN-03: Copy-pasted thread-safety paragraph on every exception
+### IN-03: Exception and fixture Javadoc carries a copy-pasted thread-safety paragraph
 
 **Files modified:** `AuthRequiredException.java`, `InvalidMailException.java`, `MailException.java`, `PermanentMailException.java`, `SenderRejectedException.java`, `TransientMailException.java`, `MailTransport.java` (all under `morimail/src/main/java/de/morisoft/morimail/`)
 **Commit:** b0c0893
 **Applied fix:** The full explanation now sits once on `MailException`, wrapped at 100 columns. Subclasses carry one short sentence. The over-long first lines of these files and the at-least-once line in `MailTransport` were wrapped. The "thread" wording that `PublicTypesDocumentThreadSafetyTest` checks is kept.
 
-### IN-04: `MailMessage.toString()` prints bodies, recipients and paths
+### IN-04: `MailMessage` and `Attachment` default `toString()` print full bodies, recipients and paths
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/MailMessage.java`
 **Commit:** 3987910
 **Applied fix:** Took the review's documentation option, not a `toString()` override (Rule 0): the class Javadoc now says `toString()` includes addresses, bodies and attachment paths, so a message should not be logged as a whole.
 
-### IN-05: Subject line-break handling differs between literal and rendered subjects
+### IN-05: Subject line-break handling is inconsistent between literal and rendered subjects
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/Mail.java`, `morimail/src/main/java/de/morisoft/morimail/MailTemplate.java`
 **Commit:** bb76d5a
 **Applied fix:** Kept the behaviour, which matches the spec ("line breaks ... replaced by a space"), and documented it: `Mail.Builder.subject` rejects only CR and LF, while a subject value from a template has every Unicode line break replaced by a space.
 
-### IN-06: A provider returning no transport is not rejected
+### IN-06: Provider failures other than `ServiceConfigurationError` are not wrapped, and a null transport is not rejected
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/MailAccount.java`, `morimail/src/main/java/de/morisoft/morimail/TransportProvider.java`
 **Commit:** a6653fa
