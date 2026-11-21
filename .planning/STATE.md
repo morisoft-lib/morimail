@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Serial-Mail Sample
-status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-11-21T18:04:48.051Z"
+status: verifying
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-11-21T18:08:25.126Z"
 last_activity: 2026-11-21
 last_activity_desc: Phase 02 execution started
-state_head: f9abf2931402b9b9293619008c78e5f66e82fd9c
+state_head: 09f14b6eba71ec900a12388d3cd1356fc679c1db
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 10
+  completed_plans: 11
   percent: 25
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-11-21)
 
 Phase: 02 (Serial-Mail Sample) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-21 — Phase 02 execution started
 
 Progress: [███░░░░░░░] 25%
@@ -66,6 +66,7 @@ Progress: [███░░░░░░░] 25%
 | Phase 02 P01 | 15 min | 3 tasks | 10 files |
 | Phase 02 P02 | 12 min | 3 tasks | 5 files |
 | Phase 02 P03 | 5 min | 3 tasks | 5 files |
+| Phase 02 P04 | 3 min | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -98,6 +99,8 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-03: the row behind an exit-3 stop counts as failed and has a failed journal line; later rows are not counted
 - [Phase 02]: 02-03: a damaged journal line is warned about and its row sent again (at-least-once); never a pre-flight stop
 - [Phase 02]: 02-03: pre-flight checks every CSV row even with --limit
+- [Phase 02]: Sample runnable jar uses a jar manifest classpath over target/lib (copy-dependencies, runtime scope); no shade plugin
+- [Phase 02]: Example attachments are generated once outside the repository; only the committed bytes are the source of truth
 
 ### Pending Todos
 
@@ -120,6 +123,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T18:04:47.953Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-11-21T18:08:25.017Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
