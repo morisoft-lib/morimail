@@ -68,6 +68,25 @@ public final class RecordingTransport implements MailTransport {
     }
 
     /**
+     * Fails sends to one recipient (stub, implemented in the GREEN step).
+     *
+     * @param email the recipient address
+     * @param failure the failure
+     */
+    public synchronized void failFor(String email, MailException failure) {
+        // Not implemented yet.
+    }
+
+    /**
+     * Fails validation (stub, implemented in the GREEN step).
+     *
+     * @param failure the failure, or {@code null} to clear it
+     */
+    public synchronized void failValidation(InvalidMailException failure) {
+        // Not implemented yet.
+    }
+
+    /**
      * Returns how many times {@link #send(MailMessage)} was called, failed calls included.
      *
      * @return the number of send calls
