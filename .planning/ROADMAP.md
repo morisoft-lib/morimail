@@ -43,7 +43,7 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
   3. `build()` raises `InvalidMailException`, naming the problem, for any of: a missing placeholder field; no recipient, subject or body; an unreadable attachment; a set `contentId`; CR/LF in an address, display name or subject; an address without exactly one `@`.
   4. A developer can build `MailAccount.builder(id).transport("recording")`, and `Mailer.of(account).send(mail)` records the message with `defaultFrom` applied. Scripted failures surface as transient, permanent, sender-rejected or auth-required. An unknown account raises `PermanentMailException`. An unknown transport ID fails and lists the available IDs. A duplicate external ID fails when the registry loads.
   5. The repository is safe to publish from its first commit. `LICENSE`, the `README.md` stub (pre-1.0, coordinates, accepted-not-delivered note), `SECURITY.md`, `CLAUDE.md` and `docs/spec.md` are in place. No file holds a secret or real address, and the import-rule test fails the build if the core imports anything but the JDK.
-**Plans:** 2/6 plans executed (wave 1: 01-01; wave 2: 01-02, 01-03; wave 3: 01-04; wave 4: 01-05, 01-06)
+**Plans:** 3/6 plans executed (wave 1: 01-01; wave 2: 01-02, 01-03; wave 3: 01-04; wave 4: 01-05, 01-06)
 
 Plans:
 **Wave 1**
@@ -51,7 +51,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [x] 01-02-PLAN.md — Publish-safe repository: README stub, SECURITY.md, root CLAUDE.md, spec moved to docs/spec.md, deviations in docs/architecture.md, hygiene gates
-- [ ] 01-03-PLAN.md — Walking skeleton, part 2: core records, plain `Mail.Builder`, checked error tree, SPI interfaces (`MailTransport`, `TransportProvider`, `TokenProvider`)
+- [x] 01-03-PLAN.md — Walking skeleton, part 2: core records, plain `Mail.Builder`, checked error tree, SPI interfaces (`MailTransport`, `TransportProvider`, `TokenProvider`)
 
 **Wave 3** *(blocked on Wave 2 completion)*
 - [ ] 01-04-PLAN.md — Walking skeleton, part 3: registry, `MailAccount`, `Mailer`, `recording` test-jar fixture, sample consumer test (end-to-end gate `SendThroughRecordingTest`), import-rule and thread-safety guards
@@ -150,7 +150,7 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Library Core | 2/6 | In Progress | - |
+| 1. Library Core | 3/6 | In Progress | - |
 | 2. Serial-Mail Sample | 0/0 | Not started | - |
 | 3. Graph and Entra | 0/0 | Not started | - |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |
