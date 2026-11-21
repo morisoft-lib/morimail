@@ -129,9 +129,11 @@ public final class MailAccount {
          *
          * @return the account
          * @throws IllegalArgumentException if the account id or the transport id is missing, the
-         *     transport id is unknown, or the default sender is not a valid address
+         *     transport id is unknown, the default sender is not a valid address, or the
+         *     transport provider rejects the options
          * @throws IllegalStateException if the transport registry cannot be loaded: a provider on
-         *     the classpath has no id, two providers share an id, or the service loader fails
+         *     the classpath has no id, two providers share an id, or the service loader fails; also
+         *     if the provider returns no transport
          * @throws NullPointerException if an option key or value is {@code null}
          */
         public MailAccount build() {
@@ -152,6 +154,10 @@ public final class MailAccount {
             }
             TransportProvider provider = TransportRegistry.load().find(transportId);
             MailTransport transport = provider.create(Map.copyOf(options), auth);
+            if (transport == null) {
+                throw new IllegalStateException("Transport provider "
+                        + provider.getClass().getName() + " returned no transport");
+            }
             return new MailAccount(id, transport, from);
         }
     }

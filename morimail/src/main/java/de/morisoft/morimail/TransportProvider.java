@@ -22,7 +22,8 @@ public interface TransportProvider {
      *
      * @param options the account options as an unmodifiable map; the core does not interpret them
      * @param auth the source of access tokens, or {@code null} when the transport needs none
-     * @return a new transport
+     * @return a new transport, never {@code null}
+     * @throws IllegalArgumentException if the options are not valid for this transport
      */
     MailTransport create(Map<String, Object> options, TokenProvider auth);
 }
