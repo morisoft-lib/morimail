@@ -9,17 +9,17 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Repository and Build (REPO)
 
-- [ ] **REPO-01**: Maven reactor: parent `de.morisoft:morimail-parent`, library `morimail`, sample `morimail-sample-serial`, version `0.1.0-SNAPSHOT`. Java 17 via `maven.compiler.release=17`. All plugin and dependency versions are pinned and verified on Maven Central at implementation time (§3, §13.2).
-- [ ] **REPO-02**: The Maven wrapper is checked in, script-only type, pinned to Maven 3.x (never Maven 4) (§3).
-- [ ] **REPO-03**: The parent POM carries the Central metadata: name, description, URL `https://github.com/morisoft-lib/morimail`, MIT license, developer Stephan Wald <stephan@morisoft.de>, SCM (§13.3).
-- [ ] **REPO-04**: The library's only runtime dependency is `jackson-databind` 2.23.x, managed through `jackson-bom` **[decided]**. Test stack: JUnit Jupiter 6.x via `junit-bom`, a deliberate deviation from the spec's "JUnit 5" **[decided]** (owner 2026-11-21), AssertJ, `org.wiremock:wiremock` 3.x. picocli is in the sample only (§3).
-- [ ] **REPO-05**: The library jar manifest has `Automatic-Module-Name: de.morisoft.morimail`. There is no `module-info.java`.
+- [x] **REPO-01**: Maven reactor: parent `de.morisoft:morimail-parent`, library `morimail`, sample `morimail-sample-serial`, version `0.1.0-SNAPSHOT`. Java 17 via `maven.compiler.release=17`. All plugin and dependency versions are pinned and verified on Maven Central at implementation time (§3, §13.2).
+- [x] **REPO-02**: The Maven wrapper is checked in, script-only type, pinned to Maven 3.x (never Maven 4) (§3).
+- [x] **REPO-03**: The parent POM carries the Central metadata: name, description, URL `https://github.com/morisoft-lib/morimail`, MIT license, developer Stephan Wald <stephan@morisoft.de>, SCM (§13.3).
+- [x] **REPO-04**: The library's only runtime dependency is `jackson-databind` 2.23.x, managed through `jackson-bom` **[decided]**. Test stack: JUnit Jupiter 6.x via `junit-bom`, a deliberate deviation from the spec's "JUnit 5" **[decided]** (owner 2026-11-21), AssertJ, `org.wiremock:wiremock` 3.x. picocli is in the sample only (§3).
+- [x] **REPO-05**: The library jar manifest has `Automatic-Module-Name: de.morisoft.morimail`. There is no `module-info.java`.
 - [ ] **REPO-06**: The repository holds `LICENSE` (MIT), a `README.md` stub (pre-1.0 status, coordinates), `SECURITY.md` (private reporting channel), `CLAUDE.md` with the §11 rules, and `docs/spec.md`, moved from the root (§4, §13.1).
-- [ ] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (release build scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
+- [x] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (release build scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
 - [ ] **REPO-08**: `mvn verify` passes with no network access. A JUnit test tagged `live` is excluded by default and enabled with `-Plive`; the owner runs it, configured through environment variables (§10.1).
-- [ ] **REPO-09**: `release` profile with the source, Javadoc (doclint, fail on warnings), GPG and `central-publishing-maven-plugin` plugins (`autoPublish=false`). The test-jar is built for reactor use only, with `attach=false` under `release` **[decided]**. The sample sets `skipPublishing`, `maven.deploy.skip` and the source/javadoc/gpg skips, so only `morimail-parent` and `morimail` are staged (§13.3).
+- [x] **REPO-09**: `release` profile with the source, Javadoc (doclint, fail on warnings), GPG and `central-publishing-maven-plugin` plugins (`autoPublish=false`). The test-jar is built for reactor use only, with `attach=false` under `release` **[decided]**. The sample sets `skipPublishing`, `maven.deploy.skip` and the source/javadoc/gpg skips, so only `morimail-parent` and `morimail` are staged (§13.3).
 - [ ] **REPO-10**: Public types have Javadoc that states thread safety and builds cleanly under doclint from the first phase (§11, §13.3).
-- [ ] **REPO-11**: Public-repo hygiene. No secrets, tenant IDs, real addresses or hosts appear in any file or commit; examples use `example.com`/`example.org` and zero GUIDs. Every commit has author and committer Stephan Wald <stephan@morisoft.de>, overriding the workspace's `GIT_*` environment variables (§11, §13.4).
+- [x] **REPO-11**: Public-repo hygiene. No secrets, tenant IDs, real addresses or hosts appear in any file or commit; examples use `example.com`/`example.org` and zero GUIDs. Every commit has author and committer Stephan Wald <stephan@morisoft.de>, overriding the workspace's `GIT_*` environment variables (§11, §13.4).
 - [ ] **REPO-12**: A plain JUnit test enforces the import rules. The core imports only the JDK, except the built-in list; `graph` and `entra` don't import each other (§4).
 
 ### Mail Model and Builder (MODEL)
@@ -168,17 +168,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REPO-01 | Phase 1 | Pending |
-| REPO-02 | Phase 1 | Pending |
-| REPO-03 | Phase 1 | Pending |
-| REPO-04 | Phase 1 | Pending |
-| REPO-05 | Phase 1 | Pending |
+| REPO-01 | Phase 1 | Complete |
+| REPO-02 | Phase 1 | Complete |
+| REPO-03 | Phase 1 | Complete |
+| REPO-04 | Phase 1 | Complete |
+| REPO-05 | Phase 1 | Complete |
 | REPO-06 | Phase 1 | Pending |
-| REPO-07 | Phase 1 | Pending |
+| REPO-07 | Phase 1 | Complete |
 | REPO-08 | Phase 3 | Pending |
-| REPO-09 | Phase 1 | Pending |
+| REPO-09 | Phase 1 | Complete |
 | REPO-10 | Phase 1 | Pending |
-| REPO-11 | Phase 1 | Pending |
+| REPO-11 | Phase 1 | Complete |
 | REPO-12 | Phase 1 | Pending |
 | MODEL-01 | Phase 1 | Pending |
 | MODEL-02 | Phase 1 | Pending |

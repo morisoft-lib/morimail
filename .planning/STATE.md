@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Library Core
 status: executing
-stopped_at: Phase 1 context gathered
-last_updated: "2026-11-21T10:24:19.506Z"
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-11-21T13:00:03.544Z"
 last_activity: 2026-11-21
-last_activity_desc: Roadmap created (4 phases, 69/69 v1 requirements mapped)
-state_head: b37ead19df20ec1c4b75050980d09160aafcfa79
+last_activity_desc: Phase 01 execution started
+state_head: 59f14d1cbc952c73da102d32d4602b1e9ae0f7e1
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 6
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-21)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 1 - Library Core
+**Current focus:** Phase 01 — Library Core
 
 ## Current Position
 
-Phase: 01 (Library Core) — READY TO EXECUTE
-Plan: 0 of TBD in current phase
+Phase: 01 (Library Core) — EXECUTING
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-11-21 — Roadmap created (4 phases, 69/69 v1 requirements mapped)
+Last activity: 2026-11-21 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -52,6 +52,11 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: -
 
 *Updated after each plan completion*
+**Per-Plan Metrics:**
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 01 P01 | 20min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -64,6 +69,8 @@ Recent decisions affecting current work:
 - [Roadmap]: The `release` profile and CI's `-Prelease verify -Dgpg.skip` start in Phase 1. The bundle rehearsal is Phase 4.
 - [Roadmap]: Hard STOP after Phase 3 for the owner's live test. Phase 4 starts from its findings; a large code correction becomes a decimal phase inserted after Phase 3.
 - [Init]: Jackson 2.23.x via `jackson-bom`, JUnit 6.x, `changeit` test keystore, reactor-only test-jar, Graph `baseUrl` option, comma-only CSV, at-least-once documented, and a `freshAccessToken` default on `TokenProvider`.
+- [Phase 01]: Release builds use -pl morimail -am (D-20): an unattached test-jar is unresolvable in a packaging full-reactor build
+- [Phase 01]: wiremock and picocli are version-managed in the parent but declared by no module until Phase 3 / Phase 2
 
 ### Pending Todos
 
@@ -88,6 +95,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T08:48:10.694Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-library-core/01-CONTEXT.md
+Last session: 2026-11-21T13:00:03.506Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None
