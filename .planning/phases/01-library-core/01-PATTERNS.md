@@ -4,6 +4,8 @@
 **Files analyzed:** about 45 new files (no modified source files)
 **Analogs found:** 0 in-repo / all files
 
+> **Superseded by the plans (2026-11-21, review round 1 and plan-checker iteration 1).** Two items below no longer apply; where this page and a `01-0*-PLAN.md` disagree, the plan wins. (1) "Core imports: the core imports only `java.*`/`javax.*`": the core imports and names `java.*` types only, with no `javax.*` (`ImportRulesTest`, plan 01-04). (2) "Logging: `System.Logger` with `isLoggable` guards (Pitfall 12)": no logging in the Phase 1 core; `System.Logger` arrives with the first transport that needs it (plan 01-03 Task 1 step 1).
+
 ## Greenfield Statement
 
 `git ls-files` shows no Java, POM, workflow or script file. The repository holds only `LICENSE`, `.gitignore`, `.claude/CLAUDE.md` and `.planning/` docs (`spec.md` is untracked). There is no in-repo code analog for any file, and none is invented here. The references are the executed prototypes and recipes in `.planning/phases/01-library-core/01-RESEARCH.md` (RESEARCH) and `.planning/research/STACK.md` (STACK).
@@ -83,9 +85,9 @@ Build the address API from CONTEXT D-01 and D-02:
   - Add `@param` for every record component, `@return` and `@throws` on every method, and a comment on explicit compact constructors.
   - State thread safety on each public type.
   - Use `{@code}` for generics and for references to test-only types.
-  - Run `./mvnw -Prelease clean verify -Dgpg.skip` after each Javadoc-bearing task.
+  - Run `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am` after each Javadoc-bearing task (release build scoped to the published modules, D-20 in `01-CONTEXT.md`).
 - **Error messages:** each names the offending field, placeholder or id. They never echo the data map, bodies or tokens (spec §11, Pitfall 12).
-- **Commits:** run `export GIT_AUTHOR_EMAIL=stephan@morisoft.de GIT_COMMITTER_EMAIL=stephan@morisoft.de` first (Pitfall 7). Commit `8c9b082` is the one known exception (D-02b).
+- **Commits:** run `export GIT_AUTHOR_NAME='Stephan Wald' GIT_AUTHOR_EMAIL=stephan@morisoft.de GIT_COMMITTER_NAME='Stephan Wald' GIT_COMMITTER_EMAIL=stephan@morisoft.de` first (Pitfall 7; the workspace's GIT_* variables override the local config). Commit `8c9b082` is the one known exception (D-02b).
 - **Hygiene:** `example.com`/`example.org` only. Scrub the absolute workstation paths in `.planning/research/ARCHITECTURE.md` (about line 551) and `.planning/research/PITFALLS.md` (about line 562) per Pitfall 17.
 
 ## No Analog Found

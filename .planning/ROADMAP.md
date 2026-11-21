@@ -24,7 +24,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 These apply to every phase. They come from the binding spec (§10.2, §11, §13.4).
 
 - A phase is done only when `./mvnw verify` is green with no network access and the work is committed before the next phase starts. Author and committer of every commit is Stephan Wald <stephan@morisoft.de>.
-- Javadoc stays doclint-clean (CI's `mvn -Prelease verify -Dgpg.skip` stays green), and every new public type states its thread safety.
+  - Gate note (Phase 1, owner decision D-18 in `phases/01-library-core/01-CONTEXT.md`): "no network access" is proven in Phase 1 by a warm-cache `./mvnw -o verify` plus the source check that no source uses `java.net.` networking. The network-disabled proof (for example a CI job without network) is REPO-08 in Phase 3.
+- Javadoc stays doclint-clean (CI's `mvn -Prelease verify -Dgpg.skip -pl morimail -am` stays green; the release build is scoped to the published modules per D-20 in `phases/01-library-core/01-CONTEXT.md`), and every new public type states its thread safety.
 - No file, fixture or commit contains a secret, tenant ID, real address or internal host. Use only `example.com`/`example.org` and zero GUIDs.
 - Never send real mail, publish, deploy or tag. The owner runs the live test and the release.
 - The order is fixed. The sample runs against `recording` (Phase 2) before any Entra or Graph code exists (Phase 3).
@@ -37,7 +38,7 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
 **Depends on**: Nothing (first phase)
 **Requirements**: REPO-01, REPO-02, REPO-03, REPO-04, REPO-05, REPO-06, REPO-07, REPO-09, REPO-10, REPO-11, REPO-12, MODEL-01, MODEL-02, MODEL-03, MODEL-04, MODEL-05, TMPL-01, TMPL-02, TMPL-03, TMPL-04, CORE-01, CORE-02, CORE-03, CORE-04, CORE-05, CORE-06, CORE-07, ERR-01, ERR-02
 **Success Criteria** (what must be TRUE):
-  1. `./mvnw verify` passes offline on Java 17. The CI workflow runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip` green on push and pull request, with doclint-clean Javadoc that states thread safety on every public type.
+  1. `./mvnw verify` passes offline on Java 17 (D-18: proven by a warm-cache `./mvnw -o verify` plus the `java.net.` source check; `-o` is not network isolation, and the network-off proof is REPO-08 in Phase 3). The CI workflow runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (D-20: scoped to the published modules) green on push and pull request, with doclint-clean Javadoc that states thread safety on every public type.
   2. A developer can build a mail with `Mail.using(id)...template(t, data).attach(p).build()`. HTML values are escaped, `$$!name$$` inserts raw, line breaks in a subject value become a space, and `$` or `\` in data is inserted literally.
   3. `build()` raises `InvalidMailException`, naming the problem, for any of: a missing placeholder field; no recipient, subject or body; an unreadable attachment; a set `contentId`; CR/LF in an address, display name or subject; an address without exactly one `@`.
   4. A developer can build `MailAccount.builder(id).transport("recording")`, and `Mailer.of(account).send(mail)` records the message with `defaultFrom` applied. Scripted failures surface as transient, permanent, sender-rejected or auth-required. An unknown account raises `PermanentMailException`. An unknown transport ID fails and lists the available IDs. A duplicate external ID fails when the registry loads.
@@ -123,7 +124,7 @@ Phase 4 starts only after this report. If the corrections to code are substantia
   2. The owner can follow `docs/entra-setup.md` from the app registration and certificate, through Exchange RBAC for Applications (union trap, 30 min to 2 h delay, Enterprise-application IDs, Organization Management), to a dry run and a `--limit 1` send. The owner then sends the example campaign to test addresses, and a second run sends nothing.
   3. `docs/architecture.md` summarises the contracts on one page and records every deviation: the `freshAccessToken` default, `baseUrl`, unchecked registry exceptions, JUnit 6, the `changeit` keystore, the reactor-only test-jar, and any differences from the Microsoft docs.
   4. `README.md` explains what morimail is and what it is not (Exchange limits; not a bulk mailer). It covers the pre-1.0 status, the coordinates, a quick start, the at-least-once and accepted-not-delivered semantics, and the test keystore.
-  5. `mvn -Prelease verify -Dgpg.skip` builds the sources and Javadoc jars without warnings. A `-DskipUpload=true` rehearsal bundle contains only `morimail-parent` and `morimail` (no `-tests.jar`, no sample), and the owner's release steps are listed.
+  5. `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (D-20: scoped to the published modules) builds the sources and Javadoc jars without warnings. A `-DskipUpload=true` rehearsal bundle contains only `morimail-parent` and `morimail` (no `-tests.jar`, no sample), and the owner's release steps are listed.
 **Plans**: TBD
 **UI hint**: no
 

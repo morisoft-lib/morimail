@@ -15,7 +15,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [ ] **REPO-04**: The library's only runtime dependency is `jackson-databind` 2.23.x, managed through `jackson-bom` **[decided]**. Test stack: JUnit Jupiter 6.x via `junit-bom`, a deliberate deviation from the spec's "JUnit 5" **[decided]** (owner 2026-11-21), AssertJ, `org.wiremock:wiremock` 3.x. picocli is in the sample only (§3).
 - [ ] **REPO-05**: The library jar manifest has `Automatic-Module-Name: de.morisoft.morimail`. There is no `module-info.java`.
 - [ ] **REPO-06**: The repository holds `LICENSE` (MIT), a `README.md` stub (pre-1.0 status, coordinates), `SECURITY.md` (private reporting channel), `CLAUDE.md` with the §11 rules, and `docs/spec.md`, moved from the root (§4, §13.1).
-- [ ] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip` on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
+- [ ] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (release build scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
 - [ ] **REPO-08**: `mvn verify` passes with no network access. A JUnit test tagged `live` is excluded by default and enabled with `-Plive`; the owner runs it, configured through environment variables (§10.1).
 - [ ] **REPO-09**: `release` profile with the source, Javadoc (doclint, fail on warnings), GPG and `central-publishing-maven-plugin` plugins (`autoPublish=false`). The test-jar is built for reactor use only, with `attach=false` under `release` **[decided]**. The sample sets `skipPublishing`, `maven.deploy.skip` and the source/javadoc/gpg skips, so only `morimail-parent` and `morimail` are staged (§13.3).
 - [ ] **REPO-10**: Public types have Javadoc that states thread safety and builds cleanly under doclint from the first phase (§11, §13.3).
@@ -123,7 +123,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
   - Verification: a dry run, then `--limit 1` (§9).
 - [ ] **DOCS-02**: `docs/architecture.md` is a one-page summary of the contracts and the reasons for them. It records every deviation, including the `freshAccessToken` default, `baseUrl`, unchecked registry exceptions, JUnit 6, the `changeit` keystore, the reactor-only test-jar, and any differences found in the Microsoft docs (§5, §11).
 - [ ] **DOCS-03**: The README covers what morimail is, its pre-1.0 status, the coordinates and a quick start. It also has a "what this is not" paragraph (Exchange Online limits of 30/min and 10k recipients/day per mailbox, not a bulk mailer), the at-least-once and accepted-not-delivered note, and the test keystore sentence (§13.1, G10).
-- [ ] **DOCS-04**: `mvn -Prelease verify -Dgpg.skip` builds the sources and Javadoc jars without warnings. A rehearsal bundle (`-DskipUpload=true`) contains only `morimail-parent` and `morimail`, and the owner's release steps are listed (§10.2 milestone 5, §13.5).
+- [ ] **DOCS-04**: `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) builds the sources and Javadoc jars without warnings. A rehearsal bundle (`-DskipUpload=true`) contains only `morimail-parent` and `morimail`, and the owner's release steps are listed (§10.2 milestone 5, §13.5).
 
 ## v2 Requirements
 

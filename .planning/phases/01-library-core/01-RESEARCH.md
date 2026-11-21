@@ -56,7 +56,7 @@ None. The discussion stayed within the phase scope.
 | REPO-04 | Only runtime dep `jackson-databind` 2.23.x via BOM; JUnit 6, AssertJ, WireMock | Standard Stack, Open Question 7 (when to declare WireMock) |
 | REPO-05 | `Automatic-Module-Name`, no `module-info` | Pitfall 6 (put config on `default-jar` execution) |
 | REPO-06 | LICENSE, README stub, SECURITY.md, root CLAUDE.md, `docs/spec.md` | Repository files section, D-15..D-17 |
-| REPO-07 | CI: `mvn verify` and `mvn -Prelease verify -Dgpg.skip`, Java 17, no secrets, `contents: read` | CI workflow with verified SHA pins |
+| REPO-07 | CI: `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (scoped per D-20), Java 17, no secrets, `contents: read` | CI workflow with verified SHA pins |
 | REPO-09 | `release` profile, test-jar reactor-only, sample skips | Release profile recipe (STACK.md), sample POM properties |
 | REPO-10 | Javadoc states thread safety, doclint clean | Pitfall 4 with verified doclint behaviour; thread-safety guard test |
 | REPO-11 | Public-repo hygiene, identity override | Pitfalls 7 and 17, hygiene grep commands |
@@ -102,7 +102,7 @@ Phase 1 is a plain-Java design problem plus a build-hardening problem, and almos
 
 Five findings change how the plan should be written. (1) **D-01 plus D-02 create a silent overload trap:** `to("a@example.org", "b@example.org")` resolves to the `(email, displayName)` overload, not to varargs, and the second address becomes a display name. This was reproduced with `javac`. A mitigation that stays inside the locked decisions is given (Pitfall 1). (2) `template(template, record)` with `Map<String, Object>` rejects a `Map<String,String>` CSV row at compile time; the parameter should be `Map<String, ?>`. (3) Doclint on JDK 21 warns on every public builder method without `@param`/`@return`, on declared `throws` without `@throws`, on explicit compact constructors without a comment, and on public classes with an implicit constructor; this was run, and the builder's roughly 23 public methods all need full Javadoc. (4) The empty sample jar produces a `JAR will be empty` warning (reproduced), so "zero WARNING lines" is not a usable Phase 1 gate for the whole reactor. (5) Two committed research files contain absolute workstation paths, and one pre-existing commit has a different author address; both are REPO-11 items to fix or decide.
 
-**Primary recommendation:** Build the reactor and CI first with `-Prelease clean verify -Dgpg.skip` green from the first commit, then add the core in dependency order (errors and records, SPI, renderer, builder, registry/account/mailer, `RecordingTransport`), running the release profile after every Javadoc-bearing task. Keep `TemplateRenderer`, `TransportRegistry` and `BuiltInTransports` package-private, use `Map<String, ?>` for template data, and add a mechanical import-rule test and a thread-safety-Javadoc test.
+**Primary recommendation:** Build the reactor and CI first with `-Prelease clean verify -Dgpg.skip -pl morimail -am` (scoped to the published modules, superseding the unscoped form per D-20) green from the first commit, then add the core in dependency order (errors and records, SPI, renderer, builder, registry/account/mailer, `RecordingTransport`), running the release profile after every Javadoc-bearing task. Keep `TemplateRenderer`, `TransportRegistry` and `BuiltInTransports` package-private, use `Map<String, ?>` for template data, and add a mechanical import-rule test and a thread-safety-Javadoc test.
 
 ## Architectural Responsibility Map
 
@@ -437,8 +437,10 @@ jobs:
           java-version: '17'
           cache: maven
       - run: ./mvnw -B -ntp verify
-      - run: ./mvnw -B -ntp -Prelease clean verify -Dgpg.skip
-      - run: ./mvnw -B -ntp -o verify          # proves the default build needs no network once the cache is warm
+      # release build scoped per D-20 (01-CONTEXT.md): an unattached test-jar breaks a full-reactor release build
+      - run: ./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am
+      # warmed-cache check that Maven needs no remote resolution (D-18), not network isolation
+      - run: ./mvnw -B -ntp -o verify
 ```
 No `pull_request_target`, no secrets, no live test. The wrapper must be committed with the executable bit (`git ls-files --stage mvnw` shows `100755`), otherwise CI fails with `Permission denied`.
 
@@ -499,7 +501,7 @@ Verified by running `javadoc -Xdoclint:all --release 17` on JDK 21:
 | Missing `package-info.java` | no warning |
 | Inline email address `a@example.org` mid-line | no warning |
 
-**How to avoid:** the plan needs an explicit Javadoc pass: about 23 public builder methods (3 forms each for to/cc/bcc/replyTo/from, subject, html, text, template, 3 attach forms, build) each with a sentence, `@param` and `@return`. Give every public class a private constructor (static-factory classes `Mailer`, `MailAccount`) or an explicit documented one (exceptions). Use `{@code ...}` for generics and `&amp;`. Run `./mvnw -Prelease clean verify -Dgpg.skip` after every Javadoc-bearing task, not only at the end. Local JDK is 21 and CI is 17; the 17 javadoc is believed to be less strict on default constructors [ASSUMED], so passing locally implies passing in CI. The `failOnWarnings` flag lives in the parent's `release` profile, so plain `verify` never shows these.
+**How to avoid:** the plan needs an explicit Javadoc pass: about 23 public builder methods (3 forms each for to/cc/bcc/replyTo/from, subject, html, text, template, 3 attach forms, build) each with a sentence, `@param` and `@return`. Give every public class a private constructor (static-factory classes `Mailer`, `MailAccount`) or an explicit documented one (exceptions). Use `{@code ...}` for generics and `&amp;`. Run `./mvnw -Prelease clean verify -Dgpg.skip -pl morimail -am` (scoped per D-20) after every Javadoc-bearing task, not only at the end. Local JDK is 21 and CI is 17; the 17 javadoc is believed to be less strict on default constructors [ASSUMED], so passing locally implies passing in CI. The `failOnWarnings` flag lives in the parent's `release` profile, so plain `verify` never shows these.
 
 ### Pitfall 5: Registry tests that poison each other
 `RecordingTransportProvider` is on every library test's classpath through `src/test/resources/META-INF/services/de.morisoft.morimail.TransportProvider`. Test duplicates with `TransportRegistry.of(...)` and anonymous providers. The unknown-ID assertion must use `contains("recording")`, not equality against the whole list, because Phase 3 adds `graph`. A broken provider surfaces as `ServiceConfigurationError` (an `Error`): catch it in `load()` and rethrow as `IllegalStateException`. Keep the built-in list out of `ServiceLoader`, or "built-in resolves with no services entry" proves nothing (Phase 3).
@@ -508,6 +510,7 @@ Verified by running `javadoc -Xdoclint:all --release 17` on JDK 21:
 - A plain `test-jar` execution attaches `-tests.jar` and the Central plugin would stage it. Fix: library `release` profile with `<attach>false</attach>` on the `test-jar` execution [CITED: STACK.md "Findings That Change the Plan" 2, executed there].
 - `Automatic-Module-Name` configured at plugin level lands in both jars; configure it on the `default-jar` execution.
 - The sample needs `<type>test-jar</type><scope>test</scope>`, versions from `dependencyManagement`. Verified in the smoke project; recommended to re-prove in Phase 1 with a sample smoke test (Open Question 8).
+- **Correction (2026-11-21, plan-checker iteration 1, see D-20 in `01-CONTEXT.md`):** with `attach=false`, a full-reactor `-Prelease` build cannot resolve the test-jar. It fails with "Could not find artifact ...:jar:tests" on Maven 3.10.1 and 3.9.16, even with the sample's tests skipped. Release builds are therefore scoped to `-pl morimail -am`, and the sample's use of the test-jar is proven in the default build.
 
 ### Pitfall 7: Workspace `GIT_*` environment overrides the repo identity
 The workspace exports author and committer email variables that win over local config. Every commit command, including GSD `query commit` calls and subagents, must be prefixed with `export GIT_AUTHOR_EMAIL=stephan@morisoft.de GIT_COMMITTER_EMAIL=stephan@morisoft.de` [CITED: project memory note; VERIFIED: `env | grep GIT_` shows the overriding email variables]. Check with `git log --format='%an <%ae> | %cn <%ce>'`. Existing history: the earliest commit (`8c9b082`, the GitHub-created initial LICENSE commit) has a different author address and a GitHub committer; all later commits are correct [VERIFIED: `git log`]. Rewriting it is the owner's call (Open Question 5).
@@ -656,7 +659,7 @@ All ten questions are resolved. Q1, Q2 and Q5 were decided by the owner (CONTEXT
 7. **What to declare in Phase 1 POMs.** RESOLVED (adopted as recommended): plan 01-01 manages every version in the parent and declares `jackson-databind`, `junit-jupiter` and `assertj-core` in the library; WireMock and picocli are declared when first used (Phases 3 and 2); the `live` profile arrives in Phase 3.
    - Recommendation: manage every version in the parent (`dependencyManagement`, BOM imports); declare `jackson-databind`, `junit-jupiter` and `assertj-core` in the library POM now (REPO-04 is a Phase 1 requirement); declare WireMock and picocli only when first used (Phases 3 and 2). Add the `live` profile and `excludedGroups` properties in Phase 3.
 
-8. **Sample smoke test in Phase 1.** RESOLVED (adopted as recommended): `RecordingTestJarSmokeTest` in plan 01-04, run in the default and the release build. A planning probe showed the sample's test-jar dependency fails `-Prelease` while the library has no test classes, so plan 01-04 adds that dependency together with the fixture.
+8. **Sample smoke test in Phase 1.** RESOLVED (adopted as recommended): `RecordingTestJarSmokeTest` in plan 01-04, run in the default build. Correction 2026-11-21: per D-20 the release build is scoped to `-pl morimail -am` and does not build the sample, so the smoke test does not run under `-Prelease`. A planning probe showed the sample's test-jar dependency fails `-Prelease` while the library has no test classes, so plan 01-04 adds that dependency together with the fixture.
    - Recommendation: one test in `morimail-sample-serial` asserts `MailAccount.builder("x").transport("recording").build().transport()` is a `RecordingTransport`. It proves the test-jar and its services file reach the sample, including under `-Prelease verify` with `attach=false`, which Phase 2 depends on. Accept the empty-jar warning (Pitfall 16).
 
 9. **Direct-constructed `Mail` bypasses `build()` validation.** RESOLVED (adopted as recommended): `Mailer` does not re-validate; the `Mail` and `MailMessage` Javadoc name `build()` as the validating path (plans 01-03 and 01-04).
@@ -693,7 +696,7 @@ All ten questions are resolved. Q1, Q2 and Q5 were decided by the owner (CONTEXT
 | Quick run command | `./mvnw -B -ntp -q -pl morimail test` |
 | Single class | `./mvnw -B -ntp -pl morimail test -Dtest=MailBuilderTest` |
 | Full suite command | `./mvnw -B -ntp verify` |
-| Release shape | `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip` |
+| Release shape | `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am` (scoped per D-20) |
 | Offline proof | `./mvnw -B -ntp -o verify` (after one online run) |
 
 ### Phase Requirements → Test Map
@@ -706,7 +709,7 @@ All ten questions are resolved. Q1, Q2 and Q5 were decided by the owner (CONTEXT
 | REPO-05 | Module name, no `module-info` | shell | `unzip -p morimail/target/morimail-0.1.0-SNAPSHOT.jar META-INF/MANIFEST.MF \| grep 'Automatic-Module-Name: de.morisoft.morimail'`; `unzip -l` shows no `module-info.class`; the tests jar has no such entry | ❌ Wave 0 |
 | REPO-06 | Repo files present, `spec.md` moved | shell | `test -f LICENSE -a -f README.md -a -f SECURITY.md -a -f CLAUDE.md -a -f docs/spec.md && ! test -f spec.md`; `grep -qi 'pre-1.0' README.md`; `grep -qi 'accepted' README.md` | ❌ Wave 0 |
 | REPO-07 | CI shape | shell + first push | `grep -q 'contents: read' .github/workflows/ci.yml`; `! grep -q pull_request_target`; green run on first push (owner/`gh run list`) | ❌ Wave 0 |
-| REPO-09 | Release profile builds jars, test-jar not attached, sample skipped | build | `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip` then `test -f morimail/target/morimail-0.1.0-SNAPSHOT-javadoc.jar -a -f morimail/target/morimail-0.1.0-SNAPSHOT-sources.jar` | ❌ Wave 0 |
+| REPO-09 | Release profile builds jars, test-jar not attached, sample skipped | build | `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am` (scoped per D-20) then `test -f morimail/target/morimail-0.1.0-SNAPSHOT-javadoc.jar -a -f morimail/target/morimail-0.1.0-SNAPSHOT-sources.jar` | ❌ Wave 0 |
 | REPO-10 | Javadoc clean; thread safety stated on public types | build + unit | release build above (`failOnWarnings`); `PublicTypesDocumentThreadSafetyTest` | ❌ Wave 0 |
 | REPO-11 | No secrets, GUIDs, real addresses, home paths; identity | shell | `git grep -nIEi '[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}' \| grep -viE 'example\.(com\|org)\|stephan@morisoft\.de'` (empty); GUID grep excluding zero GUID (empty); `git grep -nI '/home/[a-z]'` (empty); `git log --format='%an <%ae> \| %cn <%ce>'` (known exception `8c9b082`) | ❌ Wave 0 |
 | REPO-12 | Import rules | unit | `./mvnw -B -ntp -pl morimail test -Dtest=ImportRulesTest` | ❌ Wave 0 |
@@ -731,7 +734,7 @@ All ten questions are resolved. Q1, Q2 and Q5 were decided by the owner (CONTEXT
 
 ### Sampling Rate
 - **Per task commit:** `./mvnw -B -ntp -q -pl morimail test`, plus the release-shape command after any task that adds or edits Javadoc.
-- **Per wave merge:** `./mvnw -B -ntp verify` and `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip`.
+- **Per wave merge:** `./mvnw -B -ntp verify` and `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am` (scoped per D-20).
 - **Phase gate:** both of the above, then `./mvnw -B -ntp -o verify`, the hygiene greps, and a green GitHub Actions run before `/gsd-verify-work`.
 
 ### Wave 0 Gaps

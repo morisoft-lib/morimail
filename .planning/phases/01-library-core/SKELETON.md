@@ -6,7 +6,7 @@
 
 ## Capability Proven End-to-End
 
-A Java developer builds a plain-text mail with `Mail.using("main").to("reader@example.org").subject("Hello").text("...").build()`, sends it with `Mailer.of(account).send(mail)` through `MailAccount.builder("main").transport("recording").defaultFrom("newsletter@example.com").build()`, and reads it back, with the default sender applied, from `((RecordingTransport) account.transport()).sent()`. The `recording` transport is found by `ServiceLoader` in the library's test-jar, both in the library's own tests and in the sample module. `./mvnw -B -ntp verify`, `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip` and `./mvnw -B -ntp -o verify` are green.
+A Java developer builds a plain-text mail with `Mail.using("main").to("reader@example.org").subject("Hello").text("...").build()`, sends it with `Mailer.of(account).send(mail)` through `MailAccount.builder("main").transport("recording").defaultFrom("newsletter@example.com").build()`, and reads it back, with the default sender applied, from `((RecordingTransport) account.transport()).sent()`. The `recording` transport is found by `ServiceLoader` in the library's test-jar, both in the library's own tests and in the sample module. `./mvnw -B -ntp verify`, `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am` and `./mvnw -B -ntp -o verify` are green.
 
 morimail is a library, not an application: there is no database, no UI and no deployment target. The rows below say so instead of inventing them.
 
@@ -21,9 +21,9 @@ morimail is a library, not an application: there is no database, no UI and no de
 | Auth | The `TokenProvider` SPI (`accessToken`, default `freshAccessToken`), optional per transport (null allowed). No credential handling in Phase 1; Entra client credentials arrive in Phase 3 | Spec §2, §7; CORE-02 owner decision |
 | Extension points | Exactly two: `TransportProvider` (registry: one explicit built-in list, empty until Phase 3, plus `ServiceLoader`) and `TokenProvider` | Spec §2 and Rule 0 |
 | Error model | Checked tree: `MailException` with `TransientMailException` (retryAfter), `PermanentMailException` (with `InvalidMailException`, `SenderRejectedException`) and `AuthRequiredException`; configuration errors are unchecked `IllegalArgumentException` / `IllegalStateException` | Spec §5.2; deviation recorded in docs/architecture.md |
-| Package layout | Core `de.morisoft.morimail` imports only the JDK (its one outside reference will be `BuiltInTransports` -> `graph` in Phase 3); `de.morisoft.morimail.graph` and `de.morisoft.morimail.entra` (Phase 3) never import each other; test fixture `de.morisoft.morimail.test` ships in the test-jar | Spec §4 import rules, enforced by `ImportRulesTest` |
-| Test fixture | `RecordingTransport` (id `recording`) in library test sources, registered through `META-INF/services`, built into a test-jar that the sample consumes inside the reactor only (`attach=false` under `release`) | Spec §10.1; reactor-only test-jar owner decision |
-| Documentation contract | Every public type states its thread safety in Javadoc; the `release` profile runs doclint `all` with `failOnWarnings` | Spec §11, §13.3; enforced by `PublicTypesDocumentThreadSafetyTest` |
+| Package layout | Core `de.morisoft.morimail` imports and names only `java.*` types (its one outside reference will be `BuiltInTransports` -> `graph` in Phase 3); `de.morisoft.morimail.graph` and `de.morisoft.morimail.entra` (Phase 3) never import each other; test fixture `de.morisoft.morimail.test` ships in the test-jar | Spec §4 import rules, enforced by `ImportRulesTest` |
+| Test fixture | `RecordingTransport` (id `recording`) in library test sources, registered through `META-INF/services`, built into a test-jar that the sample consumes inside the reactor in the default build; `attach=false` under `release` hides it from the reactor, so the release build runs on the published modules only (`-pl morimail -am`) | Spec §10.1; reactor-only test-jar owner decision; route checked by the plan-checker iteration 1 probe (see 01-01) |
+| Documentation contract | Every public type states its thread safety in Javadoc; the `release` profile runs doclint `all` with `failOnWarnings` | Spec §11, §13.3; presence enforced by `PublicTypesDocumentThreadSafetyTest`, truth backed by the concurrency tests of plan 01-06 and review |
 | Deployment target | None for the skeleton. CI is GitHub Actions on Java 17 (read-only token, SHA-pinned actions, no secrets). Release to Maven Central is the owner's job in Phase 4 | Spec §13.5: Claude never publishes, deploys or tags |
 | Directory layout | `pom.xml`, `morimail/src/{main,test}/java/de/morisoft/morimail/...`, `morimail-sample-serial/`, `docs/` (spec, architecture, later entra-setup), root `README.md`, `SECURITY.md`, `CLAUDE.md`, `LICENSE`, `.github/workflows/ci.yml` | Spec §4 |
 
@@ -33,7 +33,7 @@ morimail is a library, not an application: there is no database, no UI and no de
 - [ ] Routing — not applicable as HTTP routing; the analogue is transport resolution: `MailAccount.Builder.build()` resolves the transport id through `TransportRegistry` (built-in list plus `ServiceLoader`)
 - [ ] Database — not applicable (no persistence in the library); the "read and write" of the skeleton is `RecordingTransport` recording a message (write) and `sent()` returning it (read)
 - [ ] UI — not applicable; the user-facing surface is the Java API (`Mail.using(..)`, `Mailer.of(..)`) exercised by `SendThroughRecordingTest` and by the sample module's `RecordingTestJarSmokeTest`
-- [ ] Deployment — documented local full-stack run command: `./mvnw -B -ntp verify` (plus `-Prelease clean verify -Dgpg.skip` and `-o verify`), the same commands CI runs on Java 17
+- [ ] Deployment — documented local full-stack run command: `./mvnw -B -ntp verify` (plus `-Prelease clean verify -Dgpg.skip -pl morimail -am` and `-o verify`), the same commands CI runs on Java 17
 
 ## Out of Scope (Deferred to Later Slices)
 
