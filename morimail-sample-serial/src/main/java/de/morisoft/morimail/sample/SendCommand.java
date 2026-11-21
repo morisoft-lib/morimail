@@ -109,9 +109,19 @@ final class SendCommand implements Callable<Integer> {
         PrintWriter err = spec.commandLine().getErr();
         List<String> problems = new ArrayList<>();
 
-        String id = campaignId != null
-                ? campaignId
-                : campaignDir.toAbsolutePath().normalize().getFileName().toString();
+        if (rate < 1) {
+            problems.add("--rate must be at least 1");
+        }
+        if (limit != null && limit < 1) {
+            problems.add("--limit must be at least 1");
+        }
+        Path dirName = campaignDir.toAbsolutePath().normalize().getFileName();
+        if (campaignId != null && campaignId.isBlank()) {
+            problems.add("--campaign-id must not be blank");
+        } else if (campaignId == null && dirName == null) {
+            problems.add("--campaign has no directory name; set --campaign-id");
+        }
+        String id = campaignId != null ? campaignId : dirName == null ? null : dirName.toString();
 
         int before = problems.size();
         AccountFile account = AccountFile.read(accountFile, problems);
