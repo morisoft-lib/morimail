@@ -30,6 +30,7 @@ out/
 *.iml
 *.jsonl
 account.properties
+!morimail-sample-serial/example-campaign/account.properties
 *.pfx
 
 # GSD review tool raw logs (workstation paths, session ids): never commit
