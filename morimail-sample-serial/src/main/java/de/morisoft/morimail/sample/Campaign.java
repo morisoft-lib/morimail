@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -105,6 +106,17 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
         }
         if (!header.contains("email")) {
             problems.add("recipients.csv: no column named 'email' in the header");
+            headerBroken = true;
+        }
+        Set<String> seen = new HashSet<>();
+        Set<String> repeated = new LinkedHashSet<>();
+        for (String cell : header) {
+            if (!seen.add(cell)) {
+                repeated.add(cell);
+            }
+        }
+        for (String name : repeated) {
+            problems.add("recipients.csv: column '" + name + "' appears more than once in the header");
             headerBroken = true;
         }
         Set<String> missing = new LinkedHashSet<>();
