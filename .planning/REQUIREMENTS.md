@@ -168,12 +168,83 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| REPO-01 | Phase 1 | Pending |
+| REPO-02 | Phase 1 | Pending |
+| REPO-03 | Phase 1 | Pending |
+| REPO-04 | Phase 1 | Pending |
+| REPO-05 | Phase 1 | Pending |
+| REPO-06 | Phase 1 | Pending |
+| REPO-07 | Phase 1 | Pending |
+| REPO-08 | Phase 3 | Pending |
+| REPO-09 | Phase 1 | Pending |
+| REPO-10 | Phase 1 | Pending |
+| REPO-11 | Phase 1 | Pending |
+| REPO-12 | Phase 1 | Pending |
+| MODEL-01 | Phase 1 | Pending |
+| MODEL-02 | Phase 1 | Pending |
+| MODEL-03 | Phase 1 | Pending |
+| MODEL-04 | Phase 1 | Pending |
+| MODEL-05 | Phase 1 | Pending |
+| TMPL-01 | Phase 1 | Pending |
+| TMPL-02 | Phase 1 | Pending |
+| TMPL-03 | Phase 1 | Pending |
+| TMPL-04 | Phase 1 | Pending |
+| CORE-01 | Phase 1 | Pending |
+| CORE-02 | Phase 1 | Pending |
+| CORE-03 | Phase 1 | Pending |
+| CORE-04 | Phase 1 | Pending |
+| CORE-05 | Phase 1 | Pending |
+| CORE-06 | Phase 1 | Pending |
+| CORE-07 | Phase 1 | Pending |
+| ERR-01 | Phase 1 | Pending |
+| ERR-02 | Phase 1 | Pending |
+| ENTRA-01 | Phase 3 | Pending |
+| ENTRA-02 | Phase 3 | Pending |
+| ENTRA-03 | Phase 3 | Pending |
+| ENTRA-04 | Phase 3 | Pending |
+| ENTRA-05 | Phase 3 | Pending |
+| ENTRA-06 | Phase 3 | Pending |
+| ENTRA-07 | Phase 3 | Pending |
+| ENTRA-08 | Phase 3 | Pending |
+| ENTRA-09 | Phase 3 | Pending |
+| GRAPH-01 | Phase 3 | Pending |
+| GRAPH-02 | Phase 3 | Pending |
+| GRAPH-03 | Phase 3 | Pending |
+| GRAPH-04 | Phase 3 | Pending |
+| GRAPH-05 | Phase 3 | Pending |
+| GRAPH-06 | Phase 3 | Pending |
+| GRAPH-07 | Phase 3 | Pending |
+| GRAPH-08 | Phase 3 | Pending |
+| GRAPH-09 | Phase 3 | Pending |
+| CLI-01 | Phase 2 | Pending |
+| CLI-02 | Phase 2 | Pending |
+| CLI-03 | Phase 2 | Pending |
+| CLI-04 | Phase 2 | Pending |
+| CLI-05 | Phase 2 | Pending |
+| CLI-06 | Phase 2 | Pending |
+| CLI-07 | Phase 2 | Pending |
+| CLI-08 | Phase 2 | Pending |
+| CLI-09 | Phase 2 | Pending |
+| CLI-10 | Phase 2 | Pending |
+| CLI-11 | Phase 2 | Pending |
+| CLI-12 | Phase 2 | Pending |
+| CLI-13 | Phase 2 | Pending |
+| CLI-14 | Phase 3 | Pending |
+| TEST-01 | Phase 3 | Pending |
+| TEST-02 | Phase 3 | Pending |
+| TEST-03 | Phase 3 | Pending |
+| DOCS-01 | Phase 4 | Pending |
+| DOCS-02 | Phase 4 | Pending |
+| DOCS-03 | Phase 4 | Pending |
+| DOCS-04 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 69 total
-- Mapped to phases: 0
-- Unmapped: 69 ⚠️
+- Mapped to phases: 69
+- Unmapped: 0 ✓
+
+**Per phase:** Phase 1: 29 · Phase 2: 13 · Phase 3: 23 · Phase 4: 4
 
 ---
 *Requirements defined: 2026-11-21*
-*Last updated: 2026-11-21 after initial definition*
+*Last updated: 2026-11-21 after roadmap creation (traceability mapped)*
