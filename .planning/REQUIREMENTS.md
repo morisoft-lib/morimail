@@ -88,7 +88,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 - [ ] **CLI-01**: `serial-mail send --account --campaign [--campaign-id] [--dry-run] [--out] [--limit N] [--rate 20] [--journal]` is a picocli command. The campaign ID defaults to the campaign directory name (§8.2).
 - [ ] **CLI-02**: `account.properties` is read as UTF-8 and supplies `account.id`, `tenantId`, `clientId` and `from`. The credential is either `certificate.path` + `certificate.passwordEnv` or `secretEnv`, and secrets come from environment variables only (§8.1).
-- [ ] **CLI-03**: The campaign directory supplies `subject.txt` (trailing newline trimmed), `body.html`, an optional `body.txt`, `recipients.csv` (required `email` column; all columns are fields) and `attachments/`, whose files are attached to every mail. All files are read as UTF-8 (§8.1, G2).
+- [x] **CLI-03**: The campaign directory supplies `subject.txt` (trailing newline trimmed), `body.html`, an optional `body.txt`, `recipients.csv` (required `email` column; all columns are fields) and `attachments/`, whose files are attached to every mail. All files are read as UTF-8 (§8.1, G2).
 - [ ] **CLI-04**: A hand-written RFC 4180 CSV reader handles commas only, quoted fields, CRLF and a BOM. A header that looks `;`-delimited produces a clear pre-flight error. No CSV library is used **[decided]** (G2).
 - [ ] **CLI-05**: Pre-flight checks everything before the first send: all placeholders exist as columns, every email is valid, and `mailer.validate` passes for the first row. It reports all problems together and exits with code 2 (§8.3).
 - [ ] **CLI-06**: The journal is append-only JSON lines, keyed by `campaignId:lowercase(email)` with `Locale.ROOT`. Each line records the key, email, timestamp, outcome and error class/message, and is flushed and forced after every line. A rerun skips rows already accepted. A failed journal write stops the run (§8.3).
@@ -218,7 +218,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRAPH-09 | Phase 3 | Pending |
 | CLI-01 | Phase 2 | Pending |
 | CLI-02 | Phase 2 | Pending |
-| CLI-03 | Phase 2 | Pending |
+| CLI-03 | Phase 2 | Complete |
 | CLI-04 | Phase 2 | Pending |
 | CLI-05 | Phase 2 | Pending |
 | CLI-06 | Phase 2 | Pending |

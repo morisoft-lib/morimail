@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 02
 current_phase_name: Serial-Mail Sample
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-11-21T17:10:49.782Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-11-21T17:53:49.703Z"
 last_activity: 2026-11-21
-last_activity_desc: Phase 01 complete, transitioned to Phase 2
-state_head: 9fb2164dc953ab0b3b393fa8bdb68f36b76db3e8
+last_activity_desc: Phase 02 execution started
+state_head: 22ac797eb25705726c28e9bafec207e824fae78e
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
+  completed_plans: 8
   percent: 25
 ---
 
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-21)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 2 — Serial-Mail Sample
+**Current focus:** Phase 02 — Serial-Mail Sample
 
 ## Current Position
 
-Phase: 02 (Serial-Mail Sample) — READY TO EXECUTE
-Plan: Not started
+Phase: 02 (Serial-Mail Sample) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-11-21 — Phase 01 complete, transitioned to Phase 2
+Last activity: 2026-11-21 — Phase 02 execution started
 
 Progress: [███░░░░░░░] 25%
 
@@ -63,6 +63,7 @@ Progress: [███░░░░░░░] 25%
 | Phase 01 P05 | 25 min | 3 tasks | 7 files |
 | Phase 01 P06 | 5 min | 3 tasks | 10 files |
 | Phase 01 P07 | 2 min | 1 tasks | 1 files |
+| Phase 02 P01 | 15 min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -88,6 +89,8 @@ Recent decisions affecting current work:
 - [Phase 01]: RecordingTransport checks failFor, then the failNext queue, then records; registry wraps ServiceConfigurationError with a fixed message and keeps the error as cause
 - [Phase 01]: 01-07: G-01-1 fixed by adding the nine @param tags to the MailMessage compact constructor Javadoc (not by dropping the comment); doclint all and failOnWarnings stay; Temurin 17 CI run after the owner pushes closes the gap
 - [Phase 01]: G-01-1 closed by Temurin 17 CI run 44912211934 (all three steps green, no Javadoc warning); UAT complete, SECURITY.md threats_open 0, phase complete 2026-11-21
+- [Phase 02]: A header-only recipients.csv yields no Campaign, so the command never indexes an empty row list
+- [Phase 02]: Jackson stays transitive through morimail; the sample POM gains only picocli
 
 ### Pending Todos
 
@@ -110,6 +113,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T14:40:12.911Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-serial-mail-sample/02-CONTEXT.md
+Last session: 2026-11-21T17:53:49.613Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None
