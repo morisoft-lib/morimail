@@ -412,7 +412,7 @@ static String safe(String email) {
     }
     return sb.toString();
 }
-// "%0" + width + "d-%s": width = String.valueOf(rowCount).length()  (see Open Question 3)
+// "%0" + width + "d-%s": width = Math.max(2, String.valueOf(rowCount).length())  (Open Question 3, RESOLVED by the owner: minimum width 2)
 String base = String.format("%0" + width + "d-%s", n, safe(email));
 ```
 
@@ -463,35 +463,43 @@ Executed in the scratch directory with stdlib Python only (no Pillow, no PDF too
 | A3 | A user's torn last journal line is best handled by "warn on stderr, ignore, resend that row" rather than a pre-flight failure | Pattern 3 | If the owner prefers a hard stop, a rerun after a crash needs a manual journal edit; flagged in Open Questions |
 | A4 | Counting the row that triggered a stop (exit 3) as `failed` and printing the counts line on a stop | Open Question 4 | Only affects counts display; exit code is 3 either way |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Does `--limit N` limit pre-flight too?**
    - Known: §8.2 says "process only the first N recipients"; §8.3.2 says "every row has a syntactically valid email".
    - Unclear: whether a bad row beyond N blocks a `--limit 1` verification run (DOCS-01 verification flow).
    - Recommendation: pre-flight checks the whole CSV (spec literal, no extra code), `--limit` only restricts the processing loop and the `[n/total]` total. Confirm with the owner when the plan is reviewed.
+   - RESOLVED: pre-flight checks every row of the file; `--limit` restricts only the processing loop, the dry-run writer and the `[n/total]` total. Source: planner choice in plan 02-03 (flagged assumption "Pre-flight ignores --limit", reversible in SendCommand if the owner prefers otherwise).
 
 2. **Trim the email cell?**
    - Known: the library rejects an address containing a space (`c <= ' '` in `MailAddress.invalidReason`), so a CSV cell `anna@example.org ` fails pre-flight with a "not allowed" message.
    - Recommendation: no silent trimming (the journal key and the mail must use the same string); the pre-flight message names the line. Header names are matched exactly.
+   - RESOLVED: no trimming of cells or header names; header names are matched exactly and case-sensitively, and an address cell with a space reaches `build()`, which rejects it with the line number. Source: planner choice in plan 02-01 (Campaign.read) and plan 02-02 (CampaignTest `headerNamesAreMatchedExactly`, `addressCellIsNotTrimmed`).
 
 3. **D-16 zero padding width.**
    - Known: "zero-padded to the width of the row count (`01-`, `02-` ...)". For the five-row example the width of `5` is one digit, giving `1-`, which contradicts the `01-` illustration.
    - Recommendation: planner picks one; the literal rule (`String.valueOf(rowCount).length()`) gives `1-..5-` for the example, a minimum width of 2 gives `01-..05-`. Tests assert whichever is chosen; ask the owner if it matters for the shipped example. Row count = rows processed (after `--limit`) is the natural reading.
+   - RESOLVED: minimum width 2, so width = max(2, digit count of the processed-row count): the five-row example gives `01-` to `05-`, 120 rows give `001-` to `120-`. Source: owner decision (2026-11-21, plan revision); implemented in plan 02-01 Task 2 and pinned by DryRunTest and ExampleCampaignTest (plan 02-04).
 
 4. **What happens to counts on the exit-3 stop?**
    - Known: §8.3.10 prints counts at the end; D-07 says the last attempt's line is `failed`.
    - Recommendation: journal a `failed` line for the stopping row, count it as failed, leave later rows unprocessed (neither counted), print the stop reason on stderr and the counts line on stdout, exit 3.
+   - RESOLVED: as recommended: the stopping row gets a `failed` journal line and counts as failed, later rows are neither processed nor counted, the stop reason goes to stderr and the counts line to stdout, exit 3. Source: planner choice in plan 02-03 Task 1 (flagged assumption "Counts on a stop").
 
 5. **Damaged journal lines.**
    - Recommendation in Pattern 3 (warn, ignore, newline repair). A damaged line in the middle (not the tail) is treated the same way.
+   - RESOLVED: a damaged line anywhere in the file is reported as `warning: <file> line <n> is damaged and was ignored`, never counts as accepted (the row is sent again, at-least-once), and a missing final line feed is repaired before the first append; it is never a pre-flight stop. Source: planner choice in plan 02-03 Task 3 (Assumption A3).
 
 6. **Missing `attachments/` directory.**
    - Known: CLI-03 lists `attachments/` without "optional" (unlike `body.txt`); the library accepts mails with no attachments.
    - Recommendation: absent or empty directory means no attachments, shown as "attachments: none" in the dry-run output so a typo is visible.
+   - RESOLVED: as recommended: an absent or empty `attachments/` directory means no attachments, and the dry-run prints `attachments: none`. Source: planner choice in plan 02-01 (Task 1 Campaign.read, Task 2 DryRunTest).
 
 7. **Spec §8.3.1 vs D-01.** The spec builds the token provider and `Mailer` before reading template and CSV; the locked D-01/D-02 define a different order for Phase 2. Locked decisions win; no action beyond following them.
+   - RESOLVED: the locked D-01/D-02 order is followed (account file, campaign files, row builds, then the Mailer factory and `mailer.validate` on a real run only, then the journal). Source: owner decisions D-01 and D-02 in 02-CONTEXT.md; implemented in plan 02-01 Task 1.
 
 8. **`recipients.csv` pre-flight with campaign-wide defects** (unreadable attachment fails every row identically): accept N lines or check once (Pattern 5). Planner choice.
+   - RESOLVED: accept one problem line per failing row (`recipients.csv line <n>: <message>`), the simplest correct form. Source: planner choice in plan 02-01 Task 1 (flagged assumption "Campaign-wide build problems").
 
 ## Environment Availability
 
