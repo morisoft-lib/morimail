@@ -18,9 +18,9 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [x] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (release build scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
 - [ ] **REPO-08**: `mvn verify` passes with no network access. A JUnit test tagged `live` is excluded by default and enabled with `-Plive`; the owner runs it, configured through environment variables (§10.1).
 - [x] **REPO-09**: `release` profile with the source, Javadoc (doclint, fail on warnings), GPG and `central-publishing-maven-plugin` plugins (`autoPublish=false`). The test-jar is built for reactor use only, with `attach=false` under `release` **[decided]**. The sample sets `skipPublishing`, `maven.deploy.skip` and the source/javadoc/gpg skips, so only `morimail-parent` and `morimail` are staged (§13.3).
-- [ ] **REPO-10**: Public types have Javadoc that states thread safety and builds cleanly under doclint from the first phase (§11, §13.3).
+- [x] **REPO-10**: Public types have Javadoc that states thread safety and builds cleanly under doclint from the first phase (§11, §13.3).
 - [x] **REPO-11**: Public-repo hygiene. No secrets, tenant IDs, real addresses or hosts appear in any file or commit; examples use `example.com`/`example.org` and zero GUIDs. Every commit has author and committer Stephan Wald <stephan@morisoft.de>, overriding the workspace's `GIT_*` environment variables (§11, §13.4).
-- [ ] **REPO-12**: A plain JUnit test enforces the import rules. The core imports only the JDK, except the built-in list; `graph` and `entra` don't import each other (§4).
+- [x] **REPO-12**: A plain JUnit test enforces the import rules. The core imports only the JDK, except the built-in list; `graph` and `entra` don't import each other (§4).
 
 ### Mail Model and Builder (MODEL)
 
@@ -177,9 +177,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REPO-07 | Phase 1 | Complete |
 | REPO-08 | Phase 3 | Pending |
 | REPO-09 | Phase 1 | Complete |
-| REPO-10 | Phase 1 | Pending |
+| REPO-10 | Phase 1 | Complete |
 | REPO-11 | Phase 1 | Complete |
-| REPO-12 | Phase 1 | Pending |
+| REPO-12 | Phase 1 | Complete |
 | MODEL-01 | Phase 1 | Pending |
 | MODEL-02 | Phase 1 | Pending |
 | MODEL-03 | Phase 1 | Pending |
