@@ -2,6 +2,7 @@ package de.morisoft.morimail;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceConfigurationError;
 import java.util.ServiceLoader;
 import java.util.TreeMap;
 
@@ -29,22 +30,52 @@ final class TransportRegistry {
     }
 
     /**
-     * Builds a registry from the given providers. The built-in ones are inserted first.
+     * Builds a registry from the given providers. The built-in ones are registered first. Ids are
+     * compared exactly, so {@code recording} and {@code Recording} are different ids.
+     *
+     * <p>An external provider that reuses the id of a built-in or of an earlier external provider
+     * is an error, never an override: a transport id must always select the same provider. This is
+     * configuration integrity, not a sandbox, because the service loader has already created
+     * every provider when its id is read.
      *
      * @param builtIn the built-in providers
      * @param external the providers found through the service loader
      * @return a new registry
+     * @throws IllegalStateException if a provider has no id, an id is registered twice, or the
+     *     service loader fails; the messages name ids and provider classes only, and the service
+     *     loader's own error is kept as the cause
      */
     static TransportRegistry of(List<TransportProvider> builtIn,
             Iterable<TransportProvider> external) {
         TransportRegistry registry = new TransportRegistry();
         for (TransportProvider provider : builtIn) {
-            registry.providers.put(provider.id(), provider);
+            registry.register(provider, builtIn);
         }
-        for (TransportProvider provider : external) {
-            registry.providers.put(provider.id(), provider);
+        try {
+            for (TransportProvider provider : external) {
+                registry.register(provider, builtIn);
+            }
+        } catch (ServiceConfigurationError e) {
+            // Lazy discovery can fail in iterator(), hasNext() or next(). The wrapper text is
+            // fixed: the error's own message is provider-generated and stays in the cause.
+            throw new IllegalStateException(
+                    "Cannot load a transport provider through ServiceLoader (see the cause)", e);
         }
         return registry;
+    }
+
+    private void register(TransportProvider provider, List<TransportProvider> builtIn) {
+        String id = provider.id();
+        if (id == null || id.isBlank()) {
+            throw new IllegalStateException(
+                    "Transport provider " + provider.getClass().getName() + " has no id");
+        }
+        TransportProvider existing = providers.putIfAbsent(id, provider);
+        if (existing != null) {
+            throw new IllegalStateException("Transport id '" + id + "' from "
+                    + provider.getClass().getName() + " is already registered by "
+                    + existing.getClass().getName() + (builtIn.contains(existing) ? " (built-in)" : ""));
+        }
     }
 
     /**

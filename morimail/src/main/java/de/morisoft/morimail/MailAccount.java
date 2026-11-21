@@ -130,6 +130,8 @@ public final class MailAccount {
          * @return the account
          * @throws IllegalArgumentException if the account id or the transport id is missing, the
          *     transport id is unknown, or the default sender is not a valid address
+         * @throws IllegalStateException if the transport registry cannot be loaded: a provider on
+         *     the classpath has no id, two providers share an id, or the service loader fails
          * @throws NullPointerException if an option key or value is {@code null}
          */
         public MailAccount build() {
