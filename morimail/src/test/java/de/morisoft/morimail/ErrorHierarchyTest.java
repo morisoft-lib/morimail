@@ -1,6 +1,7 @@
 package de.morisoft.morimail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -48,5 +49,13 @@ class ErrorHierarchyTest {
         assertThat(new InvalidMailException("m", cause).getCause()).isSameAs(cause);
         assertThat(new SenderRejectedException("m", cause).getCause()).isSameAs(cause);
         assertThat(new AuthRequiredException("m", cause).getCause()).isSameAs(cause);
+    }
+
+    @Test
+    void negativeRetryAfterIsRejected() {
+        assertThatThrownBy(() -> new TransientMailException("m", Duration.ofSeconds(-1)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThat(new TransientMailException("m", Duration.ZERO).retryAfter())
+                .contains(Duration.ZERO);
     }
 }

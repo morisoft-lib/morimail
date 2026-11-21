@@ -40,9 +40,13 @@ public class TransientMailException extends MailException {
      *
      * @param message the detail message
      * @param retryAfter the delay the service asked for, or {@code null} for none
+     * @throws IllegalArgumentException if the delay is negative
      */
     public TransientMailException(String message, Duration retryAfter) {
         super(message);
+        if (retryAfter != null && retryAfter.isNegative()) {
+            throw new IllegalArgumentException("retryAfter must not be negative");
+        }
         this.retryAfter = retryAfter;
     }
 
