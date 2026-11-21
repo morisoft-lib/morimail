@@ -13,7 +13,8 @@ package de.morisoft.morimail;
  *       the apostrophe become character references. {@code $$!name$$} inserts the value
  *       unchanged. Use it only for values you trust: escaping does not make a value safe inside
  *       an attribute such as {@code href} or {@code style}, or inside a {@code script} element.
- *   <li>In the subject every line break inside a value becomes one space.
+ *   <li>In the subject every line break inside a value becomes one space. A line break is any
+ *       Unicode line break, not only carriage return and line feed.
  *   <li>In the text part a value is inserted unchanged.
  * </ul>
  *

@@ -204,7 +204,9 @@ public record Mail(String accountId, MailMessage message) {
         }
 
         /**
-         * Sets the subject.
+         * Sets the subject. {@link #build()} rejects a carriage return or line feed in it. A
+         * subject that comes from a template value is stricter: every Unicode line break
+         * (including U+0085, U+2028 and U+2029) becomes a space.
          *
          * @param subject the subject line
          * @return this builder
