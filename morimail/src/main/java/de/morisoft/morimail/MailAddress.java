@@ -5,7 +5,9 @@ package de.morisoft.morimail;
  *
  * <p>This record is immutable and safe to share between threads. The values are kept exactly as
  * given: no trimming, case folding or other normalization. {@link Mail.Builder#build()} checks the
- * address before a transport sees it.
+ * address before a transport sees it: exactly one {@code @}, and no whitespace, control character
+ * or any of {@code , ; < > ( ) [ ] \ "} in the email. The display name is checked for line breaks
+ * only; a transport that builds MIME headers quotes or encodes it.
  *
  * @param email the address, for example {@code reader@example.org}
  * @param displayName the name shown next to the address, or {@code null} for none
@@ -51,6 +53,12 @@ public record MailAddress(String email, String displayName) {
         }
         if (hasLineBreak(email)) {
             return "email contains a line break";
+        }
+        for (int i = 0; i < email.length(); i++) {
+            char c = email.charAt(i);
+            if (c <= ' ' || c == 0x7f || ",;<>()[]\\\":".indexOf(c) >= 0) {
+                return "email contains a character that is not allowed";
+            }
         }
         if (address.displayName() != null && hasLineBreak(address.displayName())) {
             return "display name contains a line break";

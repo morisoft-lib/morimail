@@ -86,11 +86,11 @@ class MailModelTest {
 
     @Test
     void mailAddressKeepsValuesExactlyAsGiven() throws Exception {
-        MailAddress address = MailAddress.of(" A@Example.org ", "  N  ");
+        MailAddress address = MailAddress.of("A@Example.org", "  N  ");
 
         Mail mail = valid().to(address).build();
 
-        assertThat(mail.message().to().get(0).email()).isEqualTo(" A@Example.org ");
+        assertThat(mail.message().to().get(0).email()).isEqualTo("A@Example.org");
         assertThat(mail.message().to().get(0).displayName()).isEqualTo("  N  ");
     }
 }

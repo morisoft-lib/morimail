@@ -160,6 +160,19 @@ class MailBuilderTest {
     }
 
     @Test
+    void rejectsCharactersThatBreakAHeader() {
+        for (String bad : List.of("a,b@example.org", "a b@example.org", "a;b@example.org",
+                "x<y@example.org", "\"@example.org", "a\0b@example.org", "a\tb@example.org")) {
+            assertThatThrownBy(() -> Mail.using("main").to(bad).subject("Hello").text("Body")
+                    .build())
+                    .isInstanceOf(InvalidMailException.class)
+                    .hasMessageContaining("to[0]")
+                    .hasMessageContaining("not allowed")
+                    .message().doesNotContain(bad);
+        }
+    }
+
+    @Test
     void invalidReasonReportsLineBreakInDisplayName() {
         assertThat(MailAddress.invalidReason(MailAddress.of("reader@example.org", "Line\nBreak")))
                 .isEqualTo("display name contains a line break");
