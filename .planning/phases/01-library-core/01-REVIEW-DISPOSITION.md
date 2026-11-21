@@ -9,7 +9,7 @@ findings:
     title: "Address validation accepts characters that break MIME headers (recipient injection)"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Explicit `Attachment` filename and content type are not validated"
   - id: WR-03
     severity: warning
@@ -17,7 +17,7 @@ findings:
     title: "`Mailer.send` and `Mailer.validate` throw a raw `NullPointerException` for a directly constructed `Mail` with a null account ID"
   - id: WR-04
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "CI job has no `timeout-minutes`"
   - id: WR-05
     severity: warning
@@ -25,7 +25,7 @@ findings:
     title: "`fileDeletedAfterBuildStillSends` pins a contract that only the fixture satisfies"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: skipped
     title: "Initial commit carries a different author identity"
   - id: IN-02
     severity: info
@@ -49,11 +49,11 @@ findings:
     title: "Provider failures other than `ServiceConfigurationError` are not wrapped, and a null transport is not rejected"
   - id: IN-07
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Maven wrapper downloads the distribution without a checksum"
-open: 12
+open: 8
 total: 12
-recorded: 2026-11-21T13:26:07.406Z
+recorded: 2026-11-21T13:35:07.461Z
 ---
 
 # Phase 01: Code Review Disposition
@@ -61,17 +61,17 @@ recorded: 2026-11-21T13:26:07.406Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-01 | warning | open | - |
-| WR-02 | warning | open | - |
+| WR-02 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-03 | warning | open | - |
-| WR-04 | warning | open | - |
+| WR-04 | warning | fixed | 01-REVIEW-FIX.md |
 | WR-05 | warning | open | - |
-| IN-01 | info | open | - |
+| IN-01 | info | skipped | 01-REVIEW-FIX.md |
 | IN-02 | info | open | - |
 | IN-03 | info | open | - |
 | IN-04 | info | open | - |
 | IN-05 | info | open | - |
 | IN-06 | info | open | - |
-| IN-07 | info | open | - |
+| IN-07 | info | fixed | 01-REVIEW-FIX.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
