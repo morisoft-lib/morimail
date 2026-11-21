@@ -548,7 +548,7 @@ Fetched 2026-11-21 from Microsoft Learn. Confidence HIGH for everything quoted f
 - Microsoft Learn, certificate credentials: https://learn.microsoft.com/en-us/entra/identity-platform/certificate-credentials (HIGH)
 - Microsoft Learn, OAuth 2.0 client credentials flow: https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-client-creds-grant-flow (HIGH)
 - Microsoft Q&A, sendMail request size limit (community answers about a roughly 4 MB JSON ceiling, unofficial): https://learn.microsoft.com/en-in/answers/questions/1824204/graph-api-user-sendmail-request-size-limit (LOW)
-- Project documents: `/home/coder/morimail/spec.md` (binding), `/home/coder/morimail/.planning/PROJECT.md`
+- Project documents: `spec.md` (binding), `.planning/PROJECT.md`
 
 ---
 *Architecture research for: morimail (Java 17 mail library, Graph transport, Entra client credentials, picocli sample)*

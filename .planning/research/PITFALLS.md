@@ -559,7 +559,7 @@ Common codes to recognise in docs and tests (MEDIUM, observed on forums and in t
 - Sonatype, "Publishing By Using the Maven Plugin", https://central.sonatype.org/publish/publish-portal-maven (HIGH for plugin existence; `excludeArtifacts` classifier behaviour unverified)
 - Jackson 3.0 GA announcement, https://cowtowncoder.medium.com/jackson-3-0-0-ga-released-1f669cda529a and migration guide, https://raw.githubusercontent.com/FasterXML/jackson/master/jackson3/MIGRATING_TO_JACKSON_3.md (MEDIUM-HIGH)
 - Apache Maven Wrapper plugin docs, https://maven.apache.org/plugins/maven-wrapper-plugin/wrapper-mojo.html (MEDIUM-HIGH)
-- Project files read: `/home/coder/morimail/spec.md`, `/home/coder/morimail/.planning/PROJECT.md`, `/home/coder/morimail/.gitignore`
+- Project files read: `spec.md`, `.planning/PROJECT.md`, `.gitignore`
 - Standing knowledge (JDK 17 behaviour of `Matcher`, `Properties.load`, default charset, `HttpClient`, `RSASSA-PSS`, picocli exit codes): not re-verified this session, MEDIUM-HIGH
 
 ---
