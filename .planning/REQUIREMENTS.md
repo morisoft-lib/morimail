@@ -14,7 +14,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [x] **REPO-03**: The parent POM carries the Central metadata: name, description, URL `https://github.com/morisoft-lib/morimail`, MIT license, developer Stephan Wald <stephan@morisoft.de>, SCM (§13.3).
 - [x] **REPO-04**: The library's only runtime dependency is `jackson-databind` 2.23.x, managed through `jackson-bom` **[decided]**. Test stack: JUnit Jupiter 6.x via `junit-bom`, a deliberate deviation from the spec's "JUnit 5" **[decided]** (owner 2026-11-21), AssertJ, `org.wiremock:wiremock` 3.x. picocli is in the sample only (§3).
 - [x] **REPO-05**: The library jar manifest has `Automatic-Module-Name: de.morisoft.morimail`. There is no `module-info.java`.
-- [ ] **REPO-06**: The repository holds `LICENSE` (MIT), a `README.md` stub (pre-1.0 status, coordinates), `SECURITY.md` (private reporting channel), `CLAUDE.md` with the §11 rules, and `docs/spec.md`, moved from the root (§4, §13.1).
+- [x] **REPO-06**: The repository holds `LICENSE` (MIT), a `README.md` stub (pre-1.0 status, coordinates), `SECURITY.md` (private reporting channel), `CLAUDE.md` with the §11 rules, and `docs/spec.md`, moved from the root (§4, §13.1).
 - [x] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (release build scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
 - [ ] **REPO-08**: `mvn verify` passes with no network access. A JUnit test tagged `live` is excluded by default and enabled with `-Plive`; the owner runs it, configured through environment variables (§10.1).
 - [x] **REPO-09**: `release` profile with the source, Javadoc (doclint, fail on warnings), GPG and `central-publishing-maven-plugin` plugins (`autoPublish=false`). The test-jar is built for reactor use only, with `attach=false` under `release` **[decided]**. The sample sets `skipPublishing`, `maven.deploy.skip` and the source/javadoc/gpg skips, so only `morimail-parent` and `morimail` are staged (§13.3).
@@ -40,7 +40,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 ### Accounts, Registry and Mailer (CORE)
 
 - [ ] **CORE-01**: The SPI is `MailTransport` (`validate`, `send`), `TransportProvider` (`id`, `create(options, auth)`, auth may be null) and `@FunctionalInterface TokenProvider`. None of them contains anything Graph-specific (§2, §5).
-- [ ] **CORE-02**: `TokenProvider` has a default method `freshAccessToken(scope, rejectedToken)` that delegates to `accessToken`, so a transport can get a new token after a 401 without importing `entra`. This is recorded as a deviation from §7.3 **[decided]**.
+- [x] **CORE-02**: `TokenProvider` has a default method `freshAccessToken(scope, rejectedToken)` that delegates to `accessToken`, so a transport can get a new token after a 401 without importing `entra`. This is recorded as a deviation from §7.3 **[decided]**.
 - [ ] **CORE-03**: The registry combines an explicit built-in list with `ServiceLoader`. An external provider whose ID duplicates another provider's fails with `IllegalStateException` when the registry loads (§2).
 - [ ] **CORE-04**: `MailAccount.builder(id).transport(..).auth(..).option(..).defaultFrom(..).build()` resolves the transport through the registry. An unknown ID fails with `IllegalArgumentException` listing the available IDs. Options are passed through unread by the core (§2, §5.1).
 - [ ] **CORE-05**: `Mailer.of(accounts...)` holds accounts by ID. `validate(mail)` applies `defaultFrom` and runs the transport's `validate`; `send(mail)` does the same, then sends. An unknown account ID raises `PermanentMailException` (§5.1, §5.2).
@@ -50,7 +50,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 ### Errors (ERR)
 
 - [ ] **ERR-01**: The checked hierarchy is `MailException`, which has `TransientMailException` (`Optional<Duration> retryAfter`), `PermanentMailException` (with `InvalidMailException` and `SenderRejectedException` beneath it) and `AuthRequiredException` (§5.2).
-- [ ] **ERR-02**: `MailTransport.send` Javadoc and the README state that a normal return means accepted, not delivered, and that retrying after a timeout can deliver a mail twice (at-least-once) **[decided]**.
+- [x] **ERR-02**: `MailTransport.send` Javadoc and the README state that a normal return means accepted, not delivered, and that retrying after a timeout can deliver a mail twice (at-least-once) **[decided]**.
 
 ### Entra Token Client (ENTRA)
 
@@ -173,7 +173,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REPO-03 | Phase 1 | Complete |
 | REPO-04 | Phase 1 | Complete |
 | REPO-05 | Phase 1 | Complete |
-| REPO-06 | Phase 1 | Pending |
+| REPO-06 | Phase 1 | Complete |
 | REPO-07 | Phase 1 | Complete |
 | REPO-08 | Phase 3 | Pending |
 | REPO-09 | Phase 1 | Complete |
@@ -190,14 +190,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TMPL-03 | Phase 1 | Pending |
 | TMPL-04 | Phase 1 | Pending |
 | CORE-01 | Phase 1 | Pending |
-| CORE-02 | Phase 1 | Pending |
+| CORE-02 | Phase 1 | Complete |
 | CORE-03 | Phase 1 | Pending |
 | CORE-04 | Phase 1 | Pending |
 | CORE-05 | Phase 1 | Pending |
 | CORE-06 | Phase 1 | Pending |
 | CORE-07 | Phase 1 | Pending |
 | ERR-01 | Phase 1 | Pending |
-| ERR-02 | Phase 1 | Pending |
+| ERR-02 | Phase 1 | Complete |
 | ENTRA-01 | Phase 3 | Pending |
 | ENTRA-02 | Phase 3 | Pending |
 | ENTRA-03 | Phase 3 | Pending |

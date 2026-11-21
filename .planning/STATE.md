@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Library Core
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-11-21T13:00:03.544Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-11-21T13:02:30.813Z"
 last_activity: 2026-11-21
 last_activity_desc: Phase 01 execution started
-state_head: 59f14d1cbc952c73da102d32d4602b1e9ae0f7e1
+state_head: 5e679c271bd011e0fa4be6479f11cb6443185fcd
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 6
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-21)
 ## Current Position
 
 Phase: 01 (Library Core) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-11-21 — Phase 01 execution started
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | Phase 01 P01 | 20min | 2 tasks | 9 files |
+| Phase 01 P02 | 5min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -71,6 +72,7 @@ Recent decisions affecting current work:
 - [Init]: Jackson 2.23.x via `jackson-bom`, JUnit 6.x, `changeit` test keystore, reactor-only test-jar, Graph `baseUrl` option, comma-only CSV, at-least-once documented, and a `freshAccessToken` default on `TokenProvider`.
 - [Phase 01]: Release builds use -pl morimail -am (D-20): an unattached test-jar is unresolvable in a packaging full-reactor build
 - [Phase 01]: wiremock and picocli are version-managed in the parent but declared by no module until Phase 3 / Phase 2
+- [Phase 01]: Spec copied byte for byte to docs/spec.md and root copy removed after the committed blob hash was verified; deviations (freshAccessToken, Map<String, ?>, unchecked config errors, JUnit 6, reactor-only test-jar) recorded in docs/architecture.md
 
 ### Pending Todos
 
@@ -95,6 +97,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T13:00:03.506Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-11-21T13:02:30.770Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None
