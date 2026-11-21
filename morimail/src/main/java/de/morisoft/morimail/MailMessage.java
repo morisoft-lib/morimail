@@ -9,6 +9,9 @@ import java.util.List;
  * copies. Direct construction does not validate anything, and a {@code null} list throws
  * {@link NullPointerException}. {@link Mail.Builder#build()} is the validating path.
  *
+ * <p>{@code toString()} prints the addresses, the bodies and the attachment paths, so do not log
+ * a message as a whole.
+ *
  * @param from the sender, or {@code null} to use the account's default sender
  * @param to the primary recipients
  * @param cc the copy recipients
