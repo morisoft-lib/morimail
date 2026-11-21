@@ -8,9 +8,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -23,6 +29,9 @@ import java.util.stream.Stream;
  * @param attachments the regular files of {@code attachments/}, sorted by file name
  */
 record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
+
+    /** The placeholder pattern of the core's template renderer, copied so both agree on every name. */
+    static final Pattern PLACEHOLDER = Pattern.compile("\\$\\$(!?)([A-Za-z0-9_.-]+)\\$\\$");
 
     /**
      * One recipient row.
@@ -85,8 +94,24 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
             return null;
         }
         List<String> header = records.get(0).cells();
+        boolean headerBroken = false;
+        for (String cell : header) {
+            if (cell.contains(";")) {
+                problems.add("recipients.csv: the header looks ';'-delimited; "
+                        + "this reader accepts commas only");
+                headerBroken = true;
+                break;
+            }
+        }
         if (!header.contains("email")) {
             problems.add("recipients.csv: no column named 'email' in the header");
+            headerBroken = true;
+        }
+        Set<String> missing = new LinkedHashSet<>();
+        missing.addAll(missingColumns("subject.txt", subject, header, problems));
+        missing.addAll(missingColumns("body.html", html, header, problems));
+        missing.addAll(missingColumns("body.txt", text, header, problems));
+        if (headerBroken) {
             return null;
         }
         List<Row> rows = new ArrayList<>();
@@ -98,10 +123,25 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
                 continue;
             }
             Map<String, String> fields = new LinkedHashMap<>();
+            for (String name : missing) {
+                fields.put(name, "");
+            }
             for (int i = 0; i < header.size(); i++) {
                 fields.put(header.get(i), cells.get(i));
             }
             rows.add(new Row(record.line(), Collections.unmodifiableMap(fields)));
+        }
+        Map<String, Integer> firstSeen = new HashMap<>();
+        for (Row row : rows) {
+            String email = row.email();
+            if (email.isBlank()) {
+                continue;
+            }
+            Integer first = firstSeen.putIfAbsent(email.toLowerCase(Locale.ROOT), row.line());
+            if (first != null) {
+                problems.add("recipients.csv line " + row.line()
+                        + ": duplicate address, first seen in line " + first);
+            }
         }
         if (records.size() == 1) {
             problems.add("recipients.csv: no recipient rows");
@@ -109,6 +149,34 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
         }
         return new Campaign(new MailTemplate(subject, html, text), List.copyOf(rows),
                 List.copyOf(attachments));
+    }
+
+    /**
+     * The placeholder names of a template text in order of first appearance, {@code $$name$$} and
+     * {@code $$!name$$} alike.
+     */
+    static Set<String> placeholders(String text) {
+        Set<String> names = new LinkedHashSet<>();
+        if (text != null) {
+            Matcher matcher = PLACEHOLDER.matcher(text);
+            while (matcher.find()) {
+                names.add(matcher.group(2));
+            }
+        }
+        return names;
+    }
+
+    /** Adds one problem for every placeholder of {@code text} that is no header cell; returns those names. */
+    private static Set<String> missingColumns(String file, String text, List<String> header,
+            List<String> problems) {
+        Set<String> missing = new LinkedHashSet<>();
+        for (String name : placeholders(text)) {
+            if (!header.contains(name)) {
+                problems.add(file + ": placeholder $$" + name + "$$ has no column in recipients.csv");
+                missing.add(name);
+            }
+        }
+        return missing;
     }
 
     /**
