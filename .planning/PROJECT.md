@@ -24,7 +24,7 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 - [ ] Accounts built in code (`MailAccount`: id, transport, auth, options, defaultFrom) and a `Mailer` holding accounts by ID, with `validate` and `send`
 - [ ] Transport SPI (`MailTransport`, `TransportProvider`, `TokenProvider`) with a registry: built-in explicit list plus `ServiceLoader`; external duplicates of a built-in ID fail; unknown ID fails at account build with the list of available IDs
 - [ ] Error hierarchy: `MailException` → `TransientMailException` (retryAfter), `PermanentMailException` → `InvalidMailException`, `SenderRejectedException`; `AuthRequiredException`
-- [ ] `RecordingTransport` in library test sources, published as a test-jar, registered via `ServiceLoader` as `recording`
+- [ ] `RecordingTransport` in library test sources, built as a test-jar shared inside the reactor only (`attach=false` under `release`, never published), registered via `ServiceLoader` as `recording`
 - [ ] Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping
 - [ ] Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, 3 MB per-file and total limit in `validate`, error mapping table, one retry after 401 with a fresh token
 - [ ] Serial-mail CLI (picocli): account.properties, campaign dir, pre-flight check (exit 2), journal + resume, rate limit, transient retry ×3, stop on sender/auth errors (exit 3), dry-run output, counts and exit codes
@@ -104,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-21 after initialization*
+*Last updated: 2026-11-21 during Phase 1 planning (reactor-only test-jar wording)*

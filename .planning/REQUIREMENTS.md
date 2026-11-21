@@ -12,7 +12,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [ ] **REPO-01**: Maven reactor: parent `de.morisoft:morimail-parent`, library `morimail`, sample `morimail-sample-serial`, version `0.1.0-SNAPSHOT`. Java 17 via `maven.compiler.release=17`. All plugin and dependency versions are pinned and verified on Maven Central at implementation time (§3, §13.2).
 - [ ] **REPO-02**: The Maven wrapper is checked in, script-only type, pinned to Maven 3.x (never Maven 4) (§3).
 - [ ] **REPO-03**: The parent POM carries the Central metadata: name, description, URL `https://github.com/morisoft-lib/morimail`, MIT license, developer Stephan Wald <stephan@morisoft.de>, SCM (§13.3).
-- [ ] **REPO-04**: The library's only runtime dependency is `jackson-databind` 2.23.x, managed through `jackson-bom` **[decided]**. Test stack: JUnit Jupiter 6.x, AssertJ, `org.wiremock:wiremock` 3.x. picocli is in the sample only (§3).
+- [ ] **REPO-04**: The library's only runtime dependency is `jackson-databind` 2.23.x, managed through `jackson-bom` **[decided]**. Test stack: JUnit Jupiter 6.x via `junit-bom`, a deliberate deviation from the spec's "JUnit 5" **[decided]** (owner 2026-11-21), AssertJ, `org.wiremock:wiremock` 3.x. picocli is in the sample only (§3).
 - [ ] **REPO-05**: The library jar manifest has `Automatic-Module-Name: de.morisoft.morimail`. There is no `module-info.java`.
 - [ ] **REPO-06**: The repository holds `LICENSE` (MIT), a `README.md` stub (pre-1.0 status, coordinates), `SECURITY.md` (private reporting channel), `CLAUDE.md` with the §11 rules, and `docs/spec.md`, moved from the root (§4, §13.1).
 - [ ] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip` on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
@@ -247,4 +247,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-11-21*
-*Last updated: 2026-11-21 after roadmap creation (traceability mapped)*
+*Last updated: 2026-11-21 during Phase 1 planning (REPO-04 JUnit 6 owner decision marked)*

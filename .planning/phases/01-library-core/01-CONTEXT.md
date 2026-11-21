@@ -20,6 +20,7 @@ Requirements: REPO-01..07, REPO-09..12, MODEL-01..05, TMPL-01..04, CORE-01..07, 
 - **D-02:** `to`/`cc`/`bcc` take varargs for both forms (`to(String...)`, `to(MailAddress...)`). Repeated calls append to the list.
 - **D-02a:** `template(MailTemplate t, Map<String, ?> data)` takes `Map<String, ?>`, not the spec's `Map<String, Object>`, so typed maps such as a CSV row `Map<String,String>` compile. Recorded as a deliberate spec deviation in `docs/architecture.md`. — **Reversibility:** one-way (public signature). *(Owner decision 2026-11-21.)*
 - **D-02b:** The pre-existing first commit `8c9b082` (different author address) is left as is; no history rewrite. Hygiene checks treat it as the one known exception, and the owner decides before publishing. *(Owner decision 2026-11-21.)*
+- **D-02c:** The test engine is JUnit Jupiter 6.1.3 via `junit-bom`, not the spec's "JUnit 5" (§3); same `org.junit.jupiter` API, Java 17 baseline. Recorded as a deliberate spec deviation in `docs/architecture.md`. — **Reversibility:** reversible (test scope only). *(Owner decision 2026-11-21.)*
 - **D-03:** `from()` and `replyTo()` are single-valued, and a second call replaces the first (last call wins).
 - **D-04:** `template(t, data)` and an explicit `subject()`/`html()`/`text()` cannot be combined. `build()` throws `InvalidMailException` if both are set. There are no precedence rules.
 - **D-05:** `build()` reports the **first** problem it finds, as one `InvalidMailException` that names it. It does not collect all problems (the sample's pre-flight aggregates across rows itself).

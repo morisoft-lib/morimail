@@ -472,6 +472,7 @@ No `pull_request_target`, no secrets, no live test. The wrapper must be committe
 **Verified:** `javac --release 17` + run printed `named:a@example.org|b@example.org` for two string arguments, `varargs:1` for one, `varargs:3` for three, `varargs:2` for a `String[]` [VERIFIED: executed this session].
 **How to avoid (stays inside the locked decisions):** (a) keep the overloads exactly as D-01/D-02 say; (b) in `build()`, reject a display name that contains `@` with a message such as `display name 'x' looks like an email address; to add several recipients pass one address per call or use MailAddress...`; (c) put a `<strong>` warning in the Javadoc of the named overload; (d) add a `MailBuilderTest` row that asserts the guard fires. This is a one-line rule, stays within Rule 0, and turns a silent wrong-recipient bug into a loud `InvalidMailException`. Flagged for the owner in Open Question 1 because the cleaner fix (a different method name for the named form) would change a locked decision.
 **Warning signs:** a display name that looks like an address in dry-run output; a campaign mail with one recipient fewer than expected.
+**Superseded (2026-11-21):** the owner revised D-01 and dropped the `(String email, String displayName)` overload, so this hazard no longer exists and the guard in "How to avoid" is not built. See Open Question 1 (RESOLVED).
 
 ### Pitfall 2: Regex replacement syntax corrupts data values (TMPL-02)
 **What goes wrong:** `Matcher.appendReplacement`/`replaceAll` interpret `$1` and `\` in the value; a price, a Windows path or `$5 Fund` throws or loses characters.
@@ -626,40 +627,42 @@ Map.ofEntries(
 | A6 | Phase 1 `verify` stays green with `jackson-databind` declared but unused | Open Question 7 | None expected; it is a normal compile dependency |
 | A7 | Declaring `RecordingTransport` in package `de.morisoft.morimail.test` does not conflict with the main jar on the classpath | Pattern 6 | None expected; different package |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **D-01 + D-02 overload hazard (needs a planner/owner acknowledgement).**
+All ten questions are resolved. Q1, Q2 and Q5 were decided by the owner (CONTEXT.md D-01 revised, D-02a, D-02b, all 2026-11-21); the other seven are adopted as recommended during planning and implemented by the plan named in each entry.
+
+1. **D-01 + D-02 overload hazard.** RESOLVED (owner, revised D-01): the `(String email, String displayName)` overload was dropped; a display name is given only through `MailAddress.of(email, displayName)`, so two bare strings can never become email plus display name, and the `@` guard recommended below is moot and not built. Plans 01-03 and 01-05 gate that no builder method takes two strings for one address.
    - What we know: reproduced; two bare strings become email plus display name.
    - What's unclear: whether the owner accepts the guard (reject a display name containing `@`) or prefers renaming the named form.
    - Recommendation: implement the guard and the Javadoc warning now, inside the locked decisions; surface the rename option once in the plan summary. The overload set is a one-way door after 0.1.0.
 
-2. **`Map<String, ?>` vs spec's `Map<String, Object>` for template data.**
+2. **`Map<String, ?>` vs spec's `Map<String, Object>` for template data.** RESOLVED (owner, D-02a): `template(MailTemplate, Map<String, ?>)`, recorded as a spec deviation in `docs/architecture.md` (plan 01-02) and proven at compile time by `TemplatedSendTest` with a `Map<String, String>` (plan 01-05).
    - Recommendation: use `Map<String, ?>` (accepts everything the spec accepts, plus typed CSV rows). Record in `docs/architecture.md`. One-way door, so decide before the first commit of `Mail.Builder`.
 
-3. **`TemplateRenderer` visibility.**
+3. **`TemplateRenderer` visibility.** RESOLVED (adopted as recommended): package-private final class (plan 01-05).
    - Recommendation: package-private. Phase 2 dry-run reads the built message; nothing outside the core needs to call the renderer. Widening later is non-breaking, narrowing is not. `MailTemplate` stays public.
 
-4. **A present-but-null data value.**
+4. **A present-but-null data value.** RESOLVED (adopted as recommended): `String.valueOf` gives the text `null`, only an absent key is missing; pinned by `TemplateRendererTest` (plan 01-05).
    - Recommendation: follow the spec literally (`String.valueOf` gives `null`; absent key is the only "missing" case, tested with `containsKey`) and pin it with a test. Note in Javadoc.
 
-5. **Pre-existing first commit author address.**
+5. **Pre-existing first commit author address.** RESOLVED (owner, D-02b): `8c9b082` is left unchanged, no history rewrite; every identity gate checks `8c9b082..HEAD` and treats it as the one known exception, and the owner decides before publishing.
    - What we know: `8c9b082` has a different author address and committer GitHub; everything after is correct.
    - What's unclear: whether the owner wants it left (history rewrite is invasive once public) or accepted.
    - Recommendation: do not rewrite; mention it at the phase verification and let the owner decide. The hygiene check `git log` therefore expects one known exception.
 
-6. **Scrub absolute paths from committed research docs.**
+6. **Scrub absolute paths from committed research docs.** RESOLVED (adopted as recommended): plan 01-02 Task 1 makes the two references repo-relative and runs the whole-tree hygiene gates (in wave 2, right after the build skeleton).
    - Recommendation: include a small first-wave task replacing the two `/home/...` references with repo-relative paths, then run the hygiene greps.
 
-7. **What to declare in Phase 1 POMs.**
+7. **What to declare in Phase 1 POMs.** RESOLVED (adopted as recommended): plan 01-01 manages every version in the parent and declares `jackson-databind`, `junit-jupiter` and `assertj-core` in the library; WireMock and picocli are declared when first used (Phases 3 and 2); the `live` profile arrives in Phase 3.
    - Recommendation: manage every version in the parent (`dependencyManagement`, BOM imports); declare `jackson-databind`, `junit-jupiter` and `assertj-core` in the library POM now (REPO-04 is a Phase 1 requirement); declare WireMock and picocli only when first used (Phases 3 and 2). Add the `live` profile and `excludedGroups` properties in Phase 3.
 
-8. **Sample smoke test in Phase 1.**
+8. **Sample smoke test in Phase 1.** RESOLVED (adopted as recommended): `RecordingTestJarSmokeTest` in plan 01-04, run in the default and the release build. A planning probe showed the sample's test-jar dependency fails `-Prelease` while the library has no test classes, so plan 01-04 adds that dependency together with the fixture.
    - Recommendation: one test in `morimail-sample-serial` asserts `MailAccount.builder("x").transport("recording").build().transport()` is a `RecordingTransport`. It proves the test-jar and its services file reach the sample, including under `-Prelease verify` with `attach=false`, which Phase 2 depends on. Accept the empty-jar warning (Pitfall 16).
 
-9. **Direct-constructed `Mail` bypasses `build()` validation.**
+9. **Direct-constructed `Mail` bypasses `build()` validation.** RESOLVED (adopted as recommended): `Mailer` does not re-validate; the `Mail` and `MailMessage` Javadoc name `build()` as the validating path (plans 01-03 and 01-04).
    - Recommendation: do not re-validate in `Mailer` (Rule 0; the transport's `validate` guards its own limits). Mention in `Mail` Javadoc that `build()` is the validating path.
 
-10. **CI Java matrix.**
+10. **CI Java matrix.** RESOLVED (adopted as recommended): one Java 17 job (plan 01-01 Task 2).
     - Recommendation: keep one job on Java 17 as REPO-07 says. Local development on 21 provides the stricter doclint run.
 
 ## Environment Availability
