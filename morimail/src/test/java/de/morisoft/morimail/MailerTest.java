@@ -168,4 +168,16 @@ class MailerTest {
         assertThat(recording.sent()).hasSize(2);
         assertThat(recording.attempts()).isEqualTo(2);
     }
+
+    @Test
+    void directlyConstructedMailWithoutAccountIdOrMessageIsRejectedAsMailException() {
+        Mailer mailer = Mailer.of(account("main", "newsletter@example.com"));
+
+        assertThatThrownBy(() -> mailer.send(new Mail(null, null)))
+                .isInstanceOf(PermanentMailException.class)
+                .hasMessageContaining("Unknown account");
+        assertThatThrownBy(() -> mailer.validate(new Mail("main", null)))
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessageContaining("message");
+    }
 }

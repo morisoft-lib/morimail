@@ -63,13 +63,17 @@ public final class Mailer {
     }
 
     private Prepared prepare(Mail mail) throws PermanentMailException {
-        MailAccount account = accounts.get(mail.accountId());
+        String id = mail.accountId();
+        MailAccount account = id == null ? null : accounts.get(id);
         if (account == null) {
             String known = accounts.isEmpty() ? "(none)" : String.join(", ", new TreeSet<>(accounts.keySet()));
             throw new PermanentMailException(
-                    "Unknown account '" + mail.accountId() + "'. Known accounts: " + known);
+                    "Unknown account '" + id + "'. Known accounts: " + known);
         }
         MailMessage message = mail.message();
+        if (message == null) {
+            throw new InvalidMailException("message is missing");
+        }
         if (message.from() == null) {
             MailAddress from = account.defaultFrom().orElseThrow(() -> new InvalidMailException(
                     "No sender: set from() on the mail or defaultFrom() on account '"
