@@ -68,7 +68,7 @@ None. The discussion stayed within phase scope.
 
 ## Project Constraints (from CLAUDE.md)
 
-Extracted from `/home/coder/morimail/CLAUDE.md` and `/home/coder/morimail/.claude/CLAUDE.md`. Treat as locked.
+Extracted from `CLAUDE.md` and `.claude/CLAUDE.md`. Treat as locked.
 
 - **Rule 0:** simplest code that meets the spec. Only two extension points (`TransportProvider`, `TokenProvider`). No new interface, SPI, factory, strategy or abstract base class unless two real implementations exist. No frameworks, DI, annotation processing or reflection (picocli's own runtime reflection is the accepted exception, per the stack research). Prefer one clear class over several forwarding classes. "If a requirement seems to need something elaborate, stop and ask."
 - **Dependencies:** ask before adding any. picocli 4.7.7 is already approved for the sample only. No CSV library. No shade plugin.
@@ -170,7 +170,7 @@ Verified wiring for the runnable jar (scratch build, offline, Maven 3.10.1 wrapp
   </plugins>
 </build>
 ```
-Both plugins are already pinned in the parent `pluginManagement` (`maven-jar-plugin` 3.5.1, `maven-dependency-plugin` 3.11.0 [VERIFIED: /home/coder/morimail/pom.xml:126-129, 150-153]). `includeScope=runtime` kept the `test` scope morimail test-jar out of `target/lib`. The result is run as `java -jar target/morimail-sample-serial-0.1.0-SNAPSHOT.jar send ...`.
+Both plugins are already pinned in the parent `pluginManagement` (`maven-jar-plugin` 3.5.1, `maven-dependency-plugin` 3.11.0 [VERIFIED: pom.xml:126-129, 150-153]). `includeScope=runtime` kept the `test` scope morimail test-jar out of `target/lib`. The result is run as `java -jar target/morimail-sample-serial-0.1.0-SNAPSHOT.jar send ...`.
 
 **Version verification:** picocli 4.7.7 confirmed as the latest release on Maven Central today (command above). The dependency-plugin 3.11.0 and picocli 4.7.7 jars are already in `~/.m2`, which is why the offline build passed.
 
@@ -358,7 +358,7 @@ Not a rename, refactor or migration phase: omitted.
 **How to avoid:** Account pre-flight messages name keys only ("account.properties: missing key 'tenantId'", "exactly one credential form is required"). The Phase 3 factory must follow the same rule when an env var is unset. Mention it in the factory stub comment.
 
 ### Pitfall 4: `.gitignore` swallows the example account file
-**What goes wrong:** [VERIFIED: /home/coder/morimail/.gitignore lines 28-32] it contains `out/`, `*.jsonl`, `account.properties` (and `*.jar`, `*.zip`). `git check-ignore -v morimail-sample-serial/example-campaign/account.properties` reports `.gitignore:32:account.properties`. The example would never be committed, and dry-run (which always reads the account file, D-03) would fail on a fresh clone; success criterion 1 breaks.
+**What goes wrong:** [VERIFIED: .gitignore lines 28-32] it contains `out/`, `*.jsonl`, `account.properties` (and `*.jar`, `*.zip`). `git check-ignore -v morimail-sample-serial/example-campaign/account.properties` reports `.gitignore:32:account.properties`. The example would never be committed, and dry-run (which always reads the account file, D-03) would fail on a fresh clone; success criterion 1 breaks.
 **How to avoid:** add after line 32: `!morimail-sample-serial/example-campaign/account.properties`. Verified in a scratch repo: the example path is then not ignored while `other/account.properties` still is. Alternative: ship `account.example.properties`, but the CONTEXT/spec examples and tests use `account.properties`. Also expect: `recipients.csv`, `body.*`, `attachments/*.pdf|png` are not ignored (checked); `journal.jsonl` and `out/` stay ignored (wanted).
 
 ### Pitfall 5: Reading files with a BOM or bad bytes
@@ -442,7 +442,7 @@ int code = cl.execute("send", "--account", acct.toString(), "--campaign", dir.to
 Scripted failures: `rec.failFor("bob@example.org", new AuthRequiredException("denied"))`, `rec.failNext(new TransientMailException("busy", Duration.ofSeconds(7)), ...)`, `rec.failValidation(new InvalidMailException("too big"))`, then `rec.sent()` and `rec.attempts()`. A "rerun" test builds a fresh `MailAccount` (new `RecordingTransport` per account) and reuses the same journal path.
 
 ### Fixture generator (run once, not part of the build)
-Executed in the scratch directory with stdlib Python only (no Pillow, no PDF tool exists on this machine). Output: `logo.png` 15 619 bytes, 240x120, only IHDR/IDAT/IEND chunks (no tEXt/time/ICC), re-read successfully by `javax.imageio.ImageIO`; `info.pdf` 602 bytes, hand-written PDF 1.4 with correct xref offsets, no `/Info`, `/Producer`, `/Creator` or dates (`strings | grep -ci producer\|creator\|author` -> 0). The generator text is at `/tmp/claude-1000/-home-coder-morimail/c504dddd-f32c-4871-a71f-e8cc8bd9d849/scratchpad/gen/make_fixtures.py` (scratchpad; may be cleared, so the executing plan should recreate it from the description: PNG = signature + IHDR + IDAT(zlib level 9 of filter-0 RGB gradient rows) + IEND; PDF = catalog, pages, one page, one Helvetica text stream, xref table, trailer without `/Info`). Do not commit the script into the build. The byte output is deterministic for a given zlib build; the committed binaries are the source of truth.
+Executed in the scratch directory with stdlib Python only (no Pillow, no PDF tool exists on this machine). Output: `logo.png` 15 619 bytes, 240x120, only IHDR/IDAT/IEND chunks (no tEXt/time/ICC), re-read successfully by `javax.imageio.ImageIO`; `info.pdf` 602 bytes, hand-written PDF 1.4 with correct xref offsets, no `/Info`, `/Producer`, `/Creator` or dates (`strings | grep -ci producer\|creator\|author` -> 0). The generator text is at a session scratch directory that is not kept (scratchpad; may be cleared, so the executing plan should recreate it from the description: PNG = signature + IHDR + IDAT(zlib level 9 of filter-0 RGB gradient rows) + IEND; PDF = catalog, pages, one page, one Helvetica text stream, xref table, trailer without `/Info`). Do not commit the script into the build. The byte output is deterministic for a given zlib build; the committed binaries are the source of truth.
 
 ## State of the Art
 
