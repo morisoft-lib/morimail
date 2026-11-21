@@ -2,6 +2,7 @@ package de.morisoft.morimail.sample;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -39,8 +40,14 @@ record AccountFile(String id, String tenantId, String clientId, String from,
         Properties properties = new Properties();
         try (BufferedReader reader = Files.newBufferedReader(file)) {
             properties.load(reader);
+        } catch (MalformedInputException e) {
+            problems.add(name + " is not valid UTF-8");
+            return null;
         } catch (IOException e) {
             problems.add(name + ": cannot be read");
+            return null;
+        } catch (IllegalArgumentException e) {
+            problems.add(name + ": contains a malformed unicode escape");
             return null;
         }
         AccountFile account = new AccountFile(
@@ -55,6 +62,18 @@ record AccountFile(String id, String tenantId, String clientId, String from,
         require(name, "tenantId", account.tenantId, problems);
         require(name, "clientId", account.clientId, problems);
         require(name, "from", account.from, problems);
+        boolean hasPath = account.certificatePath != null;
+        boolean hasPasswordEnv = account.certificatePasswordEnv != null;
+        boolean hasSecret = account.secretEnv != null;
+        if (hasSecret && (hasPath || hasPasswordEnv)) {
+            problems.add(name + ": use either certificate.path with certificate.passwordEnv, "
+                    + "or secretEnv, not both");
+        } else if (!hasSecret && !hasPath && !hasPasswordEnv) {
+            problems.add(name + ": no credential: set certificate.path and "
+                    + "certificate.passwordEnv, or secretEnv");
+        } else if (!hasSecret && hasPath != hasPasswordEnv) {
+            problems.add(name + ": certificate.path and certificate.passwordEnv must be set together");
+        }
         return account;
     }
 
