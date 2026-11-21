@@ -48,13 +48,17 @@ final class Journal implements Closeable {
 
     /**
      * Reads the keys that were accepted in an earlier run and opens the file for appending. A line
-     * that cannot be read is an error, never a silent "accepted".
+     * that is not a JSON object is reported in {@code warnings} and ignored, so it never counts as
+     * accepted and its row is sent again. A file that does not end with a line feed (a torn last
+     * line) gets one, so the next record starts on its own line.
      */
     static Journal open(Path file, List<String> warnings) throws IOException {
         Set<String> accepted = new HashSet<>();
+        boolean needsLineFeed = false;
         if (Files.isRegularFile(file)) {
-            String content = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-            String[] lines = content.split("\n", -1);
+            byte[] bytes = Files.readAllBytes(file);
+            needsLineFeed = bytes.length > 0 && bytes[bytes.length - 1] != '\n';
+            String[] lines = new String(bytes, StandardCharsets.UTF_8).split("\n", -1);
             for (int i = 0; i < lines.length; i++) {
                 if (lines[i].isBlank()) {
                     continue;
@@ -63,10 +67,12 @@ final class Journal implements Closeable {
                 try {
                     node = MAPPER.readTree(lines[i]);
                 } catch (IOException e) {
-                    throw new IOException(file.getFileName() + " line " + (i + 1) + " cannot be read");
+                    node = null;
                 }
                 if (node == null || !node.isObject()) {
-                    throw new IOException(file.getFileName() + " line " + (i + 1) + " cannot be read");
+                    warnings.add(file.getFileName() + " line " + (i + 1)
+                            + " is damaged and was ignored");
+                    continue;
                 }
                 JsonNode outcome = node.get("outcome");
                 JsonNode key = node.get("key");
@@ -76,7 +82,12 @@ final class Journal implements Closeable {
                 }
             }
         }
-        return new Journal(FileChannel.open(file, CREATE, WRITE, APPEND), accepted);
+        FileChannel channel = FileChannel.open(file, CREATE, WRITE, APPEND);
+        if (needsLineFeed) {
+            channel.write(ByteBuffer.wrap(new byte[] {'\n'}));
+            channel.force(true);
+        }
+        return new Journal(channel, accepted);
     }
 
     /** Tells whether an earlier attempt for this key was accepted. */
@@ -87,7 +98,7 @@ final class Journal implements Closeable {
     /**
      * Appends one line and forces it to the device.
      *
-     * @param outcome {@code accepted} or {@code failed}
+     * @param outcome {@code accepted}, {@code transient} or {@code failed}
      * @param error the failure, or null
      */
     void append(String key, String email, String outcome, MailException error) throws IOException {

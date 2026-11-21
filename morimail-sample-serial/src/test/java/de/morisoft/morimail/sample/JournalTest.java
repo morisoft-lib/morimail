@@ -285,6 +285,7 @@ class JournalTest {
         }, new ArrayList<>(), "send");
 
         assertThat(run.exit()).isEqualTo(2);
-        assertThat(run.err()).contains("the next run sends it again");
+        // picocli wraps the footer at the terminal width, so compare with line breaks folded
+        assertThat(run.err().replaceAll("\\s+", " ")).contains("the next run sends it again");
     }
 }

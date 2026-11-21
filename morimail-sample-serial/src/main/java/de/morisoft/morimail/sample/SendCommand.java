@@ -32,7 +32,9 @@ import picocli.CommandLine.Spec;
  * <p>Not thread-safe: one instance runs one command line.
  */
 @Command(name = "send",
-        description = "Sends one mail per row of recipients.csv, or renders them with --dry-run.")
+        description = "Sends one mail per row of recipients.csv, or renders them with --dry-run.",
+        footer = "A mail that is in flight when the run is stopped has no journal line, "
+                + "so the next run sends it again.")
 final class SendCommand implements Callable<Integer> {
 
     @Spec
@@ -184,6 +186,11 @@ final class SendCommand implements Callable<Integer> {
             err.flush();
             return 2;
         }
+
+        for (String warning : warnings) {
+            err.println("warning: " + warning);
+        }
+        err.flush();
 
         if (dryRun) {
             return writeDryRun(campaign, mails, out, err);
