@@ -86,16 +86,16 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Serial-Mail CLI Sample (CLI)
 
-- [ ] **CLI-01**: `serial-mail send --account --campaign [--campaign-id] [--dry-run] [--out] [--limit N] [--rate 20] [--journal]` is a picocli command. The campaign ID defaults to the campaign directory name (§8.2).
+- [x] **CLI-01**: `serial-mail send --account --campaign [--campaign-id] [--dry-run] [--out] [--limit N] [--rate 20] [--journal]` is a picocli command. The campaign ID defaults to the campaign directory name (§8.2).
 - [ ] **CLI-02**: `account.properties` is read as UTF-8 and supplies `account.id`, `tenantId`, `clientId` and `from`. The credential is either `certificate.path` + `certificate.passwordEnv` or `secretEnv`, and secrets come from environment variables only (§8.1).
 - [x] **CLI-03**: The campaign directory supplies `subject.txt` (trailing newline trimmed), `body.html`, an optional `body.txt`, `recipients.csv` (required `email` column; all columns are fields) and `attachments/`, whose files are attached to every mail. All files are read as UTF-8 (§8.1, G2).
 - [x] **CLI-04**: A hand-written RFC 4180 CSV reader handles commas only, quoted fields, CRLF and a BOM. A header that looks `;`-delimited produces a clear pre-flight error. No CSV library is used **[decided]** (G2).
 - [x] **CLI-05**: Pre-flight checks everything before the first send: all placeholders exist as columns, every email is valid, and `mailer.validate` passes for the first row. It reports all problems together and exits with code 2 (§8.3).
-- [ ] **CLI-06**: The journal is append-only JSON lines, keyed by `campaignId:lowercase(email)` with `Locale.ROOT`. Each line records the key, email, timestamp, outcome and error class/message, and is flushed and forced after every line. A rerun skips rows already accepted. A failed journal write stops the run (§8.3).
-- [ ] **CLI-07**: Sends are spaced evenly according to `--rate` (mails per minute, default 20); skipped rows don't wait (§8.3).
-- [ ] **CLI-08**: On `TransientMailException`, the sample waits `retryAfter` (capped) or 30 s and retries up to 3 times, then records the failure and continues. On another `PermanentMailException`, it records and continues (§8.3).
-- [ ] **CLI-09**: On `SenderRejectedException` or `AuthRequiredException`, the run stops at once with exit code 3 (§8.3).
-- [ ] **CLI-10**: The sample prints one progress line per recipient, and at the end prints the accepted/skipped/failed counts. The exit code is 0 only if nothing failed (§8.3, G6).
+- [x] **CLI-06**: The journal is append-only JSON lines, keyed by `campaignId:lowercase(email)` with `Locale.ROOT`. Each line records the key, email, timestamp, outcome and error class/message, and is flushed and forced after every line. A rerun skips rows already accepted. A failed journal write stops the run (§8.3).
+- [x] **CLI-07**: Sends are spaced evenly according to `--rate` (mails per minute, default 20); skipped rows don't wait (§8.3).
+- [x] **CLI-08**: On `TransientMailException`, the sample waits `retryAfter` (capped) or 30 s and retries up to 3 times, then records the failure and continues. On another `PermanentMailException`, it records and continues (§8.3).
+- [x] **CLI-09**: On `SenderRejectedException` or `AuthRequiredException`, the run stops at once with exit code 3 (§8.3).
+- [x] **CLI-10**: The sample prints one progress line per recipient, and at the end prints the accepted/skipped/failed counts. The exit code is 0 only if nothing failed (§8.3, G6).
 - [ ] **CLI-11**: `--dry-run` writes `out/<n>-<email>.html`, `.txt` and `.subject.txt` with sanitised file names and lists the attachments. It touches neither the network nor the journal and works without the secret or certificate env vars (§8.3, G7).
 - [x] **CLI-12**: The command logic takes a `Mailer`, so tests run it against `recording` (journal, resume, skip on rerun, stop on auth error, pre-flight report, dry-run) (§10.1).
 - [ ] **CLI-13**: The example campaign in `morimail-sample-serial/example-campaign/` has three placeholders, a generated PDF and PNG (each under 100 KB, neutral metadata) and five `example.org` rows (§8.1).
@@ -216,16 +216,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRAPH-07 | Phase 3 | Pending |
 | GRAPH-08 | Phase 3 | Pending |
 | GRAPH-09 | Phase 3 | Pending |
-| CLI-01 | Phase 2 | Pending |
+| CLI-01 | Phase 2 | Complete |
 | CLI-02 | Phase 2 | Pending |
 | CLI-03 | Phase 2 | Complete |
 | CLI-04 | Phase 2 | Complete |
 | CLI-05 | Phase 2 | Complete |
-| CLI-06 | Phase 2 | Pending |
-| CLI-07 | Phase 2 | Pending |
-| CLI-08 | Phase 2 | Pending |
-| CLI-09 | Phase 2 | Pending |
-| CLI-10 | Phase 2 | Pending |
+| CLI-06 | Phase 2 | Complete |
+| CLI-07 | Phase 2 | Complete |
+| CLI-08 | Phase 2 | Complete |
+| CLI-09 | Phase 2 | Complete |
+| CLI-10 | Phase 2 | Complete |
 | CLI-11 | Phase 2 | Pending |
 | CLI-12 | Phase 2 | Complete |
 | CLI-13 | Phase 2 | Pending |

@@ -81,7 +81,7 @@ Scope notes:
   3. Run against `recording`, each row is sent once, with one progress line per recipient and one forced journal line per attempt. Rerunning the same campaign sends nothing and counts every row as skipped.
   4. A transient failure waits `retryAfter` (capped) or 30 s and is retried up to 3 times, then recorded, and the run continues. A sender-rejected or auth-required failure stops the run at once with exit code 3. The run ends by printing accepted, skipped and failed counts, and exits 0 only if nothing failed.
   5. Sends are spaced by `--rate` and skipped rows don't wait. `--limit`, `--campaign-id` and `--journal` behave as specified. `account.properties` and the campaign files are read as UTF-8, secrets come from env vars only, and `./mvnw verify` stays green offline.
-**Plans:** 2/4 plans executed (wave 1: 02-01; wave 2: 02-02, 02-03, 02-04)
+**Plans:** 3/4 plans executed (wave 1: 02-01; wave 2: 02-02, 02-03, 02-04)
 
 Plans:
 **Wave 1**
@@ -89,7 +89,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion; 02-02, 02-03 and 02-04 share no file)*
 - [x] 02-02-PLAN.md — Pre-flight reports every problem of a broken campaign at once (placeholders vs columns, `;` header, duplicates, CSV edge cases, credential form, no echoed values), exit 2
-- [ ] 02-03-PLAN.md — Transient retry with capped waits, stop with exit 3 on sender/auth errors, `--rate`/`--limit`/`--campaign-id`/`--journal` and argument checks, damaged-line warnings and stop on a failed journal write
+- [x] 02-03-PLAN.md — Transient retry with capped waits, stop with exit 3 on sender/auth errors, `--rate`/`--limit`/`--campaign-id`/`--journal` and argument checks, damaged-line warnings and stop on a failed journal write
 - [ ] 02-04-PLAN.md — The shipped example campaign (three placeholders, five `example.org` rows, PDF and PNG without metadata) and the runnable jar that dry-runs it on a fresh clone
 **UI hint**: no
 
@@ -163,6 +163,6 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
-| 2. Serial-Mail Sample | 2/4 | In Progress | - |
+| 2. Serial-Mail Sample | 3/4 | In Progress | - |
 | 3. Graph and Entra | 0/0 | Not started | - |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |
