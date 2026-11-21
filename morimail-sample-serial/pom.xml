@@ -29,6 +29,12 @@
       <artifactId>morimail</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.morisoft</groupId>
+      <artifactId>morimail</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
