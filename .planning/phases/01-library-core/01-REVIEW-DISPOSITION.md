@@ -53,25 +53,25 @@ findings:
     title: "Maven wrapper downloads the distribution without a checksum"
 open: 0
 total: 12
-recorded: 2026-11-21T13:35:19.671Z
+recorded: 2026-11-21T14:02:05.027Z
 ---
 
 # Phase 01: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-04 | warning | fixed | 01-REVIEW-FIX.md |
-| WR-05 | warning | fixed | 01-REVIEW-FIX.md |
-| IN-01 | info | skipped | 01-REVIEW-FIX.md |
-| IN-02 | info | fixed | 01-REVIEW-FIX.md |
-| IN-03 | info | fixed | 01-REVIEW-FIX.md |
-| IN-04 | info | fixed | 01-REVIEW-FIX.md |
-| IN-05 | info | fixed | 01-REVIEW-FIX.md |
-| IN-06 | info | fixed | 01-REVIEW-FIX.md |
-| IN-07 | info | fixed | 01-REVIEW-FIX.md |
+| WR-01 | warning | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| WR-02 | warning | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| WR-03 | warning | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| WR-04 | warning | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| WR-05 | warning | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| IN-01 | info | skipped | 01-REVIEW-FIX.md (not in the current review) |
+| IN-02 | info | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| IN-03 | info | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| IN-04 | info | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| IN-05 | info | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| IN-06 | info | fixed | 01-REVIEW-FIX.md (not in the current review) |
+| IN-07 | info | fixed | 01-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
