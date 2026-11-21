@@ -2,6 +2,7 @@ package de.morisoft.morimail.sample;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -15,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -70,6 +72,10 @@ class ExampleCampaignTest {
                 .isEqualTo("Welcome to the November update, Anna");
         assertThat(run.outLines().get(run.outLines().size() - 1))
                 .isEqualTo("dry run: 5 mails written to " + out);
+        // pdf and png come from the core's built-in extension table, so this holds on every host
+        assertThat(run.outLines().get(0))
+                .startsWith("attachments: info.pdf (application/pdf, ")
+                .contains("logo.png (image/png, ");
     }
 
     @Test
@@ -110,5 +116,50 @@ class ExampleCampaignTest {
         assertThat(account.certificatePath()).isEqualTo("/path/app.p12");
         assertThat(account.certificatePasswordEnv()).isEqualTo("MAIL_CERT_PASSWORD");
         assertThat(account.secretEnv()).isNull();
+    }
+
+    @Test
+    void attachmentsAreSmallAndCarryNoMetadata() throws IOException {
+        Path pdfFile = CAMPAIGN.resolve("attachments").resolve("info.pdf");
+        Path pngFile = CAMPAIGN.resolve("attachments").resolve("logo.png");
+        assertThat(Files.size(pdfFile)).isLessThan(102400);
+        assertThat(Files.size(pngFile)).isLessThan(102400);
+
+        BufferedImage image = ImageIO.read(pngFile.toFile());
+        assertThat(image.getWidth()).isEqualTo(240);
+        assertThat(image.getHeight()).isEqualTo(120);
+        assertThat(pngChunkTypes(Files.readAllBytes(pngFile))).containsExactly("IHDR", "IDAT", "IEND");
+
+        String pdf = new String(Files.readAllBytes(pdfFile), StandardCharsets.ISO_8859_1);
+        assertThat(pdf).startsWith("%PDF-1.4");
+        assertThat(pdf).matches("(?s).*%%EOF\\n?");
+        for (String key : List.of("Info", "Producer", "Creator", "Author", "CreationDate", "ModDate")) {
+            assertThat(pdf).as("PDF key /" + key).doesNotContain("/" + key);
+        }
+        int xref = pdf.indexOf("\nxref\n") + 1;
+        assertThat(xref).isPositive();
+        Matcher startxref = Pattern.compile("startxref\\n(\\d+)\\n").matcher(pdf);
+        assertThat(startxref.find()).isTrue();
+        assertThat(Integer.parseInt(startxref.group(1))).isEqualTo(xref);
+        Matcher entries = Pattern.compile("(\\d{10}) 00000 n \\n").matcher(pdf);
+        int count = 0;
+        while (entries.find()) {
+            count++;
+            int offset = Integer.parseInt(entries.group(1));
+            assertThat(pdf.startsWith(count + " 0 obj", offset)).as("object " + count).isTrue();
+        }
+        assertThat(count).isEqualTo(5);
+    }
+
+    private static List<String> pngChunkTypes(byte[] png) {
+        List<String> types = new ArrayList<>();
+        int pos = 8;
+        while (pos < png.length) {
+            int length = ((png[pos] & 0xff) << 24) | ((png[pos + 1] & 0xff) << 16)
+                    | ((png[pos + 2] & 0xff) << 8) | (png[pos + 3] & 0xff);
+            types.add(new String(png, pos + 4, 4, StandardCharsets.US_ASCII));
+            pos += 12 + length;
+        }
+        return types;
     }
 }
