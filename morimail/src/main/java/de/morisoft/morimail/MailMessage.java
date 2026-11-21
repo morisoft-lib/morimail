@@ -29,6 +29,15 @@ public record MailMessage(MailAddress from, List<MailAddress> to, List<MailAddre
     /**
      * Copies the four lists so the message cannot change after construction.
      *
+     * @param from the sender, or {@code null} to use the account's default sender
+     * @param to the primary recipients
+     * @param cc the copy recipients
+     * @param bcc the blind copy recipients
+     * @param replyTo the reply address, or {@code null} for none
+     * @param subject the subject line
+     * @param html the HTML body, or {@code null} for none
+     * @param text the plain text body, or {@code null} for none
+     * @param attachments the attached files
      * @throws NullPointerException if one of the four lists is {@code null}
      */
     public MailMessage {
