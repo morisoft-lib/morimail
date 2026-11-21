@@ -25,6 +25,10 @@ public interface MailTransport {
      * {@link PermanentMailException} (do not retry this mail) or an {@link AuthRequiredException}
      * (the credentials of the account are unusable).
      *
+     * <p>An attachment file that cannot be read at send time, for example because it was deleted
+     * after {@link Mail.Builder#build()}, is reported as an {@link InvalidMailException} that names
+     * the file and never carries its content.
+     *
      * @param message the message, with a sender already applied
      * @throws MailException if the service did not accept the message
      */

@@ -519,7 +519,7 @@ class MailBuilderTest {
     }
 
     @Test
-    void fileDeletedAfterBuildStillSends() throws Exception {
+    void recordingTransportDoesNotReadAttachmentFiles() throws Exception {
         Path file = file("agenda.pdf");
         MailAccount account = MailAccount.builder("main").transport("recording")
                 .defaultFrom("newsletter@example.com").build();
