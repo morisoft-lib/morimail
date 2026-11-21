@@ -164,11 +164,12 @@ final class SendCommand implements Callable<Integer> {
             }
         }
 
+        List<String> warnings = new ArrayList<>();
         Journal journal = null;
         Path journalPath = journalFile != null ? journalFile : campaignDir.resolve("journal.jsonl");
         if (problems.isEmpty() && !dryRun) {
             try {
-                journal = Journal.open(journalPath);
+                journal = Journal.open(journalPath, warnings);
             } catch (IOException e) {
                 problems.add("journal " + journalPath + " cannot be opened: "
                         + e.getClass().getSimpleName() + ": " + e.getMessage());

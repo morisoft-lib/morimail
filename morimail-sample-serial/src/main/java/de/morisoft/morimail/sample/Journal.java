@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +50,7 @@ final class Journal implements Closeable {
      * Reads the keys that were accepted in an earlier run and opens the file for appending. A line
      * that cannot be read is an error, never a silent "accepted".
      */
-    static Journal open(Path file) throws IOException {
+    static Journal open(Path file, List<String> warnings) throws IOException {
         Set<String> accepted = new HashSet<>();
         if (Files.isRegularFile(file)) {
             String content = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
