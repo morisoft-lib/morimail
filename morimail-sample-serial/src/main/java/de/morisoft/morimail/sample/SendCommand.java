@@ -1,12 +1,15 @@
 package de.morisoft.morimail.sample;
 
+import de.morisoft.morimail.Attachment;
 import de.morisoft.morimail.InvalidMailException;
 import de.morisoft.morimail.Mail;
 import de.morisoft.morimail.MailException;
+import de.morisoft.morimail.MailMessage;
 import de.morisoft.morimail.Mailer;
 import de.morisoft.morimail.PermanentMailException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -43,6 +46,14 @@ final class SendCommand implements Callable<Integer> {
     @Option(names = "--campaign-id",
             description = "Prefix of the journal keys. Default: the name of the campaign directory.")
     String campaignId;
+
+    @Option(names = "--dry-run",
+            description = "Write the rendered mails to --out and send nothing.")
+    boolean dryRun;
+
+    @Option(names = "--out", defaultValue = "out", paramLabel = "DIR",
+            description = "Where --dry-run writes the rendered mails. Default: ${DEFAULT-VALUE}.")
+    Path outDir;
 
     @Option(names = "--limit", description = "Process only the first N recipients.")
     Integer limit;
@@ -103,7 +114,7 @@ final class SendCommand implements Callable<Integer> {
         }
 
         Mailer mailer = null;
-        if (accountOk) {
+        if (accountOk && !dryRun) {
             try {
                 mailer = mailerFactory.apply(account);
             } catch (IllegalStateException | IllegalArgumentException e) {
@@ -121,7 +132,7 @@ final class SendCommand implements Callable<Integer> {
 
         Journal journal = null;
         Path journalPath = journalFile != null ? journalFile : campaignDir.resolve("journal.jsonl");
-        if (problems.isEmpty()) {
+        if (problems.isEmpty() && !dryRun) {
             try {
                 journal = Journal.open(journalPath);
             } catch (IOException e) {
@@ -139,6 +150,10 @@ final class SendCommand implements Callable<Integer> {
             return 2;
         }
 
+        if (dryRun) {
+            return writeDryRun(campaign, mails, out, err);
+        }
+
         try (Journal run = journal) {
             return send(campaign, mails, mailer, run, journalPath, id, out, err);
         } catch (IOException e) {
@@ -146,6 +161,54 @@ final class SendCommand implements Callable<Integer> {
             err.flush();
             return 1;
         }
+    }
+
+    /** Keeps ASCII letters, digits and . _ @ - of an address and turns every other code point into _. */
+    static String safeName(String email) {
+        StringBuilder name = new StringBuilder();
+        email.codePoints().forEach(c -> {
+            boolean keep = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
+                    || c == '.' || c == '_' || c == '@' || c == '-';
+            name.append(keep ? (char) c : '_');
+        });
+        return name.toString();
+    }
+
+    private int writeDryRun(Campaign campaign, List<Mail> mails, PrintWriter out, PrintWriter err) {
+        int total = limit == null ? campaign.rows().size() : Math.min(limit, campaign.rows().size());
+        int width = Math.max(2, String.valueOf(total).length());
+        try {
+            Files.createDirectories(outDir);
+            List<Attachment> attachments = mails.get(0).message().attachments();
+            if (attachments.isEmpty()) {
+                out.println("attachments: none");
+            } else {
+                List<String> entries = new ArrayList<>();
+                for (Attachment attachment : attachments) {
+                    entries.add(attachment.filename() + " (" + attachment.contentType() + ", "
+                            + Files.size(attachment.file()) + " bytes)");
+                }
+                out.println("attachments: " + String.join(", ", entries));
+            }
+            for (int i = 0; i < total; i++) {
+                String email = campaign.rows().get(i).email();
+                MailMessage message = mails.get(i).message();
+                String base = String.format("%0" + width + "d-%s", i + 1, safeName(email));
+                Files.writeString(outDir.resolve(base + ".html"), message.html());
+                Files.writeString(outDir.resolve(base + ".subject.txt"), message.subject());
+                if (message.text() != null) {
+                    Files.writeString(outDir.resolve(base + ".txt"), message.text());
+                }
+                out.println("[" + (i + 1) + "/" + total + "] " + email + " rendered");
+            }
+            out.println("dry run: " + total + " mails written to " + outDir);
+        } catch (IOException e) {
+            err.println("Dry run stopped: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            err.flush();
+            return 1;
+        }
+        out.flush();
+        return 0;
     }
 
     private int send(Campaign campaign, List<Mail> mails, Mailer mailer, Journal journal,
