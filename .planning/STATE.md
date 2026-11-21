@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Library Core
 status: verifying
-stopped_at: Completed 01-06-PLAN.md
-last_updated: "2026-11-21T13:20:58.916Z"
+stopped_at: Completed 01-07-PLAN.md
+last_updated: "2026-11-21T13:59:54.363Z"
 last_activity: 2026-11-21
 last_activity_desc: Phase 01 execution started
-state_head: 6fdebcf811c6f0e6941366a866d333bdf9fdd1af
+state_head: 510985459aa611b0939653eae93b6ee5a9e54051
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 7
+  completed_plans: 7
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-21)
 ## Current Position
 
 Phase: 01 (Library Core) — EXECUTING
-Plan: 6 of 6
+Plan: 7 of 7
 Status: Phase complete — ready for verification
 Last activity: 2026-11-21 — Phase 01 execution started
 
@@ -62,6 +62,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P04 | 12min | 2 tasks | 12 files |
 | Phase 01 P05 | 25 min | 3 tasks | 7 files |
 | Phase 01 P06 | 5 min | 3 tasks | 10 files |
+| Phase 01 P07 | 2 min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,7 @@ Recent decisions affecting current work:
 - [Phase 01]: Attachment checks and content-type resolution happen in build(), so repeated build() calls re-check the files
 - [Phase 01]: Null Path or Attachment passed to attach throws NullPointerException at call time; a null Attachment.file is reported by build()
 - [Phase 01]: RecordingTransport checks failFor, then the failNext queue, then records; registry wraps ServiceConfigurationError with a fixed message and keeps the error as cause
+- [Phase 01]: 01-07: G-01-1 fixed by adding the nine @param tags to the MailMessage compact constructor Javadoc (not by dropping the comment); doclint all and failOnWarnings stay; Temurin 17 CI run after the owner pushes closes the gap
 
 ### Pending Todos
 
@@ -109,6 +111,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T13:20:58.878Z
-Stopped at: Completed 01-06-PLAN.md
+Last session: 2026-11-21T13:59:54.281Z
+Stopped at: Completed 01-07-PLAN.md
 Resume file: None

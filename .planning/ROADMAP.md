@@ -43,7 +43,7 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
   3. `build()` raises `InvalidMailException`, naming the problem, for any of: a missing placeholder field; no recipient, subject or body; an unreadable attachment; a set `contentId`; CR/LF in an address, display name or subject; an address without exactly one `@`.
   4. A developer can build `MailAccount.builder(id).transport("recording")`, and `Mailer.of(account).send(mail)` records the message with `defaultFrom` applied. Scripted failures surface as transient, permanent, sender-rejected or auth-required. An unknown account raises `PermanentMailException`. An unknown transport ID fails and lists the available IDs. A duplicate external ID fails when the registry loads.
   5. The repository is safe to publish from its first commit. `LICENSE`, the `README.md` stub (pre-1.0, coordinates, accepted-not-delivered note), `SECURITY.md`, `CLAUDE.md` and `docs/spec.md` are in place. No file holds a secret or real address, and the import-rule test fails the build if the core imports anything but the JDK.
-**Plans:** 6/7 plans executed (wave 1: 01-01; wave 2: 01-02, 01-03; wave 3: 01-04; wave 4: 01-05, 01-06; wave 5: 01-07 gap closure)
+**Plans:** 7/7 plans executed (wave 1: 01-01; wave 2: 01-02, 01-03; wave 3: 01-04; wave 4: 01-05, 01-06; wave 5: 01-07 gap closure)
 
 Plans:
 **Wave 1**
@@ -61,7 +61,7 @@ Plans:
 - [x] 01-06-PLAN.md — Failure categories and configuration errors: scripted failures on `recording`, registry duplicate rules, Mailer/MailAccount contracts, concurrency
 
 **Wave 5** *(gap closure, blocked on Wave 4 completion)*
-- [ ] 01-07-PLAN.md — Gap G-01-1: document the `MailMessage` compact constructor parameters so JDK 17 doclint passes in the CI release build (comment-only; confirmed by the owner's Temurin 17 CI run)
+- [x] 01-07-PLAN.md — Gap G-01-1: document the `MailMessage` compact constructor parameters so JDK 17 doclint passes in the CI release build (comment-only; confirmed by the owner's Temurin 17 CI run)
 **UI hint**: no
 
 Scope notes:
@@ -153,7 +153,7 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Library Core | 6/7 | In Progress | - |
+| 1. Library Core | 7/7 | In Progress | - |
 | 2. Serial-Mail Sample | 0/0 | Not started | - |
 | 3. Graph and Entra | 0/0 | Not started | - |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |
