@@ -1,6 +1,7 @@
 package de.morisoft.morimail.test;
 
 import de.morisoft.morimail.InvalidMailException;
+import de.morisoft.morimail.MailAddress;
 import de.morisoft.morimail.MailException;
 import de.morisoft.morimail.MailMessage;
 import de.morisoft.morimail.MailTransport;
@@ -8,7 +9,9 @@ import de.morisoft.morimail.TokenProvider;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -20,8 +23,16 @@ import java.util.Map;
  * the transport accepted are kept in {@link #sent()}; {@link #attempts()} counts every call of
  * {@link #send(MailMessage)}, failed ones included.
  *
- * <p>A test scripts failures with {@link #failNext(MailException...)}: each queued failure is
- * thrown by one later send, in the order given.
+ * <p>A test scripts failures, and {@link #send(MailMessage)} checks them in this order:
+ * <ol>
+ *   <li>{@link #failFor(String, MailException)}: every send that addresses the recipient in to,
+ *       cc or bcc fails; the entry stays and does not touch the queue;
+ *   <li>{@link #failNext(MailException...)}: each queued failure is thrown by one send, first in
+ *       line first;
+ *   <li>otherwise the message is recorded.
+ * </ol>
+ * {@link #failValidation(InvalidMailException)} makes {@link #validate(MailMessage)} throw, which
+ * {@code Mailer} calls before it sends, so a failed validation is not an attempt.
  */
 public final class RecordingTransport implements MailTransport {
 
@@ -29,6 +40,8 @@ public final class RecordingTransport implements MailTransport {
     private final TokenProvider auth;
     private final List<MailMessage> sent = new ArrayList<>();
     private final Deque<MailException> failures = new ArrayDeque<>();
+    private final Map<String, MailException> recipientFailures = new HashMap<>();
+    private InvalidMailException validationFailure;
     private int attempts;
 
     /**
@@ -43,13 +56,24 @@ public final class RecordingTransport implements MailTransport {
     }
 
     @Override
-    public void validate(MailMessage message) throws InvalidMailException {
-        // Every message is accepted.
+    public synchronized void validate(MailMessage message) throws InvalidMailException {
+        if (validationFailure != null) {
+            throw validationFailure;
+        }
     }
 
     @Override
     public synchronized void send(MailMessage message) throws MailException {
         attempts++;
+        for (List<MailAddress> recipients : List.of(message.to(), message.cc(), message.bcc())) {
+            for (MailAddress recipient : recipients) {
+                MailException perRecipient =
+                        recipientFailures.get(recipient.email().toLowerCase(Locale.ROOT));
+                if (perRecipient != null) {
+                    throw perRecipient;
+                }
+            }
+        }
         MailException failure = failures.poll();
         if (failure != null) {
             throw failure;
@@ -68,22 +92,25 @@ public final class RecordingTransport implements MailTransport {
     }
 
     /**
-     * Fails sends to one recipient (stub, implemented in the GREEN step).
+     * Fails every send that addresses {@code email} in to, cc or bcc. The address is matched
+     * case-insensitively. The failure stays until it is replaced by another call for the same
+     * address, and it wins over {@link #failNext(MailException...)} without consuming the queue.
      *
      * @param email the recipient address
-     * @param failure the failure
+     * @param failure the failure to throw
      */
     public synchronized void failFor(String email, MailException failure) {
-        // Not implemented yet.
+        recipientFailures.put(email.toLowerCase(Locale.ROOT), failure);
     }
 
     /**
-     * Fails validation (stub, implemented in the GREEN step).
+     * Makes {@link #validate(MailMessage)} throw the failure until this method is called with
+     * {@code null}.
      *
-     * @param failure the failure, or {@code null} to clear it
+     * @param failure the failure to throw, or {@code null} to clear it
      */
     public synchronized void failValidation(InvalidMailException failure) {
-        // Not implemented yet.
+        this.validationFailure = failure;
     }
 
     /**
