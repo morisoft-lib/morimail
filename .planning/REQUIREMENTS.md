@@ -24,18 +24,18 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Mail Model and Builder (MODEL)
 
-- [ ] **MODEL-01**: The records `MailAddress`, `Attachment(filename, contentType, file, contentId)`, `MailMessage` and `Mail(accountId, message)` are immutable, with lists copied defensively, and have no serialization code (§5).
-- [ ] **MODEL-02**: A developer can build a mail fluently: `Mail.using(accountId).to(..).cc(..).bcc(..).replyTo(..).from(..).subject/html/text(..).template(template, data).attach(path).build()` (§5.1).
-- [ ] **MODEL-03**: `build()` rejects a mail with no recipient, no subject, no html or text, a missing or unreadable attachment file, or a non-null `contentId`. Each failure is an `InvalidMailException` (§5.1).
-- [ ] **MODEL-04**: `build()` rejects CR/LF in addresses, display names and subject, and requires each address to have exactly one `@` (G5).
-- [ ] **MODEL-05**: An attachment's content type defaults to `application/octet-stream` when it cannot be determined.
+- [x] **MODEL-01**: The records `MailAddress`, `Attachment(filename, contentType, file, contentId)`, `MailMessage` and `Mail(accountId, message)` are immutable, with lists copied defensively, and have no serialization code (§5).
+- [x] **MODEL-02**: A developer can build a mail fluently: `Mail.using(accountId).to(..).cc(..).bcc(..).replyTo(..).from(..).subject/html/text(..).template(template, data).attach(path).build()` (§5.1).
+- [x] **MODEL-03**: `build()` rejects a mail with no recipient, no subject, no html or text, a missing or unreadable attachment file, or a non-null `contentId`. Each failure is an `InvalidMailException` (§5.1).
+- [x] **MODEL-04**: `build()` rejects CR/LF in addresses, display names and subject, and requires each address to have exactly one `@` (G5).
+- [x] **MODEL-05**: An attachment's content type defaults to `application/octet-stream` when it cannot be determined.
 
 ### Templates (TMPL)
 
-- [ ] **TMPL-01**: `MailTemplate` holds subject, html and an optional text. `TemplateRenderer` (one final class) replaces `$$name$$` placeholders, where the name matches `[A-Za-z0-9_.-]+`, from `Map<String,Object>` data via `String.valueOf`. Other text, including a lone `$$`, is left unchanged (§5.3).
-- [ ] **TMPL-02**: Values in HTML are escaped (`& < > " '`), and `$$!name$$` inserts a value raw. Values containing `$` or `\` are inserted literally, because the renderer uses a manual find loop rather than `appendReplacement` (§5.3).
-- [ ] **TMPL-03**: Subject and text values are inserted as they are, and line breaks in a subject value become a space (§5.3).
-- [ ] **TMPL-04**: A placeholder with no data field raises `InvalidMailException` naming the template part and the placeholder (§5.3).
+- [x] **TMPL-01**: `MailTemplate` holds subject, html and an optional text. `TemplateRenderer` (one final class) replaces `$$name$$` placeholders, where the name matches `[A-Za-z0-9_.-]+`, from `Map<String,Object>` data via `String.valueOf`. Other text, including a lone `$$`, is left unchanged (§5.3).
+- [x] **TMPL-02**: Values in HTML are escaped (`& < > " '`), and `$$!name$$` inserts a value raw. Values containing `$` or `\` are inserted literally, because the renderer uses a manual find loop rather than `appendReplacement` (§5.3).
+- [x] **TMPL-03**: Subject and text values are inserted as they are, and line breaks in a subject value become a space (§5.3).
+- [x] **TMPL-04**: A placeholder with no data field raises `InvalidMailException` naming the template part and the placeholder (§5.3).
 
 ### Accounts, Registry and Mailer (CORE)
 
@@ -180,15 +180,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REPO-10 | Phase 1 | Complete |
 | REPO-11 | Phase 1 | Complete |
 | REPO-12 | Phase 1 | Complete |
-| MODEL-01 | Phase 1 | Pending |
-| MODEL-02 | Phase 1 | Pending |
-| MODEL-03 | Phase 1 | Pending |
-| MODEL-04 | Phase 1 | Pending |
-| MODEL-05 | Phase 1 | Pending |
-| TMPL-01 | Phase 1 | Pending |
-| TMPL-02 | Phase 1 | Pending |
-| TMPL-03 | Phase 1 | Pending |
-| TMPL-04 | Phase 1 | Pending |
+| MODEL-01 | Phase 1 | Complete |
+| MODEL-02 | Phase 1 | Complete |
+| MODEL-03 | Phase 1 | Complete |
+| MODEL-04 | Phase 1 | Complete |
+| MODEL-05 | Phase 1 | Complete |
+| TMPL-01 | Phase 1 | Complete |
+| TMPL-02 | Phase 1 | Complete |
+| TMPL-03 | Phase 1 | Complete |
+| TMPL-04 | Phase 1 | Complete |
 | CORE-01 | Phase 1 | Pending |
 | CORE-02 | Phase 1 | Complete |
 | CORE-03 | Phase 1 | Pending |

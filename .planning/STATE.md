@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 01
 current_phase_name: Library Core
 status: executing
-stopped_at: Completed 01-04-PLAN.md
-last_updated: "2026-11-21T13:09:48.530Z"
+stopped_at: Completed 01-05-PLAN.md
+last_updated: "2026-11-21T13:15:56.145Z"
 last_activity: 2026-11-21
 last_activity_desc: Phase 01 execution started
-state_head: b880a8176fcd3a394ed7a3ff65da6d2583f12af8
+state_head: 6236a2c151a348d1e13009921bec2030c1b1c459
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-21)
 ## Current Position
 
 Phase: 01 (Library Core) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-11-21 — Phase 01 execution started
 
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 5min | 2 tasks | 8 files |
 | Phase 01 P03 | 2 min | 2 tasks | 14 files |
 | Phase 01 P04 | 12min | 2 tasks | 12 files |
+| Phase 01 P05 | 25 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Exceptions are documented as not immutable (Throwable has mutable methods); state fixed at construction and safe to pass between threads once thrown
 - [Phase 01]: Mailer.validate is declared throws PermanentMailException; no-sender and transport-validate failures are the subclass InvalidMailException
 - [Phase 01]: ImportRulesTest scans comment-stripped source text of core depth-1 files; java.* only, javax rejected, report forms imports/references/mentions
+- [Phase 01]: template(t, data) copies the data map with new HashMap at call time (Map.copyOf rejects present null values)
+- [Phase 01]: Attachment checks and content-type resolution happen in build(), so repeated build() calls re-check the files
+- [Phase 01]: Null Path or Attachment passed to attach throws NullPointerException at call time; a null Attachment.file is reported by build()
 
 ### Pending Todos
 
@@ -103,6 +107,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T13:09:48.487Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-11-21T13:15:56.107Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
