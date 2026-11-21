@@ -57,8 +57,11 @@ public record Mail(String accountId, MailMessage message) {
 
         private final String accountId;
         private final List<MailAddress> to = new ArrayList<>();
+        private final List<MailAddress> cc = new ArrayList<>();
+        private final List<MailAddress> bcc = new ArrayList<>();
         private final List<Attachment> attachments = new ArrayList<>();
         private MailAddress from;
+        private MailAddress replyTo;
         private String subject;
         private String html;
         private String text;
@@ -71,40 +74,132 @@ public record Mail(String accountId, MailMessage message) {
         }
 
         /**
-         * Appends recipients, in the order given. Repeated calls append further recipients.
+         * Appends primary recipients, in the order given. Repeated calls append further
+         * recipients; nothing is merged or removed, so an address given twice is kept twice. Pass
+         * one address per argument. To give a display name use
+         * {@link #to(MailAddress...)} with {@link MailAddress#of(String, String)}.
          *
          * @param emails the recipient addresses
          * @return this builder
          */
         public Builder to(String... emails) {
+            return append(to, emails);
+        }
+
+        /**
+         * Appends primary recipients, in the order given. Repeated calls append further
+         * recipients. Use {@link MailAddress#of(String, String)} for an address with a display
+         * name.
+         *
+         * @param addresses the recipients
+         * @return this builder
+         */
+        public Builder to(MailAddress... addresses) {
+            return append(to, addresses);
+        }
+
+        /**
+         * Appends copy recipients, in the order given. Repeated calls append further recipients.
+         * Pass one address per argument; use {@link #cc(MailAddress...)} with
+         * {@link MailAddress#of(String, String)} for a display name.
+         *
+         * @param emails the recipient addresses
+         * @return this builder
+         */
+        public Builder cc(String... emails) {
+            return append(cc, emails);
+        }
+
+        /**
+         * Appends copy recipients, in the order given. Repeated calls append further recipients.
+         *
+         * @param addresses the recipients
+         * @return this builder
+         */
+        public Builder cc(MailAddress... addresses) {
+            return append(cc, addresses);
+        }
+
+        /**
+         * Appends blind copy recipients, in the order given. Repeated calls append further
+         * recipients. Pass one address per argument; use {@link #bcc(MailAddress...)} with
+         * {@link MailAddress#of(String, String)} for a display name.
+         *
+         * @param emails the recipient addresses
+         * @return this builder
+         */
+        public Builder bcc(String... emails) {
+            return append(bcc, emails);
+        }
+
+        /**
+         * Appends blind copy recipients, in the order given. Repeated calls append further
+         * recipients.
+         *
+         * @param addresses the recipients
+         * @return this builder
+         */
+        public Builder bcc(MailAddress... addresses) {
+            return append(bcc, addresses);
+        }
+
+        private Builder append(List<MailAddress> target, String[] emails) {
             for (String email : emails) {
-                to.add(MailAddress.of(email));
+                target.add(MailAddress.of(email));
             }
             return this;
         }
 
-        // RED stubs for plan 01-05 task 3: the signatures compile, the behaviour is missing.
-        public Builder to(MailAddress... addresses) { throw new UnsupportedOperationException(); }
-        public Builder cc(String... emails) { throw new UnsupportedOperationException(); }
-        public Builder cc(MailAddress... addresses) { throw new UnsupportedOperationException(); }
-        public Builder bcc(String... emails) { throw new UnsupportedOperationException(); }
-        public Builder bcc(MailAddress... addresses) { throw new UnsupportedOperationException(); }
-        public Builder from(MailAddress address) { throw new UnsupportedOperationException(); }
-        public Builder replyTo(String email) { throw new UnsupportedOperationException(); }
-        public Builder replyTo(MailAddress address) { throw new UnsupportedOperationException(); }
-        public Builder attach(Path file, String contentType) {
-            throw new UnsupportedOperationException();
+        private Builder append(List<MailAddress> target, MailAddress[] addresses) {
+            for (MailAddress address : addresses) {
+                target.add(address);
+            }
+            return this;
         }
-        public Builder attach(Attachment attachment) { throw new UnsupportedOperationException(); }
 
         /**
-         * Sets the sender. A later call replaces an earlier one.
+         * Sets the sender. A later call replaces an earlier one. Without a sender the account's
+         * default sender is used.
          *
          * @param email the sender address
          * @return this builder
          */
         public Builder from(String email) {
             this.from = MailAddress.of(email);
+            return this;
+        }
+
+        /**
+         * Sets the sender, with an optional display name. A later call replaces an earlier one.
+         *
+         * @param address the sender
+         * @return this builder
+         */
+        public Builder from(MailAddress address) {
+            this.from = address;
+            return this;
+        }
+
+        /**
+         * Sets the reply address. A later call replaces an earlier one.
+         *
+         * @param email the reply address
+         * @return this builder
+         */
+        public Builder replyTo(String email) {
+            this.replyTo = MailAddress.of(email);
+            return this;
+        }
+
+        /**
+         * Sets the reply address, with an optional display name. A later call replaces an earlier
+         * one.
+         *
+         * @param address the reply address
+         * @return this builder
+         */
+        public Builder replyTo(MailAddress address) {
+            this.replyTo = address;
             return this;
         }
 
@@ -186,6 +281,38 @@ public record Mail(String accountId, MailMessage message) {
         }
 
         /**
+         * Attaches a file with an explicit content type. The file name shown to the recipient is
+         * the last element of the path. The file is checked in {@link #build()}, not here.
+         *
+         * @param file the file to attach
+         * @param contentType the media type, for example {@code application/pdf}
+         * @return this builder
+         * @throws NullPointerException if an argument is {@code null}
+         */
+        public Builder attach(Path file, String contentType) {
+            Objects.requireNonNull(file, "file");
+            Objects.requireNonNull(contentType, "contentType");
+            attachments.add(new Attachment(null, contentType, file, null));
+            return this;
+        }
+
+        /**
+         * Attaches a file described by an {@link Attachment}, for a file name or content type of
+         * your choice. A {@code null} file name or content type is filled in by {@link #build()}
+         * as for {@link #attach(Path)}. {@code build()} rejects a {@code null} file and a
+         * non-null content id.
+         *
+         * @param attachment the attachment
+         * @return this builder
+         * @throws NullPointerException if {@code attachment} is {@code null}
+         */
+        public Builder attach(Attachment attachment) {
+            Objects.requireNonNull(attachment, "attachment");
+            attachments.add(attachment);
+            return this;
+        }
+
+        /**
          * Checks the parts and builds the mail. Only the first problem found is reported, in this
          * order: account id, template mixed with explicit content, template rendering,
          * recipients, subject, body, addresses, line break in the subject, attachments. The
@@ -212,7 +339,7 @@ public record Mail(String accountId, MailMessage message) {
                 html = rendered.html();
                 text = rendered.text();
             }
-            if (to.isEmpty()) {
+            if (to.isEmpty() && cc.isEmpty() && bcc.isEmpty()) {
                 throw new InvalidMailException("at least one recipient (to, cc or bcc) is required");
             }
             if (subject == null || subject.isBlank()) {
@@ -221,24 +348,41 @@ public record Mail(String accountId, MailMessage message) {
             if ((html == null || html.isBlank()) && (text == null || text.isBlank())) {
                 throw new InvalidMailException("html or text body is missing");
             }
-            if (from != null) {
-                String reason = MailAddress.invalidReason(from);
-                if (reason != null) {
-                    throw new InvalidMailException("from: " + reason);
-                }
-            }
-            for (int i = 0; i < to.size(); i++) {
-                String reason = MailAddress.invalidReason(to.get(i));
-                if (reason != null) {
-                    throw new InvalidMailException("to[" + i + "]: " + reason);
-                }
-            }
+            checkAddress("from", from);
+            checkAddresses("to", to);
+            checkAddresses("cc", cc);
+            checkAddresses("bcc", bcc);
+            checkAddress("replyTo", replyTo);
             if (MailAddress.hasLineBreak(subject)) {
                 throw new InvalidMailException("subject contains a line break");
             }
             List<Attachment> resolved = resolveAttachments();
-            return new Mail(accountId, new MailMessage(from, to, List.of(), List.of(), null,
+            return new Mail(accountId, new MailMessage(from, to, cc, bcc, replyTo,
                     subject, html, text, resolved));
+        }
+
+        private static void checkAddress(String field, MailAddress address)
+                throws InvalidMailException {
+            if (address != null) {
+                String reason = MailAddress.invalidReason(address);
+                if (reason != null) {
+                    throw new InvalidMailException(field + ": " + reason);
+                }
+            }
+        }
+
+        private static void checkAddresses(String field, List<MailAddress> addresses)
+                throws InvalidMailException {
+            for (int i = 0; i < addresses.size(); i++) {
+                MailAddress address = addresses.get(i);
+                if (address == null) {
+                    throw new InvalidMailException(field + "[" + i + "]: address is missing");
+                }
+                String reason = MailAddress.invalidReason(address);
+                if (reason != null) {
+                    throw new InvalidMailException(field + "[" + i + "]: " + reason);
+                }
+            }
         }
 
         private List<Attachment> resolveAttachments() throws InvalidMailException {
