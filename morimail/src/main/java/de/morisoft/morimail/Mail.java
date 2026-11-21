@@ -83,6 +83,20 @@ public record Mail(String accountId, MailMessage message) {
             return this;
         }
 
+        // RED stubs for plan 01-05 task 3: the signatures compile, the behaviour is missing.
+        public Builder to(MailAddress... addresses) { throw new UnsupportedOperationException(); }
+        public Builder cc(String... emails) { throw new UnsupportedOperationException(); }
+        public Builder cc(MailAddress... addresses) { throw new UnsupportedOperationException(); }
+        public Builder bcc(String... emails) { throw new UnsupportedOperationException(); }
+        public Builder bcc(MailAddress... addresses) { throw new UnsupportedOperationException(); }
+        public Builder from(MailAddress address) { throw new UnsupportedOperationException(); }
+        public Builder replyTo(String email) { throw new UnsupportedOperationException(); }
+        public Builder replyTo(MailAddress address) { throw new UnsupportedOperationException(); }
+        public Builder attach(Path file, String contentType) {
+            throw new UnsupportedOperationException();
+        }
+        public Builder attach(Attachment attachment) { throw new UnsupportedOperationException(); }
+
         /**
          * Sets the sender. A later call replaces an earlier one.
          *
