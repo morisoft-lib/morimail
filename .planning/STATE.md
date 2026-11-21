@@ -1,19 +1,19 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 01
-current_phase_name: Library Core
-status: verifying
-stopped_at: Completed 01-07-PLAN.md
-last_updated: "2026-11-21T13:59:54.363Z"
+current_phase: 2
+current_phase_name: Serial-Mail Sample
+status: planning
+stopped_at: Phase 01 complete, ready to plan Phase 2
+last_updated: "2026-11-21T14:09:35.423Z"
 last_activity: 2026-11-21
-last_activity_desc: Phase 01 execution started
-state_head: 510985459aa611b0939653eae93b6ee5a9e54051
+last_activity_desc: Phase 01 complete, transitioned to Phase 2
+state_head: 4dccc403027cb8aaf9a9e0f9ab8cf6a073d75929
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 7
   completed_plans: 7
-  percent: 0
+  percent: 25
 ---
 
 # Project State
@@ -23,21 +23,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-21)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 01 — Library Core
+**Current focus:** Phase 2 — Serial-Mail Sample
 
 ## Current Position
 
-Phase: 01 (Library Core) — EXECUTING
-Plan: 7 of 7
-Status: Phase complete — ready for verification
-Last activity: 2026-11-21 — Phase 01 execution started
+Phase: 2 — Serial-Mail Sample
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-21 — Phase 01 complete, transitioned to Phase 2
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
+- Total plans completed: 7
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -45,7 +45,7 @@ Progress: [░░░░░░░░░░] 0%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01 | 7 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -87,6 +87,7 @@ Recent decisions affecting current work:
 - [Phase 01]: Null Path or Attachment passed to attach throws NullPointerException at call time; a null Attachment.file is reported by build()
 - [Phase 01]: RecordingTransport checks failFor, then the failNext queue, then records; registry wraps ServiceConfigurationError with a fixed message and keeps the error as cause
 - [Phase 01]: 01-07: G-01-1 fixed by adding the nine @param tags to the MailMessage compact constructor Javadoc (not by dropping the comment); doclint all and failOnWarnings stay; Temurin 17 CI run after the owner pushes closes the gap
+- [Phase 01]: G-01-1 closed by Temurin 17 CI run 44912211934 (all three steps green, no Javadoc warning); UAT complete, SECURITY.md threats_open 0, phase complete 2026-11-21
 
 ### Pending Todos
 
@@ -94,9 +95,7 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: The PROJECT.md Constraints section still gives the test keystore password as `test`, but TEST-01 decided on `changeit`. Align the PROJECT.md wording.
-- [Phase 1]: `spec.md` is untracked at the repo root. Phase 1 moves it to `docs/spec.md` (REPO-06) and commits it.
-- [Phase 1]: `config.json` sets `claude_md_path` to `./.claude/CLAUDE.md`, but spec §4 and REPO-06 put `CLAUDE.md` at the repo root. Keep the spec's location.
+- [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: PS256 acceptance, the §6.3 error table, the request-size ceiling (about 4 MB, LOW confidence) and the `from` display name can only be proven by the owner's live test. Research flagged Phase 3 for deeper research.
 - [Checkpoint]: The owner still has to confirm the `LICENSE` holder, the `SECURITY.md` contact, the `Co-Authored-By` trailer, the `saveToSentItems` default in the sample, and the 20/min rate default.
 - [Phase 4]: The Central `excludeArtifacts` behaviour for the test-jar classifier is unverified. Confirm it with the `-DskipUpload=true` rehearsal.
@@ -111,6 +110,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T13:59:54.281Z
-Stopped at: Completed 01-07-PLAN.md
+Last session: 2026-11-21T14:12:00Z
+Stopped at: Phase 01 complete, ready to plan Phase 2
 Resume file: None

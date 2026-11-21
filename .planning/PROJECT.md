@@ -14,24 +14,23 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Mail model as records: account ID, from, to, cc, bcc, reply-to, subject, HTML body, optional text body, attachments (`MailAddress`, `Attachment` with `contentId` prepared for inline images, `MailMessage`, `Mail`) — Phase 1
+- ✓ Builder `Mail.using(accountId)...build()` with transport-independent validation (recipient, subject, body, readable attachments, no `contentId` in MVP) — Phase 1
+- ✓ `TemplateRenderer` with `$$name$$` placeholders (HTML-escaped in HTML, `$$!name$$` raw, subject line-break guard, missing field = `InvalidMailException`) — Phase 1
+- ✓ Accounts built in code (`MailAccount`: id, transport, auth, options, defaultFrom) and a `Mailer` holding accounts by ID, with `validate` and `send` — Phase 1
+- ✓ Transport SPI (`MailTransport`, `TransportProvider`, `TokenProvider`) with a registry: built-in explicit list plus `ServiceLoader`; external duplicates of a built-in ID fail; unknown ID fails at account build with the list of available IDs — Phase 1
+- ✓ Error hierarchy: `MailException` → `TransientMailException` (retryAfter), `PermanentMailException` → `InvalidMailException`, `SenderRejectedException`; `AuthRequiredException` — Phase 1
+- ✓ `RecordingTransport` in library test sources, built as a test-jar shared inside the reactor only (`attach=false` under `release`, never published), registered via `ServiceLoader` as `recording` — Phase 1
+- ✓ Repo hygiene: parent POM with Central metadata, Maven wrapper, `LICENSE`, `README.md`, `SECURITY.md`, CI workflow (`mvn verify`, Java 17), `CLAUDE.md` with spec §11 rules — Phase 1
+- ✓ `release` Maven profile (sources, Javadoc, GPG, Central publishing plugin); `mvn -Prelease verify -Dgpg.skip` passes without warnings — Phase 1
 
 ### Active
 
-- [ ] Mail model as records: account ID, from, to, cc, bcc, reply-to, subject, HTML body, optional text body, attachments (`MailAddress`, `Attachment` with `contentId` prepared for inline images, `MailMessage`, `Mail`)
-- [ ] Builder `Mail.using(accountId)...build()` with transport-independent validation (recipient, subject, body, readable attachments, no `contentId` in MVP)
-- [ ] `TemplateRenderer` with `$$name$$` placeholders (HTML-escaped in HTML, `$$!name$$` raw, subject line-break guard, missing field = `InvalidMailException`)
-- [ ] Accounts built in code (`MailAccount`: id, transport, auth, options, defaultFrom) and a `Mailer` holding accounts by ID, with `validate` and `send`
-- [ ] Transport SPI (`MailTransport`, `TransportProvider`, `TokenProvider`) with a registry: built-in explicit list plus `ServiceLoader`; external duplicates of a built-in ID fail; unknown ID fails at account build with the list of available IDs
-- [ ] Error hierarchy: `MailException` → `TransientMailException` (retryAfter), `PermanentMailException` → `InvalidMailException`, `SenderRejectedException`; `AuthRequiredException`
-- [ ] `RecordingTransport` in library test sources, built as a test-jar shared inside the reactor only (`attach=false` under `release`, never published), registered via `ServiceLoader` as `recording`
 - [ ] Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping
 - [ ] Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, 3 MB per-file and total limit in `validate`, error mapping table, one retry after 401 with a fresh token
 - [ ] Serial-mail CLI (picocli): account.properties, campaign dir, pre-flight check (exit 2), journal + resume, rate limit, transient retry ×3, stop on sender/auth errors (exit 3), dry-run output, counts and exit codes
 - [ ] Example campaign with three placeholders, two small generated attachments (PDF, PNG), five `example.org` rows
-- [ ] Repo hygiene: parent POM with Central metadata, Maven wrapper, `LICENSE`, `README.md`, `SECURITY.md`, CI workflow (`mvn verify`, Java 17), `CLAUDE.md` with spec §11 rules
 - [ ] Docs: `docs/entra-setup.md` (admin guide, RBAC for Applications recommended), `docs/architecture.md`, README quick start
-- [ ] `release` Maven profile (sources, Javadoc, GPG, Central publishing plugin); `mvn -Prelease verify -Dgpg.skip` passes without warnings
 - [ ] `mvn verify` passes with no network access; live test tagged `live`, enabled with `-Plive`, run by the owner only
 
 ### Out of Scope
@@ -104,4 +103,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-21 during Phase 1 planning (reactor-only test-jar wording)*
+*Last updated: 2026-11-21 after Phase 1*
