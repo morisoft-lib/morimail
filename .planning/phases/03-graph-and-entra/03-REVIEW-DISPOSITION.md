@@ -6,15 +6,15 @@ findings:
   - id: WR-01
     severity: warning
     disposition: open
-    title: "The new address-redaction regex is quadratic on server-controlled text and can hang a send"
+    title: "`clean()` address regex is quadratic on a long, address-free token"
   - id: IN-01
     severity: info
     disposition: open
-    title: "The address pattern misses some forms and swallows trailing punctuation"
+    title: "The \"no addresses in exception messages\" claim is still a best-effort statement for `code` and `request-id`"
   - id: IN-02
     severity: info
     disposition: open
-    title: "The Entra header-safety check is a second copy and sits next to the spec line \"Do not parse or validate the access token\""
+    title: "No test shows that an address-bearing `request-id` is cleaned"
   - id: WR-02
     severity: warning
     disposition: fixed
@@ -41,7 +41,7 @@ findings:
     title: "Test gaps and one weak assertion"
 open: 3
 total: 9
-recorded: 2026-11-22T10:04:58.177Z
+recorded: 2026-11-22T12:17:50.995Z
 ---
 
 # Phase 03: Code Review Disposition
