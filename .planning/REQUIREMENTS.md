@@ -115,13 +115,13 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Documentation (DOCS)
 
-- [ ] **DOCS-01**: `docs/entra-setup.md` guides the owner through:
+- [x] **DOCS-01**: `docs/entra-setup.md` guides the owner through:
   - The app registration and the certificate (self-signed certificate and PKCS12 creation; a secret as the quick alternative).
   - Granting `Mail.Send`: Entra consent (A) versus Exchange RBAC for Applications (B), with B recommended. Cmdlets are copied from the current Microsoft page.
   - The traps: Entra and RBAC grants combine as a union; changes take 30 min to 2 h to apply; Enterprise-application IDs are required; Organization Management is required.
   - The licensed mailbox, the shared-mailbox question, `saveToSentItems` defaulting to true, and the `account.properties` and environment variables.
   - Verification: a dry run, then `--limit 1` (§9).
-- [ ] **DOCS-02**: `docs/architecture.md` is a one-page summary of the contracts and the reasons for them. It records every deviation, including the `freshAccessToken` default, `baseUrl`, unchecked registry exceptions, JUnit 6, the `changeit` keystore, the reactor-only test-jar, and any differences found in the Microsoft docs (§5, §11).
+- [x] **DOCS-02**: `docs/architecture.md` is a one-page summary of the contracts and the reasons for them. It records every deviation, including the `freshAccessToken` default, `baseUrl`, unchecked registry exceptions, JUnit 6, the `changeit` keystore, the reactor-only test-jar, and any differences found in the Microsoft docs (§5, §11).
 - [ ] **DOCS-03**: The README covers what morimail is, its pre-1.0 status, the coordinates and a quick start. It also has a "what this is not" paragraph (Exchange Online limits of 30/min and 10k recipients/day per mailbox, not a bulk mailer), the at-least-once and accepted-not-delivered note, and the test keystore sentence (§13.1, G10).
 - [ ] **DOCS-04**: `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) builds the sources and Javadoc jars without warnings. A rehearsal bundle (`-DskipUpload=true`) contains only `morimail-parent` and `morimail`, and the owner's release steps are listed (§10.2 milestone 5, §13.5).
 
@@ -233,8 +233,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 3 | Complete |
 | TEST-03 | Phase 3 | Complete |
-| DOCS-01 | Phase 4 | Pending |
-| DOCS-02 | Phase 4 | Pending |
+| DOCS-01 | Phase 4 | Complete |
+| DOCS-02 | Phase 4 | Complete |
 | DOCS-03 | Phase 4 | Pending |
 | DOCS-04 | Phase 4 | Pending |
 

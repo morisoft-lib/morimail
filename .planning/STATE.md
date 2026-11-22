@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 04
 current_phase_name: Docs and Release Readiness
 status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-11-22T19:24:12.903Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-11-22T19:28:02.815Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 04 execution started
-state_head: 6ceade2a5fc532e437cba3ad7b53569bac7d3452
+state_head: 7f07748d604cd75dfc54f65a765885803db3b3dd
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 21
-  completed_plans: 18
+  completed_plans: 19
   percent: 75
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-22)
 ## Current Position
 
 Phase: 04 (Docs and Release Readiness) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-11-22 — Phase 04 execution started
 
@@ -76,6 +76,7 @@ Progress: [████████░░] 75%
 | Phase 03 P05 | 45min | 3 tasks | 8 files |
 | Phase 03 P06 | 8 min | 3 tasks | 7 files |
 | Phase 04 P01 | 12 min | 3 tasks | 7 files |
+| Phase 04 P02 | 3 min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -123,6 +124,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 03-06: Graph failure messages carry HTTP status, code and request-id only; Graph's error.message is dropped (G-03-2)
 - [Phase 04]: 04-01: server text is cut back to a word boundary before the address pattern runs; a single word over 1000 characters gives '-' (WR-01)
 - [Phase 04]: 04-01: the error mapping, the 3 MiB and 4 MiB constants and the sample --rate default are unchanged; live results matched them (D-01)
+- [Phase 04]: 04-02: the guide's scope filter example uses Alias, because the recipient-filter page says to use EmailAddresses and not PrimarySmtpAddress
+- [Phase 04]: 04-02: every open item lives in the closing section Not yet verified live; the steps carry only the two allowed caveat lines (D-04, D-06)
 
 ### Pending Todos
 
@@ -147,6 +150,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T19:24:12.596Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-11-22T19:28:02.575Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
