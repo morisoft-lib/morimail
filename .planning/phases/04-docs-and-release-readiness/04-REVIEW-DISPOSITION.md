@@ -5,48 +5,33 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "README states as fact a limit that architecture.md says is unconfirmed for Graph"
-  - id: WR-02
-    severity: warning
-    disposition: fixed
-    title: "entra-setup step 2 tells the reader to delete the key, then needs it"
-  - id: WR-03
-    severity: warning
-    disposition: fixed
-    title: "release.md asks for CI on the release commit, but the commit is made after CI could run and before the irreversible step"
+    disposition: open
+    title: "Step 7 tags HEAD, not the release commit, so the tag lands on unpushed docs commits"
   - id: IN-01
     severity: info
-    disposition: fixed
-    title: "Review and plan identifiers leak into public source and docs"
+    disposition: open
+    title: "The doc puts the \"cannot prompt\" behaviour on batch mode, but `--pinentry-mode error` is the real cause"
   - id: IN-02
     severity: info
-    disposition: fixed
-    title: "The two `clean()` methods sanitise differently, though both documents say the same thing"
+    disposition: open
+    title: "\"No pinentry means the agent cache was empty\" is incomplete when several secret keys exist"
   - id: IN-03
     severity: info
-    disposition: fixed
-    title: "Test names and coverage no longer match the new behaviour"
-  - id: IN-04
-    severity: info
-    disposition: fixed
-    title: "`.gitignore` covers the key formats in the guide but not the common neighbours"
-open: 0
-total: 7
-recorded: 2026-11-22T19:45:28.599Z
+    disposition: open
+    title: "The warm-up gives no success signal, so a failed warm-up is only discovered by the deploy"
+open: 4
+total: 4
+recorded: 2026-11-22T20:50:12.000Z
 ---
 
 # Phase 04: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 04-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 04-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 04-REVIEW-FIX.md |
-| IN-01 | info | fixed | 04-REVIEW-FIX.md |
-| IN-02 | info | fixed | 04-REVIEW-FIX.md |
-| IN-03 | info | fixed | 04-REVIEW-FIX.md |
-| IN-04 | info | fixed | 04-REVIEW-FIX.md |
+| WR-01 | warning | open | 04-REVIEW.md |
+| IN-01 | info | open | 04-REVIEW.md |
+| IN-02 | info | open | 04-REVIEW.md |
+| IN-03 | info | open | 04-REVIEW.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
