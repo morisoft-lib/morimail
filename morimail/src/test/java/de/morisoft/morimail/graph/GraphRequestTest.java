@@ -307,7 +307,9 @@ class GraphRequestTest {
                 Arguments.of("baseUrl", Map.of("baseUrl", 42), "42"),
                 Arguments.of("baseUrl", Map.of("baseUrl", "ftp://example.com"), "ftp://example.com"),
                 Arguments.of("baseUrl", Map.of("baseUrl", "not a url"), "not a url"),
-                Arguments.of("baseUrl", Map.of("baseUrl", "https:///v1.0"), "https:///v1.0"));
+                Arguments.of("baseUrl", Map.of("baseUrl", "https:///v1.0"), "https:///v1.0"),
+                Arguments.of("baseUrl", Map.of("baseUrl", "http://graph.example.com/v1.0"),
+                        "graph.example.com"));
     }
 
     @ParameterizedTest
@@ -327,8 +329,9 @@ class GraphRequestTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"http://localhost:8080/v1.0", "https://graph.example.com/v1.0"})
-    void absoluteHttpAndHttpsUrlsAreAccepted(String url) {
+    @ValueSource(strings = {"http://localhost:8080/v1.0", "http://127.0.0.1:8080/v1.0",
+        "http://[::1]:8080/v1.0", "https://graph.example.com/v1.0"})
+    void httpsAndLoopbackHttpUrlsAreAccepted(String url) {
         assertThat(new GraphTransportProvider().create(Map.of("baseUrl", url), stub)).isNotNull();
     }
 

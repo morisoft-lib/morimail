@@ -209,17 +209,18 @@ public final class EntraClientCredentials implements TokenProvider {
      * Returns a copy of these credentials that gets tokens from another authority, for example a
      * sovereign cloud or a test server.
      *
-     * @param authority an absolute http or https URI with a host; one trailing slash is dropped
+     * @param authority an absolute https URI with a host, or an http URI for {@code localhost},
+     *        {@code 127.0.0.1} or {@code [::1]}, so the secret never travels in cleartext over a
+     *        network; one trailing slash is dropped
      * @return a new instance with the same credentials and the given authority
      * @throws NullPointerException if the authority is {@code null}
-     * @throws IllegalArgumentException if the authority is not an absolute http or https URI
+     * @throws IllegalArgumentException if the authority is not an absolute https URI (or an http URI
+     *         for localhost)
      */
     public EntraClientCredentials authority(URI authority) {
         Objects.requireNonNull(authority, "authority");
-        String scheme = authority.getScheme();
-        boolean web = "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
-        if (!web || authority.getHost() == null) {
-            throw new IllegalArgumentException("authority must be an absolute http or https URI");
+        if (!secureOrLoopback(authority)) {
+            throw new IllegalArgumentException("authority must be an absolute https URI (http only for localhost)");
         }
         String text = authority.toString();
         if (text.endsWith("/")) {
@@ -227,6 +228,19 @@ public final class EntraClientCredentials implements TokenProvider {
         }
         return new EntraClientCredentials(tenantId, clientId, secret, privateKey, certificate,
                 URI.create(text), clock, requestTimeout);
+    }
+
+    /** True for https, and for http only when the host is this machine (a test server). */
+    private static boolean secureOrLoopback(URI uri) {
+        String host = uri.getHost();
+        if (host == null) {
+            return false;
+        }
+        if ("https".equalsIgnoreCase(uri.getScheme())) {
+            return true;
+        }
+        return "http".equalsIgnoreCase(uri.getScheme())
+                && (host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1") || host.equals("[::1]"));
     }
 
     /** Test seam: a copy with another clock and request timeout. Used by same-package tests only. */

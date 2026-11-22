@@ -13,15 +13,17 @@ import java.util.Map;
  * <p>The account accepts exactly two options:
  *
  * <ul>
- *   <li>{@code baseUrl}, a {@link String} that is an absolute {@code http} or {@code https} URL
- *       with a host. It sets the Graph endpoint and defaults to {@link #DEFAULT_BASE_URL}.
+ *   <li>{@code baseUrl}, a {@link String} that is an absolute {@code https} URL with a host;
+ *       {@code http} is accepted only for {@code localhost}, {@code 127.0.0.1} and {@code [::1]},
+ *       so a bearer token never travels in cleartext over a network. It sets the Graph endpoint
+ *       and defaults to {@link #DEFAULT_BASE_URL}.
  *   <li>{@code saveToSentItems}, a {@link Boolean} that defaults to {@code true}. With
  *       {@code false} the mail is not kept in the Sent Items folder of the sender.
  * </ul>
  *
  * <p>{@link #create(Map, TokenProvider)} throws {@link IllegalArgumentException} for any other
- * option key, for a value of the wrong type, for a {@code baseUrl} that is not an absolute http or
- * https URL, and for a missing token provider. The message names the option key and never the
+ * option key, for a value of the wrong type, for a {@code baseUrl} that is not an absolute https URL
+ * (or an http URL for localhost), and for a missing token provider. The message names the option key and never the
  * value. The token provider of the account supplies the bearer tokens.
  *
  * <p>This class is stateless and thread-safe.
@@ -54,7 +56,7 @@ public final class GraphTransportProvider implements TransportProvider {
      * @param auth the source of access tokens for Graph
      * @return a new transport
      * @throws IllegalArgumentException if an option key is unknown, a value has the wrong type,
-     *     {@code baseUrl} is not an absolute http or https URL, or {@code auth} is {@code null}
+     *     {@code baseUrl} is not an absolute https URL (or an http URL for localhost), or {@code auth} is {@code null}
      */
     @Override
     public MailTransport create(Map<String, Object> options, TokenProvider auth) {
@@ -80,7 +82,7 @@ public final class GraphTransportProvider implements TransportProvider {
     }
 
     private static String checkedBaseUrl(Object value) {
-        String problem = "option baseUrl must be an absolute http or https URL";
+        String problem = "option baseUrl must be an absolute https URL (http only for localhost)";
         if (!(value instanceof String text)) {
             throw new IllegalArgumentException(problem);
         }
@@ -90,10 +92,22 @@ public final class GraphTransportProvider implements TransportProvider {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(problem);
         }
-        boolean http = "http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme());
-        if (!http || uri.getHost() == null) {
+        if (!secureOrLoopback(uri)) {
             throw new IllegalArgumentException(problem);
         }
         return text;
+    }
+
+    /** True for https, and for http only when the host is this machine (a test server). */
+    private static boolean secureOrLoopback(URI uri) {
+        String host = uri.getHost();
+        if (host == null) {
+            return false;
+        }
+        if ("https".equalsIgnoreCase(uri.getScheme())) {
+            return true;
+        }
+        return "http".equalsIgnoreCase(uri.getScheme())
+                && (host.equalsIgnoreCase("localhost") || host.equals("127.0.0.1") || host.equals("[::1]"));
     }
 }

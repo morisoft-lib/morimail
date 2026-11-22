@@ -166,6 +166,23 @@ class EntraTokenErrorsTest {
                 .satisfies(e -> assertThat(e.getMessage()).doesNotContain("secret"));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"http://login.example.com", "ftp://localhost", "https:///x", "login.example.com"})
+    void anAuthorityThatIsNeitherHttpsNorLoopbackHttpIsRejected(String authority) {
+        assertThatThrownBy(() -> EntraClientCredentials.withSecret(ZERO_GUID, ZERO_GUID, "made-up-secret")
+                .authority(URI.create(authority)))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessage("authority must be an absolute https URI (http only for localhost)");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"https://login.example.com/", "http://localhost:8080", "http://127.0.0.1:8080",
+        "http://[::1]:8080"})
+    void httpsAndLoopbackHttpAuthoritiesAreAccepted(String authority) {
+        assertThat(EntraClientCredentials.withSecret(ZERO_GUID, ZERO_GUID, "made-up-secret")
+                .authority(URI.create(authority))).isNotNull();
+    }
+
     @Test
     void aMailAddressInTheDescriptionIsReplaced(WireMockRuntimeInfo wm) {
         stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"No user x@example.org here\"}");
