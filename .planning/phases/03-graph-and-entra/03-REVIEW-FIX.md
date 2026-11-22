@@ -38,7 +38,7 @@ status: partial
 **Status:** fixed: requires human verification (regex)
 **Applied fix:** Option (a). Both `clean` methods replace anything that looks like a mail address with `<address>`, so the documented guarantee holds. The architecture note now also says the quoted text is the service's own and that the Entra description can still name application and tenant ids. Tests send a 404 and a 400 whose text contains `x@example.org`.
 
-### WR-03: Plain `http` is accepted for the token authority and the Graph base URL
+### WR-03: Plain `http` is accepted for the token authority and the Graph base URL, so the client secret and bearer token can travel in cleartext
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/entra/EntraClientCredentials.java`, `morimail/src/main/java/de/morisoft/morimail/graph/GraphTransportProvider.java`, `docs/architecture.md`, `morimail/src/test/java/de/morisoft/morimail/graph/GraphRequestTest.java`, `morimail/src/test/java/de/morisoft/morimail/entra/EntraTokenErrorsTest.java`
 **Commit:** 24b5638
@@ -51,13 +51,13 @@ status: partial
 **Commit:** 74d5823
 **Applied fix:** The record overrides `toString()` and leaves out the token value. No test was added: the record is private and nothing stringifies it.
 
-### IN-03: The request-size estimate is looser than its Javadoc suggests
+### IN-03: The request-size estimate is looser than its Javadoc suggests, and the MB/MiB limits are unverified
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java`
 **Commit:** 5a38aba
 **Applied fix:** The review said to document the approximation until the live probe is done. `validate` now has a Javadoc that says the estimate omits the subject, recipients and attachment names, and that the 3 MiB and 4 MiB limits are readings of the documentation, not confirmed by a live probe. The constants are unchanged.
 
-### IN-04: Under a token-endpoint outage, waiting threads are served one after another
+### IN-04: Under a token-endpoint outage, waiting threads are served one after another, each with its own timeout
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/entra/EntraClientCredentials.java`
 **Commit:** 9305395
