@@ -5,11 +5,11 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "A malformed access token escapes `send` as an unchecked exception that contains the token"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Server-echoed text goes into exception messages, journal and stdout, but the docs promise \"never addresses\""
   - id: WR-03
     severity: warning
@@ -17,11 +17,11 @@ findings:
     title: "Plain `http` is accepted for the token authority and the Graph base URL, so the client secret and bearer token can travel in cleartext"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The private `Token` record's `toString()` prints the access token"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: skipped
     title: "A 401 that is not about the token still discards a valid cached token"
   - id: IN-03
     severity: info
@@ -33,14 +33,31 @@ findings:
     title: "Under a token-endpoint outage, waiting threads are served one after another, each with its own timeout"
   - id: IN-05
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Rule 0: tolerance code for inputs the documentation says do not occur"
   - id: IN-06
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Test gaps and one weak assertion"
+open: 3
+total: 9
+recorded: 2026-11-22T09:35:38.856Z
 ---
 
-# Phase 03 code review disposition
+# Phase 03: Code Review Disposition
 
-All nine findings from 03-REVIEW.md are open. None is critical. Fixing is the owner's call (`/gsd-code-review 03 --fix`).
+| Finding | Severity | Disposition | Source |
+|---------|----------|-------------|--------|
+| WR-01 | warning | fixed | 03-REVIEW-FIX.md |
+| WR-02 | warning | fixed | 03-REVIEW-FIX.md |
+| WR-03 | warning | open | - |
+| IN-01 | info | fixed | 03-REVIEW-FIX.md |
+| IN-02 | info | skipped | 03-REVIEW-FIX.md |
+| IN-03 | info | open | - |
+| IN-04 | info | open | - |
+| IN-05 | info | fixed | 03-REVIEW-FIX.md |
+| IN-06 | info | fixed | 03-REVIEW-FIX.md |
+
+Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
+Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
+Re-running the gate keeps every row it can. A row the current review no longer reports is kept and its Source cell flagged, so a finding does not leave this record silently. ONE exception: when a finding id is REUSED by a different finding, the earlier decision cannot keep a row — the id is taken — and it is dropped. A RECORDED decision (anything but `open`) is named on the console when that happens; a row still at `open` is replaced silently, because `open` records no decision to lose.
