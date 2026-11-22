@@ -3,7 +3,7 @@ status: diagnosed
 phase: 03-graph-and-entra
 source: [03-VERIFICATION.md]
 started: 2026-11-22T09:27:25Z
-updated: 2026-11-22T11:38:57.537Z
+updated: 2026-11-22T12:21:31.000Z
 ---
 
 ## Current Test
@@ -45,12 +45,20 @@ expected: Findings reported back before Phase 4 starts
 result: pass
 notes: "Owner accepts seconds-only Retry-After (HTTP-date form yields no delay), matching the Graph throttling documentation."
 
+### 7. Optional live re-check of G-03-2: re-run the live main test with a sender that has no Exchange mailbox (the case that returned 404 ErrorInvalidUser)
+expected: The printed line reads 'Graph sendMail failed: HTTP 404, code ErrorInvalidUser, request-id <guid>' with no address and no Graph sentence, and the exception is SenderRejectedException
+result: [pending]
+
+### 8. Optional: re-run secure-phase 03
+expected: T-03-19 in 03-SECURITY.md assumed address-free messages; 03-06 makes that true for Graph, so the threat can be re-confirmed
+result: [pending]
+
 ## Summary
 
-total: 6
+total: 8
 passed: 4
 issues: 2
-pending: 0
+pending: 2
 skipped: 0
 blocked: 0
 
