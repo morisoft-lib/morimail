@@ -322,7 +322,7 @@ serial-mail send
 
 Dry-run writes `out/<n>-<email>.html`, `.txt` and `.subject.txt` per recipient, lists the attachments, and touches neither the network nor the journal.
 
-The default of 20 mails per minute stays below the Exchange Online limit of 30 messages per minute per mailbox; a mailbox can also send to at most 10,000 recipients per day (Microsoft n.d.-g). The owner confirmed the default after milestone 4.
+The default of 20 mails per minute stays below the Exchange Online limit of 30 messages per minute per mailbox for SMTP client submission; Microsoft does not say whether Graph `sendMail` counts against it. A mailbox can also send to at most 10,000 recipients per day (Microsoft n.d.-g). The owner confirmed the default after milestone 4.
 
 ## 9. Admin setup guide (`docs/entra-setup.md`)
 

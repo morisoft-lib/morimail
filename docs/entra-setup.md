@@ -137,7 +137,7 @@ The `from` mailbox must exist and be licensed for Exchange Online. A sender with
 
 Use an address on a verified custom domain. A sender on an `onmicrosoft.com` address is limited to 100 external recipients per 24 hours.
 
-Microsoft documents these per-mailbox limits: 30 messages per minute and 10,000 recipients per day. The sample default `--rate 20` stays below 30 messages per minute.
+Exchange Online documents a limit of 30 messages per minute per mailbox for SMTP client submission, and 10,000 recipients per day. Microsoft does not say whether Graph `sendMail` counts against the per-minute limit. The sample default `--rate 20` stays below it either way.
 
 A shared mailbox has no licence of its own. Whether the app can send from one is listed under Not yet verified live.
 

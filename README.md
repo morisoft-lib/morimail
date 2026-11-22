@@ -83,7 +83,7 @@ This writes the rendered mails to `out/` and needs no secrets. For a real send, 
 ## What morimail is not
 
 - Not a bulk mailer or campaign tool. It sends one mail per call, with no batching, queues, scheduling or retries; those belong to the consumer.
-- It is bound by Exchange Online's documented per-mailbox limits: 30 messages per minute and 10,000 recipients per day (Microsoft's Exchange Online limits page, read 2026-11-22). The sample's default of 20 mails per minute stays below the first. Tenants also have a limit for external recipients, and a sender on an onmicrosoft.com address reaches at most 100 external recipients per 24 hours. For bulk mail to external recipients, Microsoft points to Azure Communication Services.
+- Exchange Online documents a limit of 30 messages per minute per mailbox for SMTP client submission, and 10,000 recipients per day (Microsoft's Exchange Online limits page, read 2026-11-22). Microsoft does not say whether Graph `sendMail` counts against the per-minute limit. The sample's default of 20 mails per minute stays below it either way. Tenants also have a limit for external recipients, and a sender on an onmicrosoft.com address reaches at most 100 external recipients per 24 hours. For bulk mail to external recipients, Microsoft points to Azure Communication Services.
 - Not for large attachments. Attachments must stay under 3 MiB (3 x 1024 x 1024 bytes), per file and in total. Larger files need Graph upload sessions, which morimail does not do.
 - One body per mail on Graph. When both HTML and text are given, only the HTML is sent.
 
