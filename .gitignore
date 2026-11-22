@@ -36,6 +36,13 @@ account.properties
 *.key
 *.pem
 *.cer
+*.crt
+*.csr
+*.jks
+*.keystore
+*.pkcs12
+*.p8
+.env
 !morimail/src/test/resources/test-keystore-throwaway.p12
 
 # GSD review tool raw logs (workstation paths, session ids): never commit
