@@ -315,6 +315,30 @@ public record Mail(String accountId, MailMessage message) {
         }
 
         /**
+         * Adds an inline image: a file shown inside the HTML body, which refers to it as
+         * {@code cid:} followed by the content id, for example
+         * {@code <img src="cid:logo">}. The file name and content type are resolved in
+         * {@link #build()} as for {@link #attach(Path)}. {@code build()} checks that the content
+         * id is not blank and holds no whitespace, quote, parenthesis or angle bracket, that the
+         * content type is an {@code image/} type, that content ids are unique in the mail, and
+         * that the HTML body refers to every inline image and every {@code cid:} reference in it
+         * has one. For a file name or content type of your choice pass an {@link Attachment} with
+         * a content id to {@link #attach(Attachment)}. The file is checked in {@code build()},
+         * not here.
+         *
+         * @param image the image file
+         * @param contentId the content id that the HTML body refers to
+         * @return this builder
+         * @throws NullPointerException if an argument is {@code null}
+         */
+        public Builder inline(Path image, String contentId) {
+            Objects.requireNonNull(image, "image");
+            Objects.requireNonNull(contentId, "contentId");
+            attachments.add(new Attachment(null, null, image, contentId));
+            return this;
+        }
+
+        /**
          * Checks the parts and builds the mail. Only the first problem found is reported, in this
          * order: account id, template mixed with explicit content, template rendering,
          * recipients, subject, body, addresses, line break in the subject, attachments. The
@@ -409,10 +433,6 @@ public record Mail(String accountId, MailMessage message) {
                 if (!Files.isReadable(file)) {
                     throw new InvalidMailException(field + fileName + " is not readable");
                 }
-                if (attachment.contentId() != null) {
-                    throw new InvalidMailException(field
-                            + "contentId is not supported (inline images are a later milestone)");
-                }
                 String filename = attachment.filename() != null
                         ? attachment.filename() : fileName.toString();
                 String contentType = attachment.contentType() != null
@@ -424,7 +444,7 @@ public record Mail(String accountId, MailMessage message) {
                 if (MailAddress.hasLineBreak(contentType) || contentType.indexOf('/') < 1) {
                     throw new InvalidMailException(field + "contentType is not a media type");
                 }
-                resolved.add(new Attachment(filename, contentType, file, null));
+                resolved.add(new Attachment(filename, contentType, file, attachment.contentId()));
             }
             return resolved;
         }

@@ -386,14 +386,17 @@ class MailBuilderTest {
     }
 
     @Test
-    void rejectsContentId() throws Exception {
-        Path file = file("logo.png");
+    void inlineImageKeepsItsContentIdFilenameAndType() throws Exception {
+        Path logo = file("logo.png");
 
-        assertThatThrownBy(() -> valid()
-                .attach(new Attachment("logo.png", null, file, "cid-1")).build())
-                .isInstanceOf(InvalidMailException.class)
-                .hasMessageContaining("attachments[0]")
-                .hasMessageContaining("contentId");
+        Mail mail = valid().html("<img src=\"cid:logo\">").inline(logo, "logo").build();
+
+        assertThat(mail.message().attachments()).hasSize(1);
+        Attachment inline = mail.message().attachments().get(0);
+        assertThat(inline.contentId()).isEqualTo("logo");
+        assertThat(inline.filename()).isEqualTo("logo.png");
+        assertThat(inline.contentType()).isEqualTo("image/png");
+        assertThat(inline.file()).isEqualTo(logo);
     }
 
     @Test

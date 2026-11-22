@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.stubbing.Scenario;
@@ -26,13 +27,20 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 @WireMockTest
 class SendThroughGraphTest {
+
+    @TempDir
+    Path dir;
 
     private static final String ZERO_GUID = "00000000-0000-0000-0000-000000000000";
     private static final String SECRET = "tracer+secret&=%";
@@ -170,5 +178,58 @@ class SendThroughGraphTest {
         verify(exactly(1), postRequestedFor(urlEqualTo("/v1.0/users/newsletter%40example.com/sendMail")));
         assertThat(account.transport().getClass().getName())
                 .isEqualTo("de.morisoft.morimail.graph.GraphTransport");
+    }
+
+    @Test
+    void inlineImageArrivesAsAnInlineFileAttachmentNextToARegularOne(WireMockRuntimeInfo wm)
+            throws IOException, MailException {
+        String sendPath = "/v1.0/users/newsletter%40example.com/sendMail";
+        stubToken();
+        stubFor(post(urlEqualTo(sendPath))
+                .withHeader("Authorization", equalTo("Bearer tracer-token"))
+                .willReturn(aResponse().withStatus(202)));
+        MailAccount account = MailAccount.builder("main")
+                .transport("graph")
+                .auth(credentials(wm))
+                .option("baseUrl", wm.getHttpBaseUrl() + "/v1.0")
+                .defaultFrom("newsletter@example.com")
+                .build();
+        byte[] logoBytes = {(byte) 0x89, 'P', 'N', 'G', 13, 10};
+        byte[] agendaBytes = {'%', 'P', 'D', 'F'};
+        Path logo = dir.resolve("logo.png");
+        Path agenda = dir.resolve("agenda.pdf");
+        Files.write(logo, logoBytes);
+        Files.write(agenda, agendaBytes);
+        Mail mail = Mail.using("main")
+                .to("reader@example.org")
+                .template(new MailTemplate("Hello $$name$$",
+                        "<p>Hi $$name$$</p><p><img src=\"cid:logo\" alt=\"Logo\"></p>", null),
+                        Map.of("name", "Anna"))
+                .inline(logo, "logo")
+                .attach(agenda)
+                .build();
+
+        Mailer.of(account).send(mail);
+
+        List<LoggedRequest> sends = findAll(postRequestedFor(urlEqualTo(sendPath)));
+        assertThat(sends).hasSize(1);
+        JsonNode message = MAPPER.readTree(sends.get(0).getBody()).get("message");
+        assertThat(message.get("body").get("contentType").asText()).isEqualTo("HTML");
+        assertThat(message.get("body").get("content").asText())
+                .isEqualTo("<p>Hi Anna</p><p><img src=\"cid:logo\" alt=\"Logo\"></p>");
+        ArrayNode expected = MAPPER.createArrayNode();
+        expected.addObject()
+                .put("@odata.type", "#microsoft.graph.fileAttachment")
+                .put("name", "logo.png")
+                .put("contentType", "image/png")
+                .put("contentBytes", Base64.getEncoder().encodeToString(logoBytes))
+                .put("isInline", true)
+                .put("contentId", "logo");
+        expected.addObject()
+                .put("@odata.type", "#microsoft.graph.fileAttachment")
+                .put("name", "agenda.pdf")
+                .put("contentType", "application/pdf")
+                .put("contentBytes", Base64.getEncoder().encodeToString(agendaBytes));
+        assertThat(message.get("attachments")).isEqualTo(expected);
     }
 }

@@ -164,6 +164,11 @@ final class GraphTransport implements MailTransport {
                 node.put("name", attachment.filename());
                 node.put("contentType", attachment.contentType());
                 node.put("contentBytes", Base64.getEncoder().encodeToString(content));
+                // Inline image: property names from the fileAttachment and attachmentItem pages; the HTML body refers to it as cid: plus the content id.
+                if (attachment.contentId() != null) {
+                    node.put("isInline", true);
+                    node.put("contentId", attachment.contentId());
+                }
             }
         }
         ObjectNode root = MAPPER.createObjectNode();
