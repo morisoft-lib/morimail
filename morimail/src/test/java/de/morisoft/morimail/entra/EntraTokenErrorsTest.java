@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -390,8 +391,9 @@ class EntraTokenErrorsTest {
 
     @Test
     void nothingSecretReachesALogOrAMessage(WireMockRuntimeInfo wm) throws Exception {
-        List<String> seen = new ArrayList<>();
-        List<String> loggers = new ArrayList<>();
+        // HttpClient and WireMock threads publish to the root logger while this thread reads, so both lists must be thread-safe (UAT G-03-4).
+        List<String> seen = new CopyOnWriteArrayList<>();
+        List<String> loggers = new CopyOnWriteArrayList<>();
         Handler handler = new Handler() {
             @Override
             public void publish(LogRecord record) {
