@@ -5,16 +5,16 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "`clean()` address regex is quadratic on a long, address-free token"
+    disposition: open
+    title: "Cutting at 1000 raw characters before whitespace collapse can leave a partial mail address in the message"
   - id: IN-01
     severity: info
-    disposition: fixed
-    title: "The \"no addresses in exception messages\" claim is still a best-effort statement for `code` and `request-id`"
+    disposition: open
+    title: "The \"quickly\" regression tests have a thin time margin"
   - id: IN-02
     severity: info
-    disposition: fixed
-    title: "No test shows that an address-bearing `request-id` is cleaned"
+    disposition: open
+    title: "The magic number 1000 is duplicated in two files, and Graph repeats 300 as a literal"
   - id: WR-02
     severity: warning
     disposition: fixed
@@ -39,18 +39,18 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 0
+open: 3
 total: 9
-recorded: 2026-11-22T16:09:34.959Z
+recorded: 2026-11-22T16:15:22.883Z
 ---
 
 # Phase 03: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 03-REVIEW-FIX.md |
-| IN-01 | info | fixed | 03-REVIEW-FIX.md |
-| IN-02 | info | fixed | 03-REVIEW-FIX.md |
+| WR-01 | warning | open | - |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | IN-03 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
