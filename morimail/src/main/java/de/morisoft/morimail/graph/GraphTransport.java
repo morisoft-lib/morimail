@@ -320,7 +320,7 @@ final class GraphTransport implements MailTransport {
         }
         // Collapse, then cut at a word boundary, then replace addresses: the address pattern is quadratic on a long
         // token without "@", so it only sees the cut text, and a cut inside a word could leave the start of an address
-        // that the pattern no longer finds (review WR-01).
+        // that the pattern no longer finds.
         String collapsed = sb.toString().replaceAll(" {2,}", " ");
         if (collapsed.length() > MAX_CLEAN_INPUT) {
             collapsed = collapsed.substring(0, MAX_CLEAN_INPUT);

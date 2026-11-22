@@ -355,7 +355,7 @@ class GraphErrorMappingTest {
                 .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id <address>");
     }
 
-    // A single word longer than the cut has no word boundary, so none of it is kept (review WR-01).
+    // A single word longer than the cut has no word boundary, so none of it is kept.
     @Test
     @Timeout(10)
     void aVeryLongCodeIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
@@ -373,7 +373,7 @@ class GraphErrorMappingTest {
                 .isEqualTo("Graph sendMail failed: HTTP 400, code <address>, request-id -");
     }
 
-    // The first address ends at character 991 and the second starts at 993, so the cut at 1000 falls inside it (review WR-01).
+    // The first address ends at character 991 and the second starts at 993, so the cut at 1000 falls inside it.
     @Test
     void anAddressStraddlingTheCutLeavesNoPartOfItInTheMessage(WireMockRuntimeInfo wm) {
         stubError(400, null, errorBody("x".repeat(980) + "@example.org " + "alice".repeat(5) + "@example.org", "m"));
@@ -391,7 +391,7 @@ class GraphErrorMappingTest {
                 .isEqualTo("Graph sendMail failed: HTTP 404, code '<address>' <<address>>, request-id -");
     }
 
-    // Graph's text can name the sender (live 404 ErrorInvalidUser, UAT G-03-2), so it never enters the message.
+    // Graph's text can name the sender (live 404 ErrorInvalidUser), so it never enters the message.
     @ParameterizedTest
     @ValueSource(strings = {"The requested user 'newsletter@example.com' is invalid.",
         "The requested user 'newsletter%40example.com' is invalid."})

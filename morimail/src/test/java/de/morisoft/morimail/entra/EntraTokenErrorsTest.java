@@ -208,7 +208,7 @@ class EntraTokenErrorsTest {
                 });
     }
 
-    // A single word longer than the cut has no word boundary, so none of it is kept (review WR-01).
+    // A single word longer than the cut has no word boundary, so none of it is kept.
     @Test
     @Timeout(10)
     void aVeryLongDescriptionIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
@@ -229,7 +229,7 @@ class EntraTokenErrorsTest {
                 .satisfies(e -> assertThat(e.getMessage()).endsWith("description: <address>"));
     }
 
-    // The first address ends at character 991 and the second starts at 993, so the cut at 1000 falls inside it (review WR-01).
+    // The first address ends at character 991 and the second starts at 993, so the cut at 1000 falls inside it.
     @Test
     void anAddressStraddlingTheCutLeavesNoPartOfItInTheMessage(WireMockRuntimeInfo wm) {
         stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "x".repeat(980) + "@example.org "
@@ -424,7 +424,7 @@ class EntraTokenErrorsTest {
 
     @Test
     void nothingSecretReachesALogOrAMessage(WireMockRuntimeInfo wm) throws Exception {
-        // HttpClient and WireMock threads publish to the root logger while this thread reads, so both lists must be thread-safe (UAT G-03-4).
+        // HttpClient and WireMock threads publish to the root logger while this thread reads, so both lists must be thread-safe.
         List<String> seen = new CopyOnWriteArrayList<>();
         List<String> loggers = new CopyOnWriteArrayList<>();
         Handler handler = new Handler() {
