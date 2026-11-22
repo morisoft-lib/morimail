@@ -5,15 +5,15 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Cutting at 1000 raw characters before whitespace collapse can leave a partial mail address in the message"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: skipped
     title: "The \"quickly\" regression tests have a thin time margin"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The magic number 1000 is duplicated in two files, and Graph repeats 300 as a literal"
   - id: WR-02
     severity: warning
@@ -39,18 +39,18 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 3
+open: 0
 total: 9
-recorded: 2026-11-22T16:15:22.883Z
+recorded: 2026-11-22T16:22:10.117Z
 ---
 
 # Phase 03: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
-| IN-01 | info | open | - |
-| IN-02 | info | open | - |
+| WR-01 | warning | fixed | 03-REVIEW-FIX.md |
+| IN-01 | info | skipped | 03-REVIEW-FIX.md |
+| IN-02 | info | fixed | 03-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | IN-03 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
