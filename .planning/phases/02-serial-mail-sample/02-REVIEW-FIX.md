@@ -1,7 +1,7 @@
 ---
 phase: 02-serial-mail-sample
 fixed_at: 2026-11-22T06:20:00Z
-review_path: /home/coder/morimail/.planning/phases/02-serial-mail-sample/02-REVIEW.md
+review_path: .planning/phases/02-serial-mail-sample/02-REVIEW.md
 iteration: 1
 findings_in_scope: 9
 fixed: 9
@@ -12,7 +12,7 @@ status: all_fixed
 # Phase 02: Code Review Fix Report
 
 **Fixed at:** 2026-11-22T06:20:00Z
-**Source review:** /home/coder/morimail/.planning/phases/02-serial-mail-sample/02-REVIEW.md
+**Source review:** .planning/phases/02-serial-mail-sample/02-REVIEW.md
 **Iteration:** 1
 
 **Summary:**

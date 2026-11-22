@@ -1,7 +1,7 @@
 ---
 phase: 01-library-core
 fixed_at: 2026-11-21T13:50:00Z
-review_path: /home/coder/morimail/.planning/phases/01-library-core/01-REVIEW.md
+review_path: .planning/phases/01-library-core/01-REVIEW.md
 iteration: 1
 findings_in_scope: 12
 fixed: 11
@@ -12,7 +12,7 @@ status: partial
 # Phase 1: Code Review Fix Report
 
 **Fixed at:** 2026-11-21T13:50:00Z
-**Source review:** /home/coder/morimail/.planning/phases/01-library-core/01-REVIEW.md
+**Source review:** .planning/phases/01-library-core/01-REVIEW.md
 **Iteration:** 1
 
 **Summary:**

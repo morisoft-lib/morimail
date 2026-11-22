@@ -1,7 +1,7 @@
 ---
 phase: 02-serial-mail-sample
-verified: 2026-11-21T18:30:00Z
-status: human_needed
+verified: 2026-11-22T07:10:00Z
+status: passed
 score: 5/5 must-haves verified
 covered_files:
   - .planning/phases/02-serial-mail-sample/02-01-PLAN.md
@@ -19,23 +19,28 @@ covered_files:
   - morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Journal.java
   - morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/SendCommand.java
   - morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/SerialMail.java
-covered_digest: "v4:sha256:eb8df6bd90ad9f4c6750cda5951f44870d515ceff4b5eb81aba451a815a26b4d"
+covered_digest: "v4:sha256:0c9e5fb34ae25a2e46493811a78cfc0eca8b3808eb22a755974171aa3820cbda"
 behavior_unverified: 0
 overrides_applied: 0
-human_verification:
-  - test: "Run the jar dry-run with --out in a new mktemp -d directory outside the repo, open the five .html files in a browser, and open example-campaign/attachments/info.pdf in a real PDF viewer and logo.png in an image viewer."
-    expected: "Each page shows the greeting with the recipient's name, city and topic (clara's topic reads 'Tips, tricks & shortcuts' as an ampersand). The PDF opens as one page with the text 'morimail example attachment'. The PNG shows a colour gradient. Neither viewer shows an author, creator or producer."
-    why_human: "No PDF tool is installed here. The structural checks (xref offsets, no Info dictionary, no text chunks) cannot prove a real viewer accepts the file, and rendering is visual. Harvested from the 02-04 PLAN human-check block."
+re_verification:
+  previous_status: human_needed
+  previous_score: 5/5
+  gaps_closed:
+    - "Human check (example PDF/PNG and rendered pages in real viewers): satisfied by 02-UAT.md (status complete, test 1 pass, 2026-11-22)"
+  gaps_remaining: []
+  regressions: []
 ---
 
 # Phase 2: Serial-Mail Sample Verification Report
 
 **Phase Goal:** As a campaign sender, I want to dry-run and send a CSV serial mail with a journal, so that a rerun never mails a recipient twice.
-**Verified:** 2026-11-21T18:30:00Z
-**Status:** human_needed
-**Re-verification:** No, initial verification
+**Verified:** 2026-11-22T07:10:00Z
+**Status:** passed
+**Re-verification:** Yes. The previous report (human_needed) went stale after the code-review fixes (commits 3e71c50 to 3981cf8). I re-read the changed code and re-ran the build and the jar. I did not rely on SUMMARY.md or REVIEW-FIX.md.
 
-All five roadmap success criteria hold in the code, and I confirmed this myself. I did not rely on SUMMARY.md. I read the 910 lines of production code, ran `./mvnw -B -ntp -o verify` (121 tests, 0 failures, BUILD SUCCESS), and ran the built jar against the shipped example campaign and against deliberately broken campaigns. One human check remains, the PDF viewer check. Two process warnings and the open code-review items are listed below. None of them is a goal blocker.
+## Result
+
+All five roadmap success criteria still hold after the review fixes. None of the nine fixes (WR-01 to WR-03, IN-01 to IN-06) broke a must-have. The one human item from the previous report is closed by 02-UAT.md (test 1: pass), so no human item remains.
 
 ## Goal Achievement
 
@@ -43,28 +48,28 @@ All five roadmap success criteria hold in the code, and I confirmed this myself.
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | `send --dry-run` on the example campaign writes 5 rendered mails (`.html`, `.txt`, `.subject.txt`, sanitised names) and lists attachments. It needs no secret env vars and touches neither the network nor the journal. The campaign has 3 placeholders, a PDF and a PNG under 100 KB each, and 5 `example.org` rows. | VERIFIED | I ran `env -i java -jar target/morimail-sample-serial-0.1.0-SNAPSHOT.jar send --dry-run` on a copy of the campaign. Exit 0 and 15 files `01-anna@example.org.{html,txt,subject.txt}` through `05-emma@...`. Printed `attachments: info.pdf (application/pdf, 602 bytes), logo.png (image/png, 60959 bytes)`. No `journal.jsonl` was created. HTML escapes `&amp;`. The CSV has 5 rows of `@example.org` and the placeholders are `firstName`, `city` and `topic`. Pre-flight sits before the `dryRun` branch and `Journal.open` is skipped when `dryRun` is set. `mailerFactory` is not called when dry-run is set, so no env var is read. |
-| 2 | A broken campaign is rejected before the first send, with all problems reported together and exit 2. The problems include a placeholder with no CSV column, an invalid email, a `;`-delimited header, and a first row that fails `mailer.validate`. | VERIFIED | Run through the jar: a `;` header gave 10 problems at once (the `;` header, no `email` column, 9 placeholder problems, the account problem) and exit 2. A second run gave a missing-column report, `duplicate address ... line 4`, `line 2: ... email must contain exactly one '@'` and exit 2, all reported together. The `mailer.validate` of the first row is at `SendCommand.java` (the `PermanentMailException` branch) and covered by `PreflightTest` (`brokenCampaignReportsEveryProblemTogether`, line 60). The journal is opened only when `problems.isEmpty()`. |
-| 3 | Against `recording`, each row is sent once, with one progress line per recipient and one forced journal line per attempt. Rerunning sends nothing and counts every row as skipped. | VERIFIED | `Journal.append` writes through a `FileChannel` opened `CREATE, WRITE, APPEND` and calls `force(true)` after each line. `SendRunTest.sendsEveryRowOnceAndJournalsIt` asserts exact stdout `[i/N] email accepted` plus `accepted 3, skipped 0, failed 0`, empty stderr, and the journal key, email, timestamp and outcome fields. `rerunOfACompleteCampaignSendsNothing` asserts `skipped (journal)` for all rows, `attempts()==0`, no waits and an unchanged 3-line journal. The tests are behavioral and assert on the real `RecordingTransport` attempt count. A failed journal write stops the run (`IOException` leads to exit 1, `JournalTest.aFailedJournalWriteStopsTheRun`). |
-| 4 | A transient failure waits `retryAfter` (capped) or 30 s and retries up to 3 times, then is recorded and the run continues. Sender-rejected or auth-required stops at once with exit 3. The run ends with accepted/skipped/failed counts and exits 0 only if nothing failed. | VERIFIED | The constants are `DEFAULT_RETRY_WAIT=30s`, `MAX_RETRY_WAIT=5min` and `MAX_ATTEMPTS=4`. `catch (SenderRejectedException \| AuthRequiredException)` journals, prints the counts and returns 3. Other `MailException` is recorded and the loop continues. Exit is 1 if `failed>0`, else 0. `FailureHandlingTest` covers retry then accept (waits 7s then 30s), the cap and the spacing floor (5 parameter cases), 4 transient attempts ending as failed with the run continuing, permanent failures that continue, stopping on both exception types with exit 3 and exactly 2 attempts, auth during retries, and resume after a stop. |
-| 5 | Sends are spaced by `--rate`, skipped rows don't wait. `--limit`, `--campaign-id` and `--journal` behave as specified. `account.properties` and the campaign files are read as UTF-8, secrets come from env vars only, and `./mvnw verify` stays green offline. | VERIFIED | `spacing(rate)` is `ceil(60000/rate)`. The sleep happens only before an actual attempt (`sentAny`), and the skip path `continue`s first. `PacingAndOptionsTest` covers the spacing table, skipped rows without waits, `--limit` (including with skips and with dry-run), `--campaign-id` prefixing, `--journal` relocation and bad-argument pre-flight problems. Account and campaign files use strict UTF-8 (`Files.newBufferedReader` and `Files.readString` raise `MalformedInputException`, reported as a problem). The account file holds only env var names (`certificate.passwordEnv`, `secretEnv`) and tests assert that no file value is echoed. `./mvnw -B -ntp -o verify` ended BUILD SUCCESS with 121 tests, 0 failures. |
+| 1 | `send --dry-run` on the example campaign writes 5 rendered mails (`.html`, `.txt`, `.subject.txt`, sanitised names), lists the attachments, needs no secret env vars, and touches neither the network nor the journal. | VERIFIED | Ran the built jar under `env -i` on a copy of the shipped campaign: exit 0, 15 output files, line `attachments: info.pdf (application/pdf, 602 bytes), logo.png (image/png, 60959 bytes)`, five `[i/5] <address> rendered` lines, and no `journal.jsonl` in the campaign directory. In `SendCommand.call` the dry-run branch returns before any `Journal` use (the journal is opened only under `!dryRun`) and `mailerFactory` is only called under `!dryRun`. `DryRunTest` (7 tests) passes. |
+| 2 | A broken campaign is rejected before the first send, all problems reported together, exit 2 (placeholder without column, invalid email, `;` header, first row failing `mailer.validate`). | VERIFIED | Ran the jar on a campaign with a `;`-delimited header: 9 problems listed at once (the `;` header, no `email` column, 7 placeholder-without-column problems, one per placeholder per file), then `Pre-flight failed with 9 problem(s); nothing was sent.` and exit 2. The real (non-dry-run) run of the shipped campaign exits 2 with one account problem and sends nothing. The post-WR-03 grouping code (`invalidMail`, lines 105-119, and the per-row loop, lines 157-177) still collects every problem before the single exit-2 return, and the first-row `mailer.validate` branch (lines 187-194) is intact. `PreflightTest` (10 tests, including the two new WR-03 tests) passes. |
+| 3 | Against `recording`, each row is sent once with one progress line and one forced journal line per attempt; a rerun sends nothing and counts every row as skipped. | VERIFIED | `Journal.append` forces the channel after each line. `send` checks `journal.isAccepted(key)` before any attempt, increments `skipped` and `continue`s. `SendRunTest` (6) and `JournalTest` (18) pass against the real `RecordingTransport` attempt count, including the rerun-sends-nothing case and "a failed journal write stops the run". The WR/IN fixes did not touch `Journal.java`. |
+| 4 | A transient failure waits `retryAfter` (capped) or 30 s and retries up to 3 times, then is recorded and the run continues. Sender-rejected or auth-required stops at once with exit 3. The run ends with counts and exits 0 only if nothing failed. | VERIFIED | `DEFAULT_RETRY_WAIT` 30 s, `MAX_RETRY_WAIT` 5 min, `MAX_ATTEMPTS` 4. The `SenderRejectedException \| AuthRequiredException` branch journals, prints counts and returns 3. Other `MailException` records and continues. Return is `exit != 0 \|\| failed > 0 ? 1 : 0`. `FailureHandlingTest` (15, including the new IN-02 and IN-03 tests) passes. The IN-02 `RuntimeException` branch only adds a stop with counts and exit 1 for an otherwise unhandled error, and does not alter the four specified paths. |
+| 5 | Sends are spaced by `--rate`, skipped rows don't wait. `--limit`, `--campaign-id`, `--journal` behave as specified. Account and campaign files are UTF-8, secrets come from env vars only, `./mvnw verify` is green offline. | VERIFIED | `spacing(rate)` is `ceil(60000/rate)`. The sleep sits inside the attempt loop after the skip `continue`, gated by `sentAny`. `PacingAndOptionsTest` (22) passes. `AccountFile.read` now uses `Files.readString` (strict UTF-8, malformed input still reported) and strips one leading BOM (WR-01); `AccountFileTest` (22) passes. `Campaign` skips dot-files in `attachments/` (WR-02, line 85) and writes the BOM as `the \u + FEFF escape` (IN-05); `CampaignTest` (23) passes. `./mvnw -B -ntp -o verify` run by me: BUILD SUCCESS, library module and sample module green, sample 128 tests, 0 failures, 0 errors, 0 skipped. |
 
 **Score:** 5/5 truths verified (0 present but behavior-unverified)
 
-The state-transition invariants (journal append, skip on rerun, stop on exit 3, retry count) each have a passing behavioral test that exercises the real command through the CLI-12 seam. They are not verified by presence alone.
+All state-transition truths (journal append, skip on rerun, stop on exit 3, retry count) have passing behavioral tests through the CLI-12 seam; none rests on presence alone.
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `SerialMail.java` (61 lines) | picocli entry, CLI-12 seam | VERIFIED | `commandLine(Function<AccountFile,Mailer>, Consumer<Duration>)` is used by `main` and by all tests. `realMailer` throws a clear "graph transport not available yet" message, which is the planned Phase 3 hook. |
-| `SendCommand.java` (329 lines) | send, dry-run, retry, stop, rate, limit | VERIFIED | Substantive and wired. All seven options are present. |
-| `Campaign.java` (295 lines) | hand-written RFC 4180 reader, template and attachments | VERIFIED | Handles quotes, CRLF, lone CR, BOM, line numbers, a `;` header, duplicate columns and a field-count mismatch. No CSV library is imported. |
-| `Journal.java` (131 lines) | forced append-only JSONL, accepted-key lookup | VERIFIED | Torn last line repair and damaged-line warnings are present. |
-| `AccountFile.java` (94 lines) | UTF-8 properties, credential form check | VERIFIED | Enforces exactly one credential form. Problems name keys, never values. |
-| `example-campaign/*` | 3 placeholders, PDF and PNG, 5 `example.org` rows | VERIFIED | The PDF is 602 bytes with correct xref offsets (1:9, 2:58, 3:115, 4:241, 5:349, xref:419) and no Info dictionary. The PNG is 60,959 bytes with only IHDR, IDAT and IEND chunks (no tEXt or eXIf). Account values are zero GUIDs and `example.com`. |
-| `pom.xml` (sample) | runnable jar with `lib/` classpath | VERIFIED | The manifest has `Main-Class` and `Class-Path: lib/...`. The jar ran on a clean `env -i` environment. |
-| 9 test classes (121 tests) | CLI-12 coverage | VERIFIED | The tests are substantive, with exact-output assertions. |
+| `SerialMail.java` (62 lines) | picocli entry, CLI-12 seam | VERIFIED | `commandLine(factory, sleep)` is the seam; `realMailer` fails clearly until Phase 3 (CLI-14). Javadoc now lists exit code 3 (IN-01). |
+| `SendCommand.java` (361 lines) | send, dry-run, retry, stop, rate, limit | VERIFIED | Substantive, all seven options present, wired to `Journal`, `Campaign`, `AccountFile`, `Mailer`. |
+| `Campaign.java` (299 lines) | hand-written RFC 4180 reader, template, attachments | VERIFIED | No CSV library imported. `Campaign.PLACEHOLDER` is reused by tests (IN-04). |
+| `Journal.java` (131 lines) | forced append-only JSONL | VERIFIED | Unchanged by the fixes. |
+| `AccountFile.java` (98 lines) | UTF-8 properties, one credential form | VERIFIED | BOM handling added; problems name keys, never values. |
+| `example-campaign/*` | 3 placeholders, PDF and PNG, 5 `example.org` rows | VERIFIED | Dry-run output confirms; PDF 602 bytes, PNG 60,959 bytes (both under 100 KB). Viewer check passed in UAT. |
+| `pom.xml` (sample) | runnable jar with `lib/` classpath, now declares `jackson-databind` | VERIFIED | Jar ran on a clean environment; the version comes from the parent BOM and the build is green offline. |
+| 9 sample test classes | CLI-12 coverage | VERIFIED | 128 tests pass. |
 
 ### Key Link Verification
 
@@ -72,25 +77,26 @@ The state-transition invariants (journal append, skip on rerun, stop on exit 3, 
 |------|----|-----|--------|---------|
 | `SerialMail.main` | `SendCommand` | `commandLine(realMailer, sleep)` | WIRED | Confirmed by running the jar. |
 | `SendCommand` | `Journal` | `open`, `isAccepted`, `append` | WIRED | |
-| `SendCommand` | `Campaign` and `AccountFile` | `read(..., problems)` | WIRED | A single `problems` list feeds exit 2. |
-| `SendCommand` | `Mailer.validate` and `Mailer.send` | first-row validate, per-row send | WIRED | Tested against the real `RecordingTransport` from the test-jar. |
-| `Journal.append` | disk | `channel.force(true)` | WIRED | |
+| `SendCommand` | `Campaign`, `AccountFile` | `read(..., problems)` | WIRED | One `problems` list feeds exit 2. |
+| `SendCommand` | `Mailer.validate`, `Mailer.send` | first-row validate, per-row send | WIRED | Tested against `RecordingTransport` from the test-jar. |
+| `Campaign` | core `TemplateRenderer` | placeholder names | WIRED | `extractedNamesSatisfyTheCoreRenderer` guards pattern drift (IN-04). |
+| sample `pom.xml` | `SerialMail` | jar manifest main class, `lib/` prefix | WIRED | Jar runs. |
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Real Data | Status |
 |----------|---------------|--------|-----------|--------|
-| dry-run files | `message.html()` etc. | `Mail.using(...).template(campaign.template(), row.fields())` from the CSV | Yes (visible in the generated files) | FLOWING |
-| send skip decision | `accepted` set | `Journal.open` parses the existing file | Yes (`rerunOfACompleteCampaignSendsNothing`) | FLOWING |
+| dry-run files | `message.html()`, `.subject()`, `.text()` | `Mail.using(...).template(campaign.template(), row.fields())` from the CSV | Yes, visible in the generated files | FLOWING |
+| skip decision | accepted-key set | `Journal.open` parses the existing file | Yes (`rerunOfACompleteCampaignSendsNothing`) | FLOWING |
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
-| Full build offline | `./mvnw -B -ntp -o verify` | 121 tests pass, BUILD SUCCESS | PASS |
-| Dry-run, no env | `env -i java -jar ... send --dry-run` | exit 0, 5 mails, attachments listed, no journal | PASS |
-| Broken campaign | jar with a `;` header and a bad email | all problems listed, exit 2 | PASS |
-| Real run before Phase 3 | jar without `--dry-run` | `account: the graph transport is not available yet...`, exit 2, nothing sent | PASS (expected, see below) |
+| Full build offline | `./mvnw -B -ntp -o verify` | BUILD SUCCESS, 128 sample tests, 0 failures | PASS |
+| Dry-run, no env | `env -i java -jar ... send --dry-run` | exit 0, 15 files, attachments listed, no journal | PASS |
+| Broken campaign | jar with a `;` header | 9 problems together, exit 2 | PASS |
+| Real run before Phase 3 | jar without `--dry-run` | one `account:` problem, exit 2, nothing sent | PASS (expected, CLI-14 is Phase 3) |
 
 ### Probe Execution
 
@@ -98,55 +104,46 @@ Step 7c: SKIPPED. No probes are declared in the plans and there is no `scripts/*
 
 ### Requirements Coverage
 
-The plan frontmatter declares CLI-01 to CLI-07, CLI-10, CLI-11, CLI-12 (02-01); CLI-02, CLI-04, CLI-05, CLI-12 (02-02); CLI-01, CLI-06 to CLI-10 (02-03); and CLI-02, CLI-11, CLI-13 (02-04). Their union is exactly CLI-01 to CLI-13. REQUIREMENTS.md maps those 13 IDs to Phase 2 and CLI-14 to Phase 3, so no ID is orphaned and none is missing.
+The PLAN frontmatter requirement IDs are CLI-01 to CLI-07, CLI-10 to CLI-12 (02-01); CLI-02, CLI-04, CLI-05, CLI-12 (02-02); CLI-01, CLI-06 to CLI-10 (02-03); CLI-02, CLI-11, CLI-13 (02-04). The union is exactly CLI-01 to CLI-13, the 13 IDs REQUIREMENTS.md maps to Phase 2 (all marked complete). CLI-14 maps to Phase 3. No ID is orphaned or missing.
 
-| Requirement | Description | Status | Evidence |
-|-------------|-------------|--------|----------|
-| CLI-01 | picocli `send` with all options, campaign id defaults to dir name | SATISFIED | `SendCommand` options. `campaignIdDefaultsToTheNormalisedDirectoryName` |
-| CLI-02 | `account.properties` UTF-8, credential forms, env-only secrets | SATISFIED | `AccountFile`. A UTF-8 BOM edge case is a warning (WR-01) |
-| CLI-03 | campaign files UTF-8, subject trailing newline trimmed, attachments | SATISFIED | `Campaign.read`. WR-02 notes that hidden files are attached |
-| CLI-04 | hand-written RFC 4180 reader, `;` header error | SATISFIED | `Campaign.parseCsv`, `CampaignTest` (22 tests) |
-| CLI-05 | pre-flight, all problems, exit 2 | SATISFIED | Jar run and `PreflightTest` |
-| CLI-06 | JSONL journal, key, forced, rerun skips, a failed write stops | SATISFIED | `Journal`, `JournalTest` (17 tests) |
-| CLI-07 | even spacing from `--rate`, skips don't wait | SATISFIED | `PacingAndOptionsTest` |
-| CLI-08 | transient retry (3x, capped), permanent records and continues | SATISFIED | `FailureHandlingTest` |
-| CLI-09 | sender or auth error stops with exit 3 | SATISFIED | `FailureHandlingTest.senderRejectedOrAuthRequiredStopsTheRun` |
-| CLI-10 | progress lines, counts, exit 0 only if nothing failed | SATISFIED | `SendRunTest` |
-| CLI-11 | dry-run files, no network, no journal, no secrets | SATISFIED | Jar run with `env -i` and `DryRunTest` |
-| CLI-12 | command logic takes a `Mailer`, tested against `recording` | SATISFIED | The seam is used by all send tests. |
-| CLI-13 | example campaign | SATISFIED | Verified above. The PDF viewer check remains for a human. |
+| Requirement | Status | Evidence |
+|-------------|--------|----------|
+| CLI-01 | SATISFIED | `SendCommand` options; campaign id defaults to the directory name |
+| CLI-02 | SATISFIED | `AccountFile`; UTF-8 and BOM handled (WR-01), env-var names only |
+| CLI-03 | SATISFIED | `Campaign.read`; hidden files no longer attached (WR-02, narrowing noted in REVIEW-FIX) |
+| CLI-04 | SATISFIED | Hand-written reader, `;` header error (jar run) |
+| CLI-05 | SATISFIED | Jar run, `PreflightTest`; identical defects reported once (WR-03) |
+| CLI-06 | SATISFIED | `Journal`, `JournalTest` |
+| CLI-07 | SATISFIED | `PacingAndOptionsTest` |
+| CLI-08 | SATISFIED | `FailureHandlingTest` |
+| CLI-09 | SATISFIED | `FailureHandlingTest` (exit 3, two exception types) |
+| CLI-10 | SATISFIED | `SendRunTest`; exit-code help text (IN-01) |
+| CLI-11 | SATISFIED | Jar run under `env -i`; `DryRunTest` |
+| CLI-12 | SATISFIED | All send tests run through the `Mailer` seam against `recording` |
+| CLI-13 | SATISFIED | Example campaign verified; viewer check passed in UAT |
 
 ### Anti-Patterns Found
 
-A grep for `TBD`, `FIXME`, `XXX`, `TODO` and `HACK` over the sample sources and campaign found nothing, so no debt-marker blocker applies. The empty-collection initialisations I saw are filled before use, so they are not stubs. The one real-run stub, `SerialMail.realMailer`, is intentional and documented in the roadmap scope notes (CLI-14 belongs to Phase 3).
+A grep for `TBD`, `FIXME`, `XXX`, `TODO`, `HACK` over the sample sources and example campaign found nothing, so no debt-marker blocker applies. No raw U+FEFF remains in the changed sources (written as `the \u + FEFF escape`). The only stub-like code, `SerialMail.realMailer`, is the documented Phase 3 hook (CLI-14).
 
 ### Human Verification Required
 
-#### 1. Example attachments and rendered pages in real viewers
-
-**Test:** Run the jar dry-run with `--out` pointing at a new `mktemp -d` directory outside the repository. Open the five `.html` files in a browser. Open `example-campaign/attachments/info.pdf` in a real PDF viewer and `logo.png` in an image viewer.
-**Expected:** Each page greets the recipient and shows their city and topic (clara's topic shows as `Tips, tricks & shortcuts`). The PDF opens as one page with the text "morimail example attachment". The PNG shows a colour gradient. Neither viewer shows an author, creator or producer.
-**Why human:** No PDF tool is installed here. I verified the structure (xref offsets match, no Info dictionary, PNG has only IHDR, IDAT and IEND) but not that a real viewer renders it.
+None. The previous report's one item (rendered pages, PDF and PNG in real viewers) is recorded as passed in `02-UAT.md`. I treat it as satisfied.
 
 ### Warnings (not goal blockers)
 
-1. **Git identity on two commits (project rule, CLAUDE.md "Commit as Stephan Wald <stephan@morisoft.de>").** Commits `33d0b53` (code review report) and `28d0326` (review disposition) have author and committer `swald@basis.cloud`, a real address. The workspace `GIT_AUTHOR_*` and `GIT_COMMITTER_*` environment variables override the local git config (this matches the saved memory note). All 24 executor commits use the required identity. The branch is 33 commits ahead of `origin/main` and has not been pushed, so the two commits can still be rewritten before any push. I did not modify history. History is permanent once pushed, so I recommend fixing it before pushing. (The pre-existing `Initial commit` 8c9b082 also carries this address. That is outside Phase 2 and the owner's call.)
-2. **Commit trailer.** All 23 trailers read `Co-Authored-By: Claude Sonnet 5.5`, while the plan text said Opus 5.5. This is cosmetic. It matches the attribution the environment requires and it has no bearing on the goal.
-3. **Open code-review findings (0 critical, 3 warning, 6 info, all `open` in 02-REVIEW-DISPOSITION.md).** I read the code behind them and agree with the review's severity.
-   - WR-01: an `account.properties` with a UTF-8 BOM reports a false "missing key" (the campaign reader strips the BOM, the account reader does not). This is an edge case against CLI-02.
-   - WR-02: every file in `attachments/`, including `.DS_Store`, is attached.
-   - WR-03: a row-independent defect (bad `from`, a bad attachment) produces one misattributed problem per row.
-   - IN-06: the journal takes no lock, so two concurrent runs on one campaign could each send every pending row. The spec's rerun guarantee holds for sequential reruns, which is what the goal states.
-   - IN-02: an unexpected `RuntimeException` ends the run with a stack trace and no counts.
+1. **Workstation path in a phase artifact.** `02-REVIEW-FIX.md` lines 4 and 15 contain an absolute workstation path (the review path). Plans 02-01 and 02-04 set a repo hygiene gate of no absolute workstation path under the phase directory, and the project is public. The file was added by the review-fix step after those plans ran, so it is not a plan deliverable, but it should be changed to a repo-relative path before this is pushed. The same pattern exists in `.planning/phases/01-library-core/01-REVIEW-FIX.md` (lines 4 and 15), which is outside this phase. This report itself uses repo-relative paths only.
+2. **Journal has no exclusive lock (IN-06, partial).** Two concurrent runs on one campaign could each send the pending rows. The reviewer called this a robustness gap, and the fixer deliberately did not add `tryLock` under Rule 0. The goal ("a rerun never mails a recipient twice") holds for sequential reruns, which is what the phase guarantees. The `jackson-databind` declaration part of IN-06 is applied.
+3. **WR-02 narrows the spec wording.** Dot-files are skipped, while spec section 8 says every file in `attachments/` is attached. `Thumbs.db` and `desktop.ini` are still attached. This is recorded in REVIEW-FIX; the dry-run lists attachments so an owner sees them.
+4. **Real sends are not available until Phase 3.** `SerialMail.realMailer` throws a clear message and the run exits 2. This is as scoped (CLI-14).
 
-   The owner should triage these (fix, defer or skip). WR-02 is the one with real recipient impact if someone's campaign directory holds junk files.
-4. **A real (non-dry-run) run cannot send until Phase 3.** `SerialMail.realMailer` throws, and the run exits 2 with "graph transport is not available yet". This is as scoped (CLI-14 belongs to Phase 3), and the phase's sending logic is proven through the `recording` seam as the roadmap requires.
+Commit identity check: every commit after the initial commit is authored and committed as the maintainer identity (the two earlier mis-attributed commits no longer appear).
 
 ### Gaps Summary
 
-No gaps. The phase goal is achieved: a campaign sender can dry-run a CSV campaign and send it with a forced journal, and a rerun skips every accepted row. The status is `human_needed` only because of the one visual PDF and PNG viewer check that the 02-04 plan explicitly deferred to a human.
+No gaps. The phase goal is achieved: a campaign sender can dry-run a CSV campaign and send it with a forced journal, and a rerun skips every accepted row. The review fixes changed pre-flight reporting, attachment selection, BOM handling, error text and one POM dependency, and none of them alters a roadmap success criterion; all are covered by passing tests.
 
 ---
 
-_Verified: 2026-11-21T18:30:00Z_
+_Verified: 2026-11-22T07:10:00Z_
 _Verifier: Claude (gsd-verifier)_
