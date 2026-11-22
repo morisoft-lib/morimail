@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,9 @@ import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** CLI-14: the sample sends the example campaign for real, with WireMock as token endpoint and Graph. */
 @WireMockTest
@@ -185,5 +189,136 @@ class GraphEndToEndTest {
         assertThat(WireMock.getAllServeEvents()).isEmpty();
         assertThat(SampleFixtures.journalLines(journal)).hasSize(5);
         assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
+    }
+
+    private SampleFixtures.Run runLimited(Path account, Path journal, Map<String, String> env, String... more) {
+        List<String> args = new ArrayList<>(List.of("send", "--account", account.toString(),
+                "--campaign", Path.of("example-campaign").toString(), "--journal", journal.toString()));
+        args.addAll(List.of(more));
+        return SampleFixtures.run(factory(env), new ArrayList<>(), args.toArray(new String[0]));
+    }
+
+    private void assertPreflight(SampleFixtures.Run run, Path journal, String problem, String... absent) {
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.errLines()).containsExactly(problem,
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
+        for (String value : absent) {
+            assertThat(run.err()).doesNotContain(value);
+            assertThat(run.out()).doesNotContain(value);
+        }
+        assertThat(WireMock.getAllServeEvents()).isEmpty();
+        assertThat(journal).doesNotExist();
+    }
+
+    @Test
+    void secretFlowSendsAClientSecretAndNoAssertion() throws IOException {
+        stubToken();
+        stubSend();
+        Path account = SampleFixtures.writeAccount(root, CERT_ACCOUNT + "secretEnv=MAIL_CLIENT_SECRET\n");
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"),
+                Map.of("MAIL_CLIENT_SECRET", "e2e-secret"), "--limit", "1");
+
+        assertThat(run.exit()).isZero();
+        assertThat(tokenRequests()).hasSize(1);
+        Map<String, String> tokenForm = form(tokenRequests().get(0));
+        assertThat(tokenForm).containsEntry("client_secret", "e2e-secret")
+                .doesNotContainKey("client_assertion");
+        assertThat(sendRequests()).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "")
+    void missingSecretIsAPreflightProblem(String value) throws IOException {
+        Path account = SampleFixtures.writeAccount(root, CERT_ACCOUNT + "secretEnv=MAIL_CLIENT_SECRET\n");
+        Map<String, String> env = new HashMap<>();
+        env.put("MAIL_CLIENT_SECRET", value);
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"), env);
+
+        assertPreflight(run, root.resolve("journal.jsonl"),
+                "account: secretEnv: the environment variable it names is not set or is empty");
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "")
+    void missingCertificatePasswordIsAPreflightProblem(String value) throws IOException {
+        Path account = certificateAccount();
+        Map<String, String> env = new HashMap<>();
+        env.put("MAIL_CERT_PASSWORD", value);
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"), env);
+
+        assertPreflight(run, root.resolve("journal.jsonl"),
+                "account: certificate.passwordEnv: the environment variable it names is not set or is empty");
+    }
+
+    @Test
+    void missingKeyStoreFileIsAPreflightProblemWithoutThePath() throws IOException {
+        Path missing = root.resolve("keys").resolve("missing.p12");
+        Path account = SampleFixtures.writeAccount(root, CERT_ACCOUNT
+                + "certificate.path=" + missing.toString().replace('\\', '/') + "\n"
+                + "certificate.passwordEnv=MAIL_CERT_PASSWORD\n");
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"),
+                Map.of("MAIL_CERT_PASSWORD", "changeit"));
+
+        assertPreflight(run, root.resolve("journal.jsonl"),
+                "account: certificate.path: the file does not exist or is not a regular file",
+                root.toString());
+    }
+
+    @Test
+    void wrongKeyStorePasswordIsAPreflightProblemWithoutPasswordOrPath() throws IOException {
+        Path account = certificateAccount();
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"),
+                Map.of("MAIL_CERT_PASSWORD", "Sentinel-pw-7f3a"));
+
+        assertPreflight(run, root.resolve("journal.jsonl"),
+                "account: certificate.path: the PKCS12 key store cannot be loaded with the password "
+                        + "from certificate.passwordEnv",
+                "Sentinel-pw-7f3a", root.toString());
+    }
+
+    @Test
+    void aRejectedMailboxStopsTheRunWithExitThree() throws IOException {
+        stubToken();
+        stubSend();
+        stubFor(post(urlEqualTo(SEND_PATH))
+                .withRequestBody(matchingJsonPath("$.message.toRecipients[0].emailAddress.address",
+                        equalTo("clara@example.org")))
+                .atPriority(1).willReturn(aResponse().withStatus(403)
+                        .withHeader("request-id", ZERO_GUID)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"error\":{\"code\":\"ErrorAccessDenied\",\"message\":\"Access is denied.\"}}")));
+        Path account = certificateAccount();
+        Path journal = root.resolve("rejected.jsonl");
+
+        SampleFixtures.Run run = runLimited(account, journal, Map.of("MAIL_CERT_PASSWORD", "changeit"));
+
+        assertThat(run.exit()).isEqualTo(3);
+        List<String> out = run.outLines();
+        assertThat(out).hasSize(4);
+        assertThat(out.get(0)).isEqualTo("[1/5] anna@example.org accepted");
+        assertThat(out.get(1)).isEqualTo("[2/5] ben@example.org accepted");
+        assertThat(out.get(2)).startsWith("[3/5] clara@example.org failed: SenderRejectedException: ");
+        assertThat(out.get(3)).isEqualTo("accepted 2, skipped 0, failed 1");
+        assertThat(run.errLines()).hasSize(1);
+        assertThat(run.err()).startsWith("Stopped: SenderRejectedException: Graph sendMail failed: HTTP 403")
+                .contains("ErrorAccessDenied").contains(ZERO_GUID)
+                .doesNotContain("e2e-token").doesNotContain("Bearer");
+        List<JsonNode> lines = SampleFixtures.journalLines(journal);
+        assertThat(lines).hasSize(3);
+        assertThat(lines.get(0).get("outcome").asText()).isEqualTo("accepted");
+        assertThat(lines.get(1).get("outcome").asText()).isEqualTo("accepted");
+        assertThat(lines.get(2).get("email").asText()).isEqualTo("clara@example.org");
+        assertThat(lines.get(2).get("outcome").asText()).isEqualTo("failed");
+        assertThat(lines.get(2).get("errorClass").asText()).isEqualTo("SenderRejectedException");
+        assertThat(sendRequests()).hasSize(3);
+        assertThat(sendRequests()).noneMatch(r -> r.getBodyAsString().contains("david@example.org")
+                || r.getBodyAsString().contains("emma@example.org"));
     }
 }

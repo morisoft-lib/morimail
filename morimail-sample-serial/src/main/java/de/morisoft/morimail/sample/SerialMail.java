@@ -4,6 +4,8 @@ import de.morisoft.morimail.MailAccount;
 import de.morisoft.morimail.Mailer;
 import de.morisoft.morimail.entra.EntraClientCredentials;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
@@ -75,8 +77,7 @@ public final class SerialMail {
                 throw new IllegalStateException(
                         "certificate.passwordEnv: the environment variable it names is not set or is empty");
             }
-            credentials = EntraClientCredentials.withCertificate(account.tenantId(), account.clientId(),
-                    Path.of(account.certificatePath()), password.toCharArray());
+            credentials = certificateCredentials(account, password);
         }
         MailAccount mailAccount = MailAccount.builder(account.id())
                 .transport("graph")
@@ -84,6 +85,29 @@ public final class SerialMail {
                 .option("baseUrl", graphBaseUrl)
                 .build();
         return Mailer.of(mailAccount);
+    }
+
+    /**
+     * The library's key-store message names the file, which is a value from account.properties, so
+     * every problem here is a fixed text.
+     */
+    private static EntraClientCredentials certificateCredentials(AccountFile account, String password) {
+        Path path;
+        try {
+            path = Path.of(account.certificatePath());
+        } catch (InvalidPathException e) {
+            throw new IllegalStateException("certificate.path: not a valid path");
+        }
+        if (!Files.isRegularFile(path)) {
+            throw new IllegalStateException("certificate.path: the file does not exist or is not a regular file");
+        }
+        try {
+            return EntraClientCredentials.withCertificate(account.tenantId(), account.clientId(), path,
+                    password.toCharArray());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("certificate.path: the PKCS12 key store cannot be loaded "
+                    + "with the password from certificate.passwordEnv", e);
+        }
     }
 
     private static void sleep(Duration wait) {
