@@ -379,7 +379,7 @@ public final class EntraClientCredentials implements TokenProvider {
         StringBuilder spaced = new StringBuilder(value.length());
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
-            spaced.append(Character.isISOControl(c) ? ' ' : c);
+            spaced.append(Character.isISOControl(c) || Character.isWhitespace(c) ? ' ' : c);
         }
         // Collapse, then cut at a word boundary, then replace addresses: the address pattern is quadratic on a long
         // token without "@", so it only sees the cut text, and a cut inside a word could leave the start of an address
