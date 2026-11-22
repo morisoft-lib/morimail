@@ -1,7 +1,7 @@
 package de.morisoft.morimail.sample;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,8 +38,12 @@ record AccountFile(String id, String tenantId, String clientId, String from,
             return null;
         }
         Properties properties = new Properties();
-        try (BufferedReader reader = Files.newBufferedReader(file)) {
-            properties.load(reader);
+        try {
+            String text = Files.readString(file);
+            if (text.startsWith("\uFEFF")) {
+                text = text.substring(1);
+            }
+            properties.load(new StringReader(text));
         } catch (MalformedInputException e) {
             problems.add(name + " is not valid UTF-8");
             return null;

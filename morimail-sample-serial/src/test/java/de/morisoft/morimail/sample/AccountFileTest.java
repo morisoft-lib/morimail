@@ -123,6 +123,14 @@ class AccountFileTest {
     }
 
     @Test
+    void leadingByteOrderMarkIsIgnored() throws IOException {
+        AccountFile account = read("\uFEFF" + ACCOUNT);
+
+        assertThat(problems).isEmpty();
+        assertThat(account.id()).isEqualTo("main");
+    }
+
+    @Test
     void malformedUnicodeEscapeIsAProblem() throws IOException {
         String backslash = String.valueOf('\\');
 
