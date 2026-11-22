@@ -25,7 +25,6 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 - ✓ `release` Maven profile (sources, Javadoc, GPG, Central publishing plugin); `mvn -Prelease verify -Dgpg.skip` passes without warnings — Phase 1
 - ✓ Serial-mail CLI (picocli): account.properties, campaign dir, pre-flight check (exit 2), journal + resume, rate limit, transient retry ×3, stop on sender/auth errors (exit 3), dry-run output, counts and exit codes — Phase 2 (real sending waits for the Graph transport, Phase 3)
 - ✓ Example campaign with three placeholders, two small generated attachments (PDF, PNG), five `example.org` rows — Phase 2
-
 - ✓ Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`, accepted by Entra live), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping — Phase 3
 - ✓ Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, size limits in `validate` (binary MiB, confirmed live), error mapping (403/404 rows confirmed live), one retry after 401 with a fresh token; failure messages carry status, code and request-id only — Phase 3
 - ✓ `mvn verify` passes with no network access (CI `unshare --net` step, Temurin 17); live test tagged `live`, enabled with `-Plive`, run by the owner — Phase 3
