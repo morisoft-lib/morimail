@@ -36,7 +36,7 @@ status: all_fixed
 **Commit:** f99d4cc
 **Applied fix:** The early "delete `app.key`" sentence is now "keep it until `app.p12` loads". The delete instruction moved after the fallback and the `keytool -list` check, and one sentence says `-legacy` is OpenSSL 3 only.
 
-### WR-03: release.md asks for CI on the release commit, but the commit is made after CI could run
+### WR-03: release.md asks for CI on the release commit, but the commit is made after CI could run and before the irreversible step
 
 **Files modified:** `docs/release.md`
 **Commit:** ce7bf8b
@@ -48,7 +48,7 @@ status: all_fixed
 **Commit:** e6707b5
 **Applied fix:** Removed WR-01, G-03-2, G-03-4, D-xx, "Phase 4" and UAT references from comments and architecture.md. The plain-language reasons stay.
 
-### IN-02: The two `clean()` methods sanitise differently
+### IN-02: The two `clean()` methods sanitise differently, though both documents say the same thing
 
 **Files modified:** `morimail/src/main/java/de/morisoft/morimail/entra/EntraClientCredentials.java`
 **Commit:** 1fba771
@@ -60,7 +60,7 @@ status: all_fixed
 **Commit:** 188707a
 **Applied fix:** Both misnamed tests are now `aSingleWordOverTheCutIsDroppedQuickly`. Each class has a new test `aLongTextWithSpacesIsCutAtAWordBoundaryAndThenAtThreeHundredCharacters` that feeds 300 repeats of `"word "` and expects `"word "` x 60 followed by `...` (the 300-character cut ends on a space, as the code produces).
 
-### IN-04: `.gitignore` does not cover the common neighbours
+### IN-04: `.gitignore` covers the key formats in the guide but not the common neighbours
 
 **Files modified:** `.gitignore`
 **Commit:** 6792cdf
