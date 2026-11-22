@@ -48,7 +48,7 @@ openssl req -x509 -newkey rsa:2048 -sha256 -nodes -keyout app.key -out app.cer -
 openssl pkcs12 -export -inkey app.key -in app.cer -name morimail -out app.p12 -passout env:MAIL_CERT_PASSWORD
 ```
 
-Then delete `app.key`. The file `app.p12` holds the key behind the password.
+The file `app.p12` holds the key behind the password. Keep `app.key` until you have checked that `app.p12` loads (see the fallback below).
 
 Upload `app.cer` to the app registration: Certificates & secrets, Certificates, Upload certificate, select `app.cer`, then Add. morimail does not need the thumbprint, because it computes `x5t#S256` itself.
 
@@ -58,7 +58,7 @@ Fallback: if an old JDK 17 patch level cannot read `app.p12`, create the file ag
 openssl pkcs12 -export -legacy -inkey app.key -in app.cer -name morimail -out app.p12 -passout env:MAIL_CERT_PASSWORD
 ```
 
-This needs `app.key`, so delete it only after you know that `app.p12` loads.
+`-legacy` exists only in OpenSSL 3. Older OpenSSL and LibreSSL reject the flag, and their default output is already the old format. This needs `app.key`. Check that the file loads, for example with `keytool -list -storetype PKCS12 -keystore app.p12`. Only then delete `app.key`, for example with `shred -u app.key`.
 
 Quick alternative for a first test: a client secret. Go to Certificates & secrets, Client secrets, New client secret. Copy the Value at once, because Entra never shows it again. A secret lives at most 24 months, and Microsoft recommends under 12. Microsoft says client secrets should not be used in production. Give the secret to the shell the same way as the password:
 
