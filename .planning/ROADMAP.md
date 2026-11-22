@@ -154,7 +154,7 @@ Phase 4 starts only after this report. If the corrections to code are substantia
   3. `docs/architecture.md` summarises the contracts on one page and records every deviation: the `freshAccessToken` default, `baseUrl`, unchecked registry exceptions, JUnit 6, the `changeit` keystore, the reactor-only test-jar, and any differences from the Microsoft docs.
   4. `README.md` explains what morimail is and what it is not (Exchange limits; not a bulk mailer). It covers the pre-1.0 status, the coordinates, a quick start, the at-least-once and accepted-not-delivered semantics, and the test keystore.
   5. `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (D-20: scoped to the published modules) builds the sources and Javadoc jars without warnings. A `-DskipUpload=true` rehearsal bundle contains only `morimail-parent` and `morimail` (no `-tests.jar`, no sample), and the owner's release steps are listed.
-**Plans:** 3/4 plans executed (wave 1: 04-01; wave 2: 04-02; wave 3: 04-03; wave 4: 04-04)
+**Plans:** 4/4 plans executed (wave 1: 04-01; wave 2: 04-02; wave 3: 04-03; wave 4: 04-04)
 
 Plans:
 **Wave 1**
@@ -167,7 +167,7 @@ Plans:
 - [x] 04-03-PLAN.md — `README.md`: what morimail is and is not, a quick start compiled once against the real API, the sample dry run and the setup link
 
 **Wave 4** *(blocked on Wave 3 completion)*
-- [ ] 04-04-PLAN.md — Signed `-DskipUpload=true` rehearsal at 0.1.0 in a scratch copy (only `morimail-parent` and `morimail`, cleanup proven), `docs/release.md` with the owner's steps, the CI commands, and the owner hand-over (live walk-through of the guide)
+- [x] 04-04-PLAN.md — Signed `-DskipUpload=true` rehearsal at 0.1.0 in a scratch copy (only `morimail-parent` and `morimail`, cleanup proven), `docs/release.md` with the owner's steps, the CI commands, and the owner hand-over (live walk-through of the guide)
 **UI hint**: no
 
 Scope notes:
@@ -195,4 +195,4 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
 | 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
 | 3. Graph and Entra | 6/6 | Complete    | 2026-11-22 |
-| 4. Docs and Release Readiness | 3/4 | In Progress | - |
+| 4. Docs and Release Readiness | 4/4 | In Progress | - |
