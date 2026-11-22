@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v0.2.0
 milestone_name: Inline Images
 status: planning
-last_updated: "2026-11-22T21:36:53.785Z"
+last_updated: "2026-11-22T22:00:00.000Z"
 last_activity: 2026-11-22
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -17,18 +17,19 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-22 after v0.1.0)
+See: .planning/PROJECT.md (updated 2026-11-22 after starting milestone v0.2.0)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Planning the next milestone (candidate: inline images, spec §10.3)
+**Current focus:** Phase 5: Inline Images in Core and Graph
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-11-22 — Milestone v0.2.0 started
+Phase: 5 of 7 (Inline Images in Core and Graph), first of 3 phases in v0.2.0
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-22: Roadmap for v0.2.0 created (Phases 5-7, 15/15 requirements mapped)
 
+Progress (v0.2.0): [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -87,7 +88,13 @@ v0.1.0 decisions are archived in milestones/v0.1.0-ROADMAP.md, the phase files i
 
 - Release builds use `-pl morimail -am` (D-20); the test-jar is reactor-only and never published.
 - Graph failure messages carry the HTTP status, code and request-id only.
-- `Attachment.contentId` exists and `build()` rejects it until inline images are built (spec §10.3).
+- `Attachment.contentId` exists and `build()` rejects it until inline images are built (spec §10.3). Phase 5 replaces that rejection with the INLN-01..05 checks.
+
+v0.2.0 roadmap (2026-11-22):
+
+- Three phases: core and Graph together (Phase 5), then the sample (Phase 6), then docs and release readiness (Phase 7). Core checks come before Graph and the sample, and docs come last.
+- Owner checkpoint after Phase 5 for the live inline test. It does not block Phase 6, which runs against `recording`. Phase 7 records the owner's result, or asks the owner whether to record "not yet confirmed live".
+- Spec §10.3 says "a transport that cannot send inline images rejects them in `validate`". This needs no code: both in-repo transports handle inline images (Rule 0).
 
 ### Pending Todos
 
@@ -95,10 +102,12 @@ None yet.
 
 ### Blockers/Concerns
 
+- [Phase 5]: The Graph `fileAttachment` inline property names are unverified (spec §10.3). Read the current Microsoft page before coding and note any difference in `docs/architecture.md`.
+- [Phase 5]: Only JDK 21 is installed locally. Content-type resolution for images and the doclint result on the changed records need a Temurin 17 CI round-trip.
 - [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
-- [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached.
+- [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached. Phase 6 should decide the same rule for `inline/`. Under the CLI-16 non-image check, `Thumbs.db` in `inline/` would fail pre-flight.
 
 ## Deferred Items
 
@@ -110,10 +119,11 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T20:45:45.154Z
-Stopped at: Milestone v0.1.0 complete and archived
+Last session: 2026-11-22T22:00:00.000Z
+Stopped at: v0.2.0 roadmap created (Phases 5-7), awaiting owner approval
 Resume file: None
 
 ## Operator Next Steps
 
-- Start the next milestone with /gsd-new-milestone
+- Review and approve the v0.2.0 roadmap (.planning/ROADMAP.md)
+- Then plan the first phase with /gsd-plan-phase 5 (or /gsd-discuss-phase 5 first)

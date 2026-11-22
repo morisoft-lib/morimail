@@ -64,12 +64,27 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
+| INLN-01 | Phase 5 | Pending |
+| INLN-02 | Phase 5 | Pending |
+| INLN-03 | Phase 5 | Pending |
+| INLN-04 | Phase 5 | Pending |
+| INLN-05 | Phase 5 | Pending |
+| INLN-06 | Phase 5 | Pending |
+| GRAPH-10 | Phase 5 | Pending |
+| GRAPH-11 | Phase 5 | Pending |
+| GRAPH-12 | Phase 5 | Pending |
+| CLI-15 | Phase 6 | Pending |
+| CLI-16 | Phase 6 | Pending |
+| CLI-17 | Phase 6 | Pending |
+| CLI-18 | Phase 6 | Pending |
+| DOCS-05 | Phase 7 | Pending |
+| DOCS-06 | Phase 7 | Pending |
 
 **Coverage:**
 - v0.2.0 requirements: 15 total
-- Mapped to phases: 0
-- Unmapped: 15 ⚠️
+- Mapped to phases: 15 (Phase 5: 9, Phase 6: 4, Phase 7: 2)
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-22*
-*Last updated: 2026-11-22 after initial definition*
+*Last updated: 2026-11-22 after roadmap creation (Phases 5-7)*
