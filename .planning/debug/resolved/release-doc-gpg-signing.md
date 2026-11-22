@@ -1,18 +1,19 @@
 ---
-status: diagnosed
+status: resolved
 trigger: "release-doc-gpg-signing: docs/release.md lets the owner run the release, including the signed deploy, without hitting an undocumented failure; the Portal validates the deployment and the bundle matches the 30-entry listing."
 created: 2026-11-22T20:21:00Z
-updated: 2026-11-22T20:48:00Z
-goal: find_root_cause_only
+updated: 2026-11-22T21:26:00Z
+goal: find_and_fix
 ---
 
 ## Current Focus
 
 bug_class: Bohrbug (deterministic: same command, same environment, same failure on the first sign call)
-hypothesis: CONFIRMED - H2. Maven `-B` (in both documented deploy commands) makes maven-gpg-plugin 3.2.8 run gpg with `--batch --no-tty --pinentry-mode error`, so gpg-agent can only hand over a cached passphrase. The owner's key is passphrase-protected and the cache was cold, so the first sign (morimail-parent POM) fails with gpg exit 2. docs/release.md never tells the owner to prime the agent, says "gpg asks for the passphrase" (impossible under -B), and presents GPG_TTY as the remedy (it only matters for the warm-up).
-test: done (bytecode, gpg matrix, real release-profile build, warm-up pty test, owner's post-priming success)
+hypothesis: CONFIRMED - H2. Maven `-B` (in both documented deploy commands) makes maven-gpg-plugin 3.2.8 run gpg with `--batch --no-tty --pinentry-mode error`, so gpg-agent can only hand over a cached passphrase. The owner's key is passphrase-protected and the cache was cold, so the first sign (morimail-parent POM) fails with gpg exit 2. docs/release.md never told the owner to prime the agent, said "gpg asks for the passphrase" (impossible under -B), and presented GPG_TTY as the remedy (it only matters for the warm-up).
+resume_finding: the fix is ALREADY in HEAD. Gap closure 04-05 committed it in c359ec1 (20:45Z), and review fixes 49cfe7b, 7b97943, f9096a9 refined it. UAT test 5 (owner, real terminal, real deploy and Portal) passed with the fixed doc, and 0.1.0 was released (81ff531). No further doc edit is needed (Rule 0: do not write it twice).
+test: done (each fix item checked against docs/release.md at HEAD; revert-and-reconfirm of the doc procedure with a throwaway protected key; `./mvnw -o -B -ntp verify` green)
 expecting: n/a
-next_action: return ROOT CAUSE FOUND to the orchestrator (goal find_root_cause_only); no doc or source edits
+next_action: none; session resolved and archived to .planning/debug/resolved/
 
 reasoning_checkpoint:
   hypothesis: "docs/release.md step 5 fails with gpg exit 2 because its `-B` deploy commands put maven-gpg-plugin into non-interactive mode (--pinentry-mode error), so a passphrase-protected key can only be used from a primed gpg-agent cache, and the doc has no step that primes it; it instead promises a passphrase prompt and offers GPG_TTY, which has no effect under -B."
@@ -132,9 +133,42 @@ started: Discovered during UAT on 2026-11-22
   found: W1 GPG_TTY unset -> exit 2 "gpg: signing failed: Inappropriate ioctl for device". W2 GPG_TTY=$(tty) -> pinentry prompt drawn on the pty and waiting (timeout 124, prompt text seen). Library test phase takes about 7 s (surefire reports), well below gpg-agent's default-cache-ttl of 600 s.
   implication: GPG_TTY is needed for the warm-up (its stdin is a pipe, so gpg cannot find the tty itself), not for Maven. The warm-up must run in a real terminal; in a Claude Code `!` shell `$(tty)` is "not a tty" (C2 -> "No such file or directory"). The cache lasts 10 minutes after the last use, so a long pause between the skipUpload check and the real deploy needs a second warm-up.
 
+- timestamp: 2026-11-22T21:15:00Z
+  checked: resume (goal find_and_fix): git log -- docs/release.md, docs/release.md at HEAD, 04-UAT.md, git diff 72e7f7f HEAD of the three POMs
+  found: the recommended fix is already committed. c359ec1 "fix(04-05): warm up gpg-agent before each deploy" (20:45Z) plus review fixes 49cfe7b (IN-01 name --pinentry-mode error), 7b97943 (IN-02 same-key check), f9096a9 (IN-03 warm-up prints nothing on success). At HEAD: step 2.3 (line 33) scopes GPG_TTY to the warm-up and says the deploy cannot prompt; step 5 (line 68) says to use a real terminal, not a Claude Code `!` command, and explains -B -> --pinentry-mode error; the warm-up `export GPG_TTY=$(tty)` + `echo test | gpg --clearsign > /dev/null` stands before the skipUpload check (lines 70-73) and again before the real deploy (lines 104-107); line 77 covers the 10-minute cache and several secret keys; line 115 replaces "gpg asks for the passphrase" with "signs from the agent cache and cannot prompt"; line 117 says where the raw `gpg:` line appears and that "No pinentry" means an empty cache. POMs changed only in the version (0.1.0 -> 0.2.0-SNAPSHOT); the gpg plugin config is untouched. 04-UAT.md test 5 (owner, real terminal: warm-up, 30-entry skipUpload check, warm-up, real deploy, Portal validation) is `result: pass`; 81ff531 bumps to 0.2.0-SNAPSHOT "after the 0.1.0 release".
+  implication: every fix item from fix_rationale is in place and the owner has already used it for the real release. A second edit would duplicate it (Rule 0), so files_changed of this session is the existing commits.
+
+- timestamp: 2026-11-22T21:22:00Z
+  checked: scratchpad/verify-doc.sh + ptyrun.py (revert-and-reconfirm). Throwaway passphrase-protected ed25519 key in its own GNUPGHOME; pinentry-curses; each step in a fresh pty (python pty.fork, TERM=xterm); the warm-up taken verbatim from both step 5 code blocks at HEAD (awk, both blocks identical); Maven = `./mvnw -B -ntp -o -s <empty settings> -Prelease clean verify -DskipTests -pl morimail -am` on a `git archive HEAD` copy (the sign execution only; no deploy, no install, no upload)
+  found:
+    OLD (72e7f7f doc: GPG_TTY=$(tty) exported in the deploy shell, no warm-up, -B, cold cache cached=0 protection=P) -> mvn rc=1; "gpg: signing failed: No pinentry" twice at log line 25-26, under "--- gpg:3.2.8:sign (sign-artifacts) @ morimail-parent ---" (line 23), above "Reactor Summary" (line 28); line 38 "[ERROR] Failed to execute goal ...maven-gpg-plugin:3.2.8:sign (sign-artifacts) on project morimail-parent: Exit code: 2" (the owner's exact error)
+    NEW warm-up (doc text, pinentry-curses prompt seen, passphrase typed into the pty) -> rc=0, no `gpg:` output; agent now cached=1
+    NEW deploy-equivalent (same Maven -B command, GPG_TTY set, primed cache) -> mvn rc=0, BUILD SUCCESS, signs 1 + 4 files, 5 .asc, 5 good signatures by gpg --verify
+  cleanup: throwaway GNUPGHOME, agent and archive copy removed; only the owner's agent (--homedir ~/.gnupg) runs, never used
+  implication: the bug returns when the old procedure is followed and is gone when the new one is followed, with only the doc's steps varied. This closes the one link the earlier run did not exercise (passphrase typed into pinentry by the doc's exact warm-up, instead of a loopback priming). The doc's claims "prints nothing on success" and "gpg: line under --- gpg:3.2.8:sign, above the Reactor Summary" match the real output.
+
+- timestamp: 2026-11-22T21:24:00Z
+  checked: `./mvnw -o -B -ntp verify` in /home/coder/morimail at HEAD (0.2.0-SNAPSHOT)
+  found: BUILD SUCCESS; morimail 316 tests, morimail-sample-serial 137 tests, 0 failures, 0 errors, 0 skipped (live test excluded by default)
+  implication: the repository build is green; the doc fix touched no code
+
 ## Resolution
 
 root_cause: "docs/release.md step 5 runs the deploy with Maven `-B`, which makes maven-gpg-plugin 3.2.8 call gpg with `--batch --no-tty --pinentry-mode error` (no passphrase source configured), so gpg-agent may only use an already cached passphrase; the owner's key is passphrase-protected and the cache was cold, so gpg exits 2 on the first file (morimail-parent POM); the doc has no agent warm-up step, wrongly says gpg asks for the passphrase during the deploy, offers GPG_TTY (step 2) as if it made the deploy prompt, and does not say where gpg's real message appears; the 04-04 rehearsal could not catch it because its throwaway key had no passphrase (%no-protection)"
-fix: "(diagnosis only; not applied) docs/release.md: add a warm-up in a real terminal right before each deploy command (export GPG_TTY=$(tty); echo test | gpg --clearsign > /dev/null), fix the 'gpg asks for the passphrase' sentence, re-scope the step 2.3 GPG_TTY line to the warm-up, and add one line on reading the raw gpg: line under gpg:3.2.8:sign"
-verification: "n/a (find_root_cause_only)"
-files_changed: []
+fix: "docs/release.md only, no POM change (already committed by gap closure 04-05 before this session resumed: c359ec1, refined by review fixes 49cfe7b, 7b97943, f9096a9; this session made no further doc edit). Step 2.3 now says the deploy cannot ask for the passphrase and GPG_TTY is for the warm-up only. Step 5 says to run in a real terminal, not a Claude Code `!` command, explains that -B gives --pinentry-mode error, and puts the warm-up `export GPG_TTY=$(tty)` + `echo test | gpg --clearsign > /dev/null` before the skipUpload check and again before the real deploy, with the 10-minute cache note and the several-keys hint (--local-user / -Dgpg.keyname). 'gpg asks for the passphrase' became 'signs from the agent cache and cannot prompt, because of -B'. One paragraph says Exit code: 2 carries no reason, gpg's own unprefixed gpg: line sits under --- gpg:3.2.8:sign above the Reactor Summary, and 'No pinentry' means warm up and rerun."
+verification:
+  target_test: { result: pass, note: "driving check is the doc procedure itself (no automated test exists for docs): new step 5 with a throwaway protected key -> warm-up rc=0, Maven -B release-profile sign BUILD SUCCESS, 5 .asc, 5 good signatures" }
+  mutation_check: { result: skipped, reason_if_skipped: "doc-only change; no mutation tool applies to Markdown (no Stryker/PIT configured)" }
+  no_op_deletion: { result: pass, deletion_justified_by_rca: true, note: "docs/release.md 72e7f7f..HEAD: 27 insertions, 4 deletions; the 4 removed lines are the wrong 'gpg asks for the passphrase' / GPG_TTY-as-remedy text the RCA names, replaced by correct text and the warm-up" }
+  adjacent_tests: { result: pass, suites_run: ["./mvnw -o -B -ntp verify: morimail 316, morimail-sample-serial 137, 0 failures"] }
+  revert_and_reconfirm: { result: pass, bug_returned_on_revert: true, fixed_on_reapply: true, note: "old step 5 (72e7f7f) -> the owner's exact 'maven-gpg-plugin:3.2.8:sign ... on project morimail-parent: Exit code: 2' with 'gpg: signing failed: No pinentry'; new step 5 (HEAD, warm-up typed into pinentry-curses in a pty) -> BUILD SUCCESS" }
+  human: "04-UAT.md test 5 passed: the owner followed the fixed step 5 in a real terminal (warm-up, 30-entry skipUpload check, warm-up, real deploy) and the Portal validated the deployment; 0.1.0 was released (81ff531)"
+  guardrail_verdict: accepted
+oracle_type: "specified (spec 13.3 + UAT test 3/5 expectation: the signed deploy completes without an undocumented failure; Maven exit code and gpg --verify of each .asc)"
+files_changed: ["docs/release.md (c359ec1, 49cfe7b, 7b97943, f9096a9)"]
+prevention:
+  five_whys:
+    - "docs branch: why exit 2? -B forbids pinentry and the cache was cold. Why no warm-up in the doc? The passphrase/GPG_TTY lines came from research notes ('signing prompts via gpg-agent') that were never executed with a protected key. Why not executed? The 04-04 rehearsal key was %no-protection, so its signing path never needed a passphrase."
+    - "environment branch: why did GPG_TTY not help? The plugin passes --pinentry-mode error under -B, so no pinentry can start in any terminal. Why was GPG_TTY offered? The common gpg advice (GPG_TTY for pinentry) assumes gpg may prompt, which is false for maven-gpg-plugin in batch mode (its useAgent docs say to prime the agent)."
+  why_not_caught: "verify step (the 04-04 release rehearsal): it ran the real release profile, but with an unprotected throwaway key, so the passphrase path was never exercised; no automated gate exists for doc procedures"
+  recurrence_guard: "docs/release.md step 5 warm-up before each deploy + the 'Exit code: 2' / 'No pinentry' diagnosis paragraph (line 117); KB pattern 'release-doc-gpg-signing' in .planning/debug/knowledge-base.md: rehearse signing with a passphrase-protected throwaway key and a cold agent cache, not %no-protection"
