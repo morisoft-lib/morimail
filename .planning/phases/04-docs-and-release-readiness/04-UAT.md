@@ -3,7 +3,7 @@ status: diagnosed
 phase: 04-docs-and-release-readiness
 source: [04-VERIFICATION.md]
 started: 2026-11-22T19:40:36Z
-updated: 2026-11-22T20:30:15Z
+updated: 2026-11-22T20:52:21Z
 ---
 
 ## Current Test
@@ -32,12 +32,20 @@ context: "Step 5 deploy failed: maven-gpg-plugin 3.2.8 sign on morimail-parent, 
 expected: Each warning is fixed or accepted in writing.
 result: pass
 
+### 5. In a real terminal, continue docs/release.md at step 5: warm-up, skipUpload check (30 entries), warm-up again, real `./mvnw -B -ntp -Prelease clean deploy -pl morimail -am`, then step 6 in the Portal
+expected: The deploy signs from the agent cache without an undocumented failure, and the Central Portal validates the deployment (POM metadata, signatures, sources, javadoc) and lists the 30-entry bundle. Report any step where the doc and the real output differ.
+result: [pending]
+
+### 6. Before step 7, decide on review finding WR-01 of 04-REVIEW.md (step 7 tags HEAD, but HEAD is past the release commit 72e7f7f)
+expected: `git show --no-patch v0.1.0^{commit}` shows the `release 0.1.0` commit that CI tested, not a later docs commit.
+result: [pending]
+
 ## Summary
 
-total: 4
+total: 6
 passed: 3
 issues: 1
-pending: 0
+pending: 2
 skipped: 0
 blocked: 0
 
