@@ -25,6 +25,7 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,6 +40,13 @@ final class GraphTransport implements MailTransport {
     static final String SCOPE = "https://graph.microsoft.com/.default";
     static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+
+    /** Graph takes a file attachment below this size, alone and with all others added up. */
+    static final long MAX_ATTACHMENT_BYTES = 3L * 1024 * 1024;
+    /** The estimated request, attachments as base64 plus body plus allowance, may not exceed this. */
+    static final long MAX_REQUEST_BYTES = 4L * 1024 * 1024;
+    /** Room for subject, addresses and JSON syntax in the request estimate. */
+    static final long JSON_ALLOWANCE = 16L * 1024;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final System.Logger LOG = System.getLogger(GraphTransport.class.getName());
@@ -65,13 +73,55 @@ final class GraphTransport implements MailTransport {
         return URI.create(baseUrl + "/users/" + URLEncoder.encode(from, StandardCharsets.UTF_8) + "/sendMail");
     }
 
+    static long base64Size(long size) {
+        return (size + 2) / 3 * 4;
+    }
+
     @Override
-    public void validate(MailMessage message) throws InvalidMailException {
-        // The size limits arrive with the full request body.
+    public void validate(MailMessage m) throws InvalidMailException {
+        long total = 0;
+        long estimate = JSON_ALLOWANCE;
+        List<String> names = new ArrayList<>();
+        for (Attachment attachment : m.attachments()) {
+            long size;
+            try {
+                size = Files.size(attachment.file());
+            } catch (IOException e) {
+                throw new InvalidMailException("attachment " + attachment.filename() + " cannot be read", e);
+            }
+            if (size >= MAX_ATTACHMENT_BYTES) {
+                throw new InvalidMailException("attachment " + attachment.filename() + " has " + size
+                        + " bytes; Graph takes attachments below 3 MiB (" + MAX_ATTACHMENT_BYTES + " bytes)");
+            }
+            total += size;
+            estimate += base64Size(size);
+            names.add(attachment.filename());
+        }
+        if (total >= MAX_ATTACHMENT_BYTES) {
+            throw new InvalidMailException("attachments " + String.join(", ", names) + " have " + total
+                    + " bytes together; Graph takes below 3 MiB (" + MAX_ATTACHMENT_BYTES + " bytes) in total");
+        }
+        String content = usesHtml(m) ? m.html() : m.text();
+        if (content != null) {
+            try {
+                // The escaped UTF-8 JSON string without its two quotes: what send writes for the body.
+                estimate += MAPPER.writeValueAsBytes(content).length - 2;
+            } catch (IOException e) {
+                throw new InvalidMailException("the mail body cannot be written as JSON", e);
+            }
+        }
+        if (estimate > MAX_REQUEST_BYTES) {
+            throw new InvalidMailException("estimated request size " + estimate
+                    + " bytes is above the limit of 4 MiB (" + MAX_REQUEST_BYTES + " bytes)");
+        }
+    }
+
+    private static boolean usesHtml(MailMessage m) {
+        return m.html() != null && !m.html().isBlank();
     }
 
     private byte[] requestBody(MailMessage m) throws MailException {
-        boolean html = m.html() != null && !m.html().isBlank();
+        boolean html = usesHtml(m);
         boolean text = m.text() != null && !m.text().isBlank();
         if (html && text && bothBodiesLogged.compareAndSet(false, true)) {
             LOG.log(System.Logger.Level.INFO,
