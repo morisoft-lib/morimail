@@ -30,7 +30,7 @@ The owner runs every step on their own machine. Claude prepares the build and re
    gpg --keyserver keyserver.ubuntu.com --send-keys <KEYID>
    ```
 
-3. The passphrase goes through gpg-agent. Run `export GPG_TTY=$(tty)` in the shell that runs the deploy. Never set `gpg.passphrase`; the plugin deprecates it.
+3. The passphrase goes through gpg-agent. The deploy cannot ask for it, so step 5 starts with a warm-up that puts it into the agent's cache. `GPG_TTY` is for that warm-up; it does not make the deploy prompt. Never set `gpg.passphrase`; the plugin deprecates it.
 
 ## 3. Put the Portal token in settings.xml
 
@@ -65,6 +65,15 @@ The owner runs every step on their own machine. Claude prepares the build and re
 
 ## 5. Deploy
 
+Run this step in a real terminal, not as a `!` command in Claude Code, where `tty` prints `not a tty`. Both deploy commands use `-B`, so the gpg plugin runs gpg in batch mode, where it cannot ask for the passphrase. It signs only if gpg-agent already holds the passphrase. So warm up the agent right before each deploy command, and enter the passphrase when asked:
+
+```
+export GPG_TTY=$(tty)
+echo test | gpg --clearsign > /dev/null
+```
+
+By default the agent keeps the passphrase for 10 minutes after its last use. If more time passes before the deploy, warm up again. If you have several secret keys, add `--local-user <KEYID>` to the `gpg` line and `-Dgpg.keyname=<KEYID>` to both deploy commands.
+
 First, an optional check that sends nothing. It builds and signs the bundle and skips the upload:
 
 ```
@@ -88,13 +97,22 @@ Two notes on that check:
 
 The check installs the 0.1.0 artifacts under `~/.m2/repository/de/morisoft`. Remove that directory afterwards if you do not want them there.
 
-Then the real deploy:
+Then the real deploy. Warm up the agent again:
+
+```
+export GPG_TTY=$(tty)
+echo test | gpg --clearsign > /dev/null
+```
+
+Then deploy:
 
 ```
 ./mvnw -B -ntp -Prelease clean deploy -pl morimail -am
 ```
 
-Tests run, and gpg asks for the passphrase. `autoPublish` is false, and the plugin waits until the deployment is validated, so nothing is public yet.
+Tests run. The deploy signs from the agent cache and cannot prompt, because of `-B`. `autoPublish` is false, and the plugin waits until the deployment is validated, so nothing is public yet.
+
+If a deploy fails with `maven-gpg-plugin:3.2.8:sign` and `Exit code: 2`, that line gives no reason. gpg's own message is a `gpg:` line without `[INFO]` or `[ERROR]`, under `--- gpg:3.2.8:sign` and above the Reactor Summary. `gpg: signing failed: No pinentry` means the agent cache was empty: warm up and run the same command again.
 
 ## 6. Review and publish in the Portal
 
