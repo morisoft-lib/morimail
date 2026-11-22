@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: complete
 phase: 04-docs-and-release-readiness
 source: [04-VERIFICATION.md]
 started: 2026-11-22T19:40:36Z
-updated: 2026-11-22T20:52:21Z
+updated: 2026-11-22T21:01:15.584Z
 ---
 
 ## Current Test
@@ -34,18 +34,19 @@ result: pass
 
 ### 5. In a real terminal, continue docs/release.md at step 5: warm-up, skipUpload check (30 entries), warm-up again, real `./mvnw -B -ntp -Prelease clean deploy -pl morimail -am`, then step 6 in the Portal
 expected: The deploy signs from the agent cache without an undocumented failure, and the Central Portal validates the deployment (POM metadata, signatures, sources, javadoc) and lists the 30-entry bundle. Report any step where the doc and the real output differ.
-result: [pending]
+result: pass
 
 ### 6. Before step 7, decide on review finding WR-01 of 04-REVIEW.md (step 7 tags HEAD, but HEAD is past the release commit 72e7f7f)
 expected: `git show --no-patch v0.1.0^{commit}` shows the `release 0.1.0` commit that CI tested, not a later docs commit.
-result: [pending]
+result: pass
+note: "v0.1.0 on origin resolves to 72e7f7f release 0.1.0"
 
 ## Summary
 
 total: 6
-passed: 3
+passed: 5
 issues: 1
-pending: 2
+pending: 0
 skipped: 0
 blocked: 0
 
@@ -53,7 +54,9 @@ blocked: 0
 
 - gap_id: G-04-3
   truth: "docs/release.md lets the owner run the release, including the signed deploy, without hitting an undocumented failure; the Portal validates the deployment and the bundle matches the 30-entry listing."
-  status: failed
+  status: resolved
+  resolved_by: 04-05-PLAN.md
+  resolved_at: 2026-11-22
   reason: "User reported: that's missing in the document"
   severity: major
   test: 3
