@@ -388,7 +388,13 @@ class GraphErrorMappingTest {
         logger.setLevel(Level.ALL);
         logger.addHandler(handler);
         List<String> messages = new ArrayList<>();
+        MailMessage bothBodies = Mail.using("main").from("newsletter@example.com").to("reader@example.org")
+                .subject("Sentinel-subject-7f3a").text("Sentinel-text-7f3a").html("<p>Sentinel-html-7f3a</p>")
+                .build().message();
         try {
+            // The one log call of the transport fires for a mail with both bodies.
+            stubError(500, ZERO_ID, errorBody("ErrorX", "gone"));
+            catchThrowable(() -> transport(wm, secret).send(bothBodies));
             for (int status : new int[] {401, 403, 429, 500, 400}) {
                 for (String body : new String[] {"<html>Sentinel-body-7f3a</html>", errorBody("ErrorX", "gone")}) {
                     stubError(status, ZERO_ID, body);
@@ -402,7 +408,7 @@ class GraphErrorMappingTest {
 
         assertThat(messages).hasSize(10).allSatisfy(m -> assertThat(m)
                 .doesNotContain("Sentinel-body-7f3a", "Sentinel-token-7f3a", "Sentinel-subject-7f3a", "Bearer"));
-        assertThat(records).allSatisfy(r -> assertThat(r.getMessage())
+        assertThat(records).isNotEmpty().allSatisfy(r -> assertThat(r.getMessage())
                 .doesNotContain("Sentinel", "Bearer", "example.org", "example.com"));
     }
 

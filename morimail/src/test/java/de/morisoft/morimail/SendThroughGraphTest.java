@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import de.morisoft.morimail.entra.EntraClientCredentials;
 import de.morisoft.morimail.graph.GraphTransportProvider;
@@ -89,6 +90,31 @@ class SendThroughGraphTest {
         assertThat(message.get("body").get("content").asText()).isEqualTo("Plain text body");
         assertThat(message.get("toRecipients").get(0).get("emailAddress").get("address").asText())
                 .isEqualTo("reader@example.org");
+    }
+
+    @Test
+    void aRejectedTokenIsReplacedByTheRealTokenProviderAndTheSendRepeatedOnce(WireMockRuntimeInfo wm)
+            throws MailException {
+        String sendPath = "/v1.0/users/newsletter%40example.com/sendMail";
+        stubFor(post(urlEqualTo(TOKEN_PATH)).inScenario("tokens").whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(okJson("{\"access_token\":\"t1\",\"token_type\":\"Bearer\",\"expires_in\":3599}"))
+                .willSetStateTo("second"));
+        stubFor(post(urlEqualTo(TOKEN_PATH)).inScenario("tokens").whenScenarioStateIs("second")
+                .willReturn(okJson("{\"access_token\":\"t2\",\"token_type\":\"Bearer\",\"expires_in\":3599}")));
+        stubFor(post(urlEqualTo(sendPath)).withHeader("Authorization", equalTo("Bearer t1"))
+                .willReturn(aResponse().withStatus(401)));
+        stubFor(post(urlEqualTo(sendPath)).withHeader("Authorization", equalTo("Bearer t2"))
+                .willReturn(aResponse().withStatus(202)));
+        MailTransport transport = new GraphTransportProvider()
+                .create(Map.of("baseUrl", wm.getHttpBaseUrl() + "/v1.0"), credentials(wm));
+
+        transport.send(textMail("newsletter@example.com"));
+
+        verify(exactly(2), postRequestedFor(urlEqualTo(TOKEN_PATH)));
+        List<LoggedRequest> sends = findAll(postRequestedFor(urlEqualTo(sendPath)));
+        assertThat(sends).hasSize(2);
+        assertThat(sends.get(0).getHeader("Authorization")).isEqualTo("Bearer t1");
+        assertThat(sends.get(1).getHeader("Authorization")).isEqualTo("Bearer t2");
     }
 
     @Test
