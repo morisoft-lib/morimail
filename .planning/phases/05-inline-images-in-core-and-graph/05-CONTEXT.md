@@ -22,6 +22,7 @@ Not in this phase: the sample's `inline/` directory (Phase 6), docs and release 
 
 ### What counts as a `cid:` reference
 - **D-04:** Any `cid:` anywhere in the **rendered** HTML counts: `src="cid:x"`, CSS `url(cid:x)`, `background=`. A simple regex, no HTML parsing. A literal "cid:" in body text also counts, which is accepted.
+  - **Amended 2026-11-22 (owner-approved in plan review):** two narrowings apply. A `cid:` directly preceded by a letter or digit is not a reference (lookbehind `(?<![\p{L}\p{N}])`, so prose like "acid:" does not count). A `cid:` with an empty ID (e.g. `href="cid:"`) is skipped. Every other literal `cid:`, in markup or body text, still counts.
 - **D-05:** The prefix `cid:` matches in any case (`CID:`, `Cid:`). The ID after it is compared to `contentId` exactly and case-sensitively. No URL-decoding.
 - **D-06:** A reference's ID runs until `"`, `'`, whitespace, `)`, `>`, or the end of input.
 - **D-07:** Only the HTML body is scanned. A mail with inline images and no HTML body fails, because the images are unreferenced (INLN-03).
