@@ -18,5 +18,5 @@ jobs:
       - run: ./mvnw -B -ntp verify
       # release build scoped to the published modules: an unattached test-jar breaks a full-reactor release build
       - run: ./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am
-      # warmed-cache check that Maven needs no remote resolution, not network isolation
-      - run: ./mvnw -B -ntp -o verify
+      # REPO-08: the same build with no network at all: a fresh network namespace with only loopback up, Maven offline on the warmed cache, run as the runner user (sudo only creates the namespace)
+      - run: sudo --preserve-env=HOME,JAVA_HOME unshare --net sh -c "ip link set lo up && exec setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups ./mvnw -B -ntp -o verify"
