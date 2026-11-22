@@ -122,8 +122,11 @@ If a deploy fails with `maven-gpg-plugin:3.2.8:sign` and `Exit code: 2`, that li
 
 ## 7. Tag
 
+Tag the "release 0.1.0" commit from step 4, not whatever `HEAD` is now. Later commits can sit on top of it. Check that the second command shows that commit before you push the tag.
+
 ```
-git tag -a v0.1.0 -m "morimail 0.1.0"
+git tag -a v0.1.0 -m "morimail 0.1.0" "$(git log -1 --format=%H --grep='^release 0\.1\.0$')"
+git show --no-patch --format='%h %s' v0.1.0^{commit}
 git push origin v0.1.0
 ```
 
