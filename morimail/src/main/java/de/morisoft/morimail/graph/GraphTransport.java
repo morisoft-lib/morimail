@@ -3,6 +3,7 @@ package de.morisoft.morimail.graph;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import de.morisoft.morimail.Attachment;
 import de.morisoft.morimail.AuthRequiredException;
 import de.morisoft.morimail.InvalidMailException;
 import de.morisoft.morimail.MailAddress;
@@ -22,11 +23,16 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.time.Duration;
+import java.util.Base64;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Sends one message through the Graph {@code sendMail} call. Immutable after construction and
- * safe for concurrent use by several threads; the one {@link HttpClient} is shared by all of them.
+ * Sends one message through the Graph {@code sendMail} call. The configuration is fixed after
+ * construction and the only mutable state is one {@link AtomicBoolean}; one instance with its one
+ * {@link HttpClient} is safe for concurrent use by several threads.
  */
 final class GraphTransport implements MailTransport {
 
@@ -35,12 +41,14 @@ final class GraphTransport implements MailTransport {
     static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final System.Logger LOG = System.getLogger(GraphTransport.class.getName());
 
     private final String baseUrl;
     private final boolean saveToSentItems;
     private final TokenProvider auth;
     private final Duration requestTimeout;
     private final HttpClient http;
+    private final AtomicBoolean bothBodiesLogged = new AtomicBoolean();
 
     GraphTransport(String baseUrl, boolean saveToSentItems, TokenProvider auth, Duration requestTimeout) {
         this.baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
@@ -62,33 +70,75 @@ final class GraphTransport implements MailTransport {
         // The size limits arrive with the full request body.
     }
 
-    @Override
-    public void send(MailMessage m) throws MailException {
-        String token = auth.accessToken(SCOPE);
+    private byte[] requestBody(MailMessage m) throws MailException {
+        boolean html = m.html() != null && !m.html().isBlank();
+        boolean text = m.text() != null && !m.text().isBlank();
+        if (html && text && bothBodiesLogged.compareAndSet(false, true)) {
+            LOG.log(System.Logger.Level.INFO,
+                    "a mail has both an HTML and a text body; Graph sends only the HTML body (logged once per transport)");
+        }
         ObjectNode message = MAPPER.createObjectNode();
         message.put("subject", m.subject());
-        boolean html = m.html() != null && !m.html().isBlank();
-        ObjectNode body = message.putObject("body");
-        body.put("contentType", html ? "HTML" : "Text");
-        body.put("content", html ? m.html() : m.text());
-        ArrayNode to = message.putArray("toRecipients");
-        for (MailAddress address : m.to()) {
-            to.addObject().putObject("emailAddress").put("address", address.email());
+        message.putObject("body").put("contentType", html ? "HTML" : "Text")
+                .put("content", html ? m.html() : m.text());
+        addRecipients(message, "toRecipients", m.to());
+        addRecipients(message, "ccRecipients", m.cc());
+        addRecipients(message, "bccRecipients", m.bcc());
+        if (m.replyTo() != null) {
+            addRecipients(message, "replyTo", List.of(m.replyTo()));
+        }
+        if (!m.attachments().isEmpty()) {
+            ArrayNode attachments = message.putArray("attachments");
+            for (Attachment attachment : m.attachments()) {
+                byte[] content;
+                try {
+                    content = Files.readAllBytes(attachment.file());
+                } catch (IOException e) {
+                    throw new InvalidMailException("attachment " + attachment.filename() + " cannot be read", e);
+                }
+                ObjectNode node = attachments.addObject();
+                node.put("@odata.type", "#microsoft.graph.fileAttachment");
+                node.put("name", attachment.filename());
+                node.put("contentType", attachment.contentType());
+                node.put("contentBytes", Base64.getEncoder().encodeToString(content));
+            }
         }
         ObjectNode root = MAPPER.createObjectNode();
         root.set("message", message);
-
-        HttpRequest request;
+        if (!saveToSentItems) {
+            root.put("saveToSentItems", false);
+        }
         try {
-            request = HttpRequest.newBuilder(sendMailUri(m.from().email()))
-                    .header("Authorization", "Bearer " + token)
-                    .header("Content-Type", "application/json")
-                    .timeout(requestTimeout)
-                    .POST(BodyPublishers.ofByteArray(MAPPER.writeValueAsBytes(root)))
-                    .build();
+            return MAPPER.writeValueAsBytes(root);
         } catch (IOException e) {
             throw new PermanentMailException("Graph sendMail failed: the request body cannot be built", e);
         }
+    }
+
+    private static void addRecipients(ObjectNode message, String key, List<MailAddress> addresses) {
+        if (addresses.isEmpty()) {
+            return;
+        }
+        ArrayNode array = message.putArray(key);
+        for (MailAddress address : addresses) {
+            ObjectNode email = array.addObject().putObject("emailAddress");
+            email.put("address", address.email());
+            if (address.displayName() != null && !address.displayName().isEmpty()) {
+                email.put("name", address.displayName());
+            }
+        }
+    }
+
+    @Override
+    public void send(MailMessage m) throws MailException {
+        byte[] json = requestBody(m);
+        String token = auth.accessToken(SCOPE);
+        HttpRequest request = HttpRequest.newBuilder(sendMailUri(m.from().email()))
+                .header("Authorization", "Bearer " + token)
+                .header("Content-Type", "application/json")
+                .timeout(requestTimeout)
+                .POST(BodyPublishers.ofByteArray(json))
+                .build();
         HttpResponse<byte[]> response;
         try {
             response = http.send(request, BodyHandlers.ofByteArray());
