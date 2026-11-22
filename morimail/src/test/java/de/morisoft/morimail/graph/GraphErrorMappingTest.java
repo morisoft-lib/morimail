@@ -339,6 +339,23 @@ class GraphErrorMappingTest {
     }
 
     @Test
+    void aMailAddressInTheRequestIdIsReplaced(WireMockRuntimeInfo wm) {
+        stubError(500, "x@example.org", errorBody("C", "m"));
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id <address>");
+    }
+
+    @Test
+    void aMailAddressInTheInnerRequestIdIsReplaced(WireMockRuntimeInfo wm) {
+        stubError(500, null, "{\"error\":{\"code\":\"C\",\"message\":\"m\",\"innerError\":"
+                + "{\"request-id\":\"x@example.org\"}}}");
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id <address>");
+    }
+
+    @Test
     @Timeout(10)
     void aVeryLongCodeIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
         stubError(400, null, errorBody("a".repeat(100_000), "m"));
