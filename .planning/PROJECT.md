@@ -28,10 +28,11 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 - ✓ Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`, accepted by Entra live), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping — Phase 3
 - ✓ Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, size limits in `validate` (binary MiB, confirmed live), error mapping (403/404 rows confirmed live), one retry after 401 with a fresh token; failure messages carry status, code and request-id only — Phase 3
 - ✓ `mvn verify` passes with no network access (CI `unshare --net` step, Temurin 17); live test tagged `live`, enabled with `-Plive`, run by the owner — Phase 3
+- ✓ Docs: `docs/entra-setup.md` (admin guide, RBAC for Applications), `docs/architecture.md`, README quick start, `docs/release.md` (gpg-agent warm-up for `-B` deploys, tag the release commit) — Phase 4
+- ✓ Release 0.1.0: signed deploy validated by the Central Portal (30-entry bundle), tag `v0.1.0` on the CI-green release commit — Phase 4 (run by the owner)
 
 ### Active
 
-- [ ] Docs: `docs/entra-setup.md` (admin guide, RBAC for Applications recommended), `docs/architecture.md`, README quick start
 - [ ] Address scrub in `clean()` cuts at 1000 characters before replacing addresses, so an address straddling the cut can leak its start (review WR-01, advisory)
 
 ### Out of Scope
@@ -109,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-22 after Phase 3*
+*Last updated: 2026-11-22 after Phase 4*

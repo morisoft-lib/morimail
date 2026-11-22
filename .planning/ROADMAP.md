@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Library Core** - Templated mail built, validated and sent through a `Mailer` account to the `recording` transport, on a CI-checked, release-shaped build (completed 2026-11-21)
 - [x] **Phase 2: Serial-Mail Sample** - The `serial-mail` CLI dry-runs and sends a CSV campaign against `recording`, with pre-flight, journal, resume, rate limit and exit codes (completed 2026-11-22)
 - [x] **Phase 3: Graph and Entra** - Entra client-credentials tokens and the built-in Graph transport, wired through the registry and run end to end against WireMock; ends at the owner's live-test STOP (completed 2026-11-22)
-- [ ] **Phase 4: Docs and Release Readiness** - Live-test findings applied, then the setup guide, architecture page, README quick start and a release rehearsal the owner can publish from
+- [x] **Phase 4: Docs and Release Readiness** - Live-test findings applied, then the setup guide, architecture page, README quick start and a release rehearsal the owner can publish from (completed 2026-11-22)
 
 > **HARD STOP between Phase 3 and Phase 4 (spec §10.2, milestone 4).** When Phase 3 is verified and committed, report to the owner and stop. The owner runs the `live` test and feeds sanitised real responses back. Phase 4 does not start before that report. See the checkpoint block under Phase 3.
 
@@ -154,7 +154,7 @@ Phase 4 starts only after this report. If the corrections to code are substantia
   3. `docs/architecture.md` summarises the contracts on one page and records every deviation: the `freshAccessToken` default, `baseUrl`, unchecked registry exceptions, JUnit 6, the `changeit` keystore, the reactor-only test-jar, and any differences from the Microsoft docs.
   4. `README.md` explains what morimail is and what it is not (Exchange limits; not a bulk mailer). It covers the pre-1.0 status, the coordinates, a quick start, the at-least-once and accepted-not-delivered semantics, and the test keystore.
   5. `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (D-20: scoped to the published modules) builds the sources and Javadoc jars without warnings. A `-DskipUpload=true` rehearsal bundle contains only `morimail-parent` and `morimail` (no `-tests.jar`, no sample), and the owner's release steps are listed.
-**Plans:** 5/5 plans executed (wave 1: 04-01; wave 2: 04-02; wave 3: 04-03; wave 4: 04-04; wave 5: 04-05 gap closure)
+**Plans:** 5/5 plans complete (wave 1: 04-01; wave 2: 04-02; wave 3: 04-03; wave 4: 04-04; wave 5: 04-05 gap closure)
 
 Plans:
 **Wave 1**
@@ -198,4 +198,4 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
 | 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
 | 3. Graph and Entra | 6/6 | Complete    | 2026-11-22 |
-| 4. Docs and Release Readiness | 5/5 | In Progress | - |
+| 4. Docs and Release Readiness | 5/5 | Complete    | 2026-11-22 |
