@@ -5,8 +5,8 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "Step 7 tags HEAD, not the release commit, so the tag lands on unpushed docs commits"
+    disposition: open
+    title: "Tracked debug note commits the maintainer's GPG key ID to the public repo"
   - id: IN-01
     severity: info
     disposition: fixed
@@ -19,19 +19,19 @@ findings:
     severity: info
     disposition: fixed
     title: "The warm-up gives no success signal, so a failed warm-up is only discovered by the deploy"
-open: 0
+open: 1
 total: 4
-recorded: 2026-11-22T20:55:05.903Z
+recorded: 2026-11-22T21:02:50.121Z
 ---
 
 # Phase 04: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 04-REVIEW-FIX.md |
-| IN-01 | info | fixed | 04-REVIEW-FIX.md |
-| IN-02 | info | fixed | 04-REVIEW-FIX.md |
-| IN-03 | info | fixed | 04-REVIEW-FIX.md |
+| WR-01 | warning | open | - |
+| IN-01 | info | fixed | 04-REVIEW-FIX.md (not in the current review) |
+| IN-02 | info | fixed | 04-REVIEW-FIX.md (not in the current review) |
+| IN-03 | info | fixed | 04-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
