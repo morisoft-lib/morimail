@@ -5,7 +5,7 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Tracked debug note commits the maintainer's GPG key ID to the public repo"
   - id: IN-01
     severity: info
@@ -19,16 +19,16 @@ findings:
     severity: info
     disposition: fixed
     title: "The warm-up gives no success signal, so a failed warm-up is only discovered by the deploy"
-open: 1
+open: 0
 total: 4
-recorded: 2026-11-22T21:02:50.121Z
+recorded: 2026-11-22T21:05:15.537Z
 ---
 
 # Phase 04: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
+| WR-01 | warning | fixed | 04-REVIEW-FIX.md |
 | IN-01 | info | fixed | 04-REVIEW-FIX.md (not in the current review) |
 | IN-02 | info | fixed | 04-REVIEW-FIX.md (not in the current review) |
 | IN-03 | info | fixed | 04-REVIEW-FIX.md (not in the current review) |
