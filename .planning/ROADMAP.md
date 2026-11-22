@@ -65,7 +65,12 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
   3. Against WireMock, the Graph transport sends each inline image as a base64 file attachment marked inline with its content ID. The property names come from the current Microsoft `fileAttachment` page, and any difference from the spec is noted in `docs/architecture.md`. Regular attachments in the same mail are not marked inline.
   4. `validate` rejects a mail when an inline image is 3 MiB or more, when inline images and regular attachments together reach 3 MiB, or when the estimated request exceeds 4 MiB (the v0.1.0 limits, unchanged; 05-CONTEXT D-15). The message names the file or the limit, and the rejection comes before any token request or HTTP call.
   5. The `live` test (tag `live`, run with `-Plive`, configured through environment variables) sends one mail with one inline image. The default offline `./mvnw verify` excludes it and stays green. Claude does not run it.
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Tracer: one inline image end to end through Graph, then the `build()` checks (INLN-01..06, GRAPH-10 code)
+- [ ] 05-02-PLAN.md — Inline images in the Graph size limits, the owner's live test, the Graph notes in `docs/architecture.md`, phase gate (GRAPH-10 docs, GRAPH-11, GRAPH-12)
+
 **UI hint**: no
 
 ### Phase 6: Inline Images in the Serial-Mail Sample
@@ -135,7 +140,7 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 2. Serial-Mail Sample | v0.1.0 | 4/4 | Complete | 2026-11-22 |
 | 3. Graph and Entra | v0.1.0 | 6/6 | Complete | 2026-11-22 |
 | 4. Docs and Release Readiness | v0.1.0 | 5/5 | Complete | 2026-11-22 |
-| 5. Inline Images in Core and Graph | v0.2.0 | 0/TBD | Not started | - |
+| 5. Inline Images in Core and Graph | v0.2.0 | 0/2 | Planned | - |
 | 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 0/TBD | Not started | - |
 | 7. HTML Image Helper Module | v0.2.0 | 0/TBD | Not started | - |
 | 8. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |
