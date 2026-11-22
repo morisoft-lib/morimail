@@ -1,11 +1,11 @@
 ---
 phase: 03-graph-and-entra
-reviewed: 2026-11-22T00:00:00Z
+reviewed: 2026-11-22T17:00:00Z
 depth: standard
 files_reviewed: 5
 files_reviewed_list:
   - docs/architecture.md
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/GraphEndToEndTest.java
+  - morimail/src/main/java/de/morisoft/morimail/entra/EntraClientCredentials.java
   - morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java
   - morimail/src/test/java/de/morisoft/morimail/entra/EntraTokenErrorsTest.java
   - morimail/src/test/java/de/morisoft/morimail/graph/GraphErrorMappingTest.java
@@ -18,65 +18,68 @@ findings:
 status: issues_found
 ---
 
-# Phase 3: Code Review Report (incremental, gap closure 03-06)
+# Phase 3: Code Review Report (incremental re-review)
 
-**Reviewed:** 2026-11-22
+**Reviewed:** 2026-11-22T17:00:00Z
 **Depth:** standard
 **Files Reviewed:** 5
 **Status:** issues_found
 
 ## Summary
 
-Scope was the diff `5018dfd..HEAD` for the five listed files, with `GraphTransport.java` read from line 150 to the end (send, failure mapping and `clean`) in its current state.
+This is an incremental re-review of the diff `962ef2b..HEAD`. It covers the fixes for the previous WR-01 (cut `clean()` input before the address regex), IN-01 (architecture.md states address cleaning as best effort) and IN-02 (request-id cleaning tests).
 
-The G-03-2 fix does what the plan says.
+- **WR-01 fix.** It removes the quadratic cost. I measured the unbounded pattern on 100,000 `x` characters at about 12 s on this machine. With a 1000-character cut the cost is bounded.
+- **IN-01 fix.** The doc wording is accurate and consistent with the code.
+- **IN-02 tests.** They are correct. `x@example.org` becomes `<address>` in both the header and `innerError` paths.
 
-- `failure()` no longer reads `error.message`. The exception text is `Graph sendMail failed: HTTP <status>, code <code>, request-id <id>`, with `code` and `request-id` passed through `clean()`.
-- No other code path copies the Graph body into a message. The 401, 403, 404, 429, 5xx and class-rule branches all use the same `message` string.
-- The status mapping is unchanged.
-- `mailboxHint` still reads the raw `code`, not the cleaned one, so the 401 mapping is unaffected by the change.
-- The re-pointed tests stay meaningful. Control-character, 300-character cut, surrogate-pair and address-replacement cases now run through `error.code`, so `clean()` keeps the same coverage.
-- The new `graphsOwnMessageNeverReachesTheExceptionMessage` pins both a plain and a percent-encoded address.
-- `GraphEndToEndTest` now checks both the stderr stop line and the journal `errorMessage`, so the sample's two leak paths are covered.
-- The `CopyOnWriteArrayList` change in `EntraTokenErrorsTest` is correct for the G-03-4 race. Appends from HttpClient and WireMock threads and iteration on the test thread are both safe. `messages` and the other `ArrayList`s are only touched by the test thread, so leaving them alone is right.
-- `docs/architecture.md` is consistent with the code. It states the narrowed rule and keeps the Entra exception.
-
-No bugs or security issues were introduced by the diff. One earlier robustness issue in the surviving `clean()` path is still open. It sits next to the changed code and matters more now that `code` is the only free-text field left.
+The new cut is placed before whitespace collapsing, though. That order creates a small leak that the old order did not have (WR-01 below). Two minor test and maintainability notes follow.
 
 ## Warnings
 
-### WR-01: `clean()` address regex is quadratic on a long, address-free token
+### WR-01: Cutting at 1000 raw characters before whitespace collapse can leave a partial mail address in the message
 
-**File:** `morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java:316-317`
-**Issue:** `clean()` runs `replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", ...)` over the whole value before it cuts to 300 characters. For a long run of non-space characters with no `@`, the regex retries from every start position and scans to the end each time, so it is O(n²). 03-VERIFICATION.md measured 0.12 s, 0.49 s and 2.0 s for 10k, 20k and 40k characters. It was recorded there as an advisory and is still unfixed.
-- The input is the server-controlled `error.code`, and the request-id header or inner id. Nothing caps the body (`BodyHandlers.ofByteArray()`), and `baseUrl` is configurable, so the service is not guaranteed to be Microsoft's.
-- This is not a data-integrity risk. It is a CPU stall on the calling thread for an error path that the caller expects to return quickly.
-- The Entra `clean` is the same pattern, according to the architecture note. It is out of this review's scope but worth the same fix.
+**File:** `morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java:316-317` and `morimail/src/main/java/de/morisoft/morimail/entra/EntraClientCredentials.java:383-385`
+**Issue:** The 1000-character cut runs on the raw text, before whitespace runs collapse. The final output limit is 300 characters, measured after collapsing. When the service text starts with a long run of whitespace or control characters, the cut can land in the middle of an address. The address's `@` is then lost, so the address pattern does not match. The local-part prefix survives in the output.
 
-**Fix:** Bound the input before the regex. The later cut to 300 still applies.
+Reproduction: input `" ".repeat(995) + "alice@example.org"`. The cut gives 995 spaces plus `alice`. Collapsing gives ` alice`. No `@` is present, so nothing is replaced. The message contains `alice`.
+
+The same cut can also leave a lone high surrogate at the end of a text that is shorter than 300 characters after collapsing. The existing surrogate guard only runs for texts longer than 300.
+
+The input is service-controlled and the case is contrived. Still, this regresses against the claim "anything that looks like a mail address is replaced". Collapsing before cutting keeps the cut harmless. Collapsing is a linear regex, so the fix does not bring the quadratic cost back. After collapsing, any text that is 1000 characters or longer is hidden by the 300-character output cut, so a split address cannot show.
+
+**Fix:** Collapse first, cut second, address pattern last.
+
 ```java
-String text = sb.length() > 1000 ? sb.substring(0, 1000) : sb.toString();
-text = text.replaceAll(" {2,}", " ")
+// GraphTransport.clean (the loop above already maps whitespace and controls to ' ')
+String collapsed = sb.toString().replaceAll(" {2,}", " ");
+String text = (collapsed.length() > 1000 ? collapsed.substring(0, 1000) : collapsed)
+        .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
+
+// EntraClientCredentials.clean
+String collapsed = spaced.toString().replaceAll("\\s+", " ");
+String text = (collapsed.length() > 1000 ? collapsed.substring(0, 1000) : collapsed)
         .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
 ```
-A 1000-character prefix is enough to keep the 300-character output, and the quadratic cost is capped at about 10^6 steps. Add a test that sends a 100000-character `code` and asserts the result is still `a`x300 plus `...`.
+
+Add a test with leading whitespace followed by an address that straddles the cut. For example, 995 spaces plus `alice@example.org` as `error.code` should give `code <address>` or `-`, and must not give `alice`.
 
 ## Info
 
-### IN-01: The "no addresses in exception messages" claim is still a best-effort statement for `code` and `request-id`
+### IN-01: The "quickly" regression tests have a thin time margin
 
-**File:** `docs/architecture.md:30`
-**Issue:** The Contracts bullet says "Exception messages never carry ... mail addresses" and then says the service fields are scrubbed by a pattern. The same document says, in the new §6.3 row, that a pattern over free text "cannot be relied on". Dropping `error.message` removes the known leak. `error.code` and `request-id` are still scrubbed only by that pattern. That is fine in practice, because Graph codes are fixed identifiers and request ids are GUIDs. The text should not promise more than the code does.
-**Fix:** Optional wording: "A Graph failure message holds only fields that are identifiers in practice (status, `error.code`, `request-id`); they are still passed through the same cleaning."
+**File:** `morimail/src/test/java/de/morisoft/morimail/entra/EntraTokenErrorsTest.java:211-219` and `morimail/src/test/java/de/morisoft/morimail/graph/GraphErrorMappingTest.java:361-366`
+**Issue:** Both tests use `@Timeout(10)` with a 100,000-character input. I measured the un-cut regex on that input at about 12 s here. On a faster CI machine the regression could finish in under 10 s, so the tests would pass without the fix. JUnit's `@Timeout` also cannot interrupt a running regex. It fails the test only after the call returns, so raising the input size would slow a failing run instead of making the guard stronger.
+**Fix:** Either accept this as a coarse guard, or make the check structural. For example, make `clean` package-private in Entra too, as Graph already does, and unit-test it with a size-based assertion. Raising the input to 200,000 characters would give about 4x the cost, roughly 48 s on this machine, and a clearer margin, but it makes a failing run slow.
 
-### IN-02: No test shows that an address-bearing `request-id` is cleaned
+### IN-02: The magic number 1000 is duplicated in two files, and Graph repeats 300 as a literal
 
-**File:** `morimail/src/test/java/de/morisoft/morimail/graph/GraphErrorMappingTest.java:343-351`
-**Issue:** The address-replacement test now covers only `error.code`. The `request-id` goes through `clean()` too (header, `innerError`, `innererror`), but no case puts an address, control character or long value there. The fallback test at line 317 only uses the benign `rid-inner`. A future change that drops `clean()` around `requestId` would pass the whole suite.
-**Fix:** Add one case that sets the `request-id` header, or `innerError.request-id`, to `x@example.org` and asserts the message ends with `request-id <address>`.
+**File:** `morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java:316` and `morimail/src/main/java/de/morisoft/morimail/entra/EntraClientCredentials.java:383`
+**Issue:** The pre-cut limit 1000 appears as a bare literal in both `clean()` methods. Entra names its output limit `MAX_ERROR_TEXT`, while Graph uses a literal `300`. Changing a limit in one place can leave the two copies out of step.
+**Fix:** Add a named constant per file (for example `MAX_CLEAN_INPUT = 1000`). Rule 0 argues against a shared helper class that would couple `graph` and `entra`, since the architecture requires that they do not import each other.
 
 ---
 
-_Reviewed: 2026-11-22_
+_Reviewed: 2026-11-22T17:00:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
