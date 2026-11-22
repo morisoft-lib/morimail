@@ -381,11 +381,16 @@ public final class EntraClientCredentials implements TokenProvider {
             char c = value.charAt(i);
             spaced.append(Character.isISOControl(c) ? ' ' : c);
         }
-        // Collapse first, then cut, then replace addresses: the address pattern is quadratic on a long
-        // token without "@", and a cut before collapsing could split an address and leave its start.
+        // Collapse, then cut at a word boundary, then replace addresses: the address pattern is quadratic on a long
+        // token without "@", so it only sees the cut text, and a cut inside a word could leave the start of an address
+        // that the pattern no longer finds (review WR-01).
         String collapsed = spaced.toString().replaceAll("\\s+", " ");
-        String text = (collapsed.length() > MAX_CLEAN_INPUT ? collapsed.substring(0, MAX_CLEAN_INPUT) : collapsed)
-                .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
+        if (collapsed.length() > MAX_CLEAN_INPUT) {
+            collapsed = collapsed.substring(0, MAX_CLEAN_INPUT);
+            int lastSpace = collapsed.lastIndexOf(' ');
+            collapsed = lastSpace > 0 ? collapsed.substring(0, lastSpace) : "";
+        }
+        String text = collapsed.replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
         }

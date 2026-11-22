@@ -5,11 +5,11 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "The 1000-character cut can still split a mail address and leave its start in the message"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The two new regression tests cover only the whitespace-padding route to the cut boundary"
   - id: IN-02
     severity: info
@@ -39,7 +39,7 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 2
+open: 0
 total: 9
 recorded: 2026-11-22T17:14:28.030Z
 ---
@@ -48,8 +48,8 @@ recorded: 2026-11-22T17:14:28.030Z
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
-| IN-01 | info | open | - |
+| WR-01 | warning | fixed | 04-01-PLAN.md (phase 4): cut at a word boundary before replacing addresses |
+| IN-01 | info | fixed | 04-01-PLAN.md (phase 4): one straddling-address test per class |
 | IN-02 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |

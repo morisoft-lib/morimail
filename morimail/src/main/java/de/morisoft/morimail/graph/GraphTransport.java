@@ -86,7 +86,9 @@ final class GraphTransport implements MailTransport {
      * Checks the attachment and request size limits. The request size is an estimate: it counts the
      * attachments as base64, the body and a fixed allowance, but not the subject, the recipients or
      * the attachment names, so a mail near the limit can still be refused by the service. The 3 MiB
-     * and 4 MiB limits are readings of the Graph documentation, not confirmed by a live probe.
+     * and 4 MiB limits are readings of the Graph documentation; in the live test of 2026-11-22 attachments
+     * of 2,900,000 and 3,100,000 bytes were accepted, which fits the binary reading, and the point where
+     * the service refuses was not probed.
      */
     @Override
     public void validate(MailMessage m) throws InvalidMailException {
@@ -303,8 +305,9 @@ final class GraphTransport implements MailTransport {
 
     /**
      * Makes a text from the server safe for a message: control characters become spaces, whitespace runs
-     * collapse, anything that looks like a mail address becomes "&lt;address&gt;", the result is cut at
-     * 300 characters (never inside a surrogate pair), and nothing becomes "-".
+     * collapse, a text longer than 1000 characters is cut back to the last space before character 1000 so
+     * that no part of a word is kept, anything that looks like a mail address becomes "&lt;address&gt;",
+     * the result is cut at 300 characters (never inside a surrogate pair), and nothing becomes "-".
      */
     static String clean(String value) {
         if (value == null) {
@@ -315,11 +318,16 @@ final class GraphTransport implements MailTransport {
             char c = value.charAt(i);
             sb.append(Character.isISOControl(c) || Character.isWhitespace(c) ? ' ' : c);
         }
-        // Collapse first, then cut, then replace addresses: the address pattern is quadratic on a long
-        // token without "@", and a cut before collapsing could split an address and leave its start.
+        // Collapse, then cut at a word boundary, then replace addresses: the address pattern is quadratic on a long
+        // token without "@", so it only sees the cut text, and a cut inside a word could leave the start of an address
+        // that the pattern no longer finds (review WR-01).
         String collapsed = sb.toString().replaceAll(" {2,}", " ");
-        String text = (collapsed.length() > MAX_CLEAN_INPUT ? collapsed.substring(0, MAX_CLEAN_INPUT) : collapsed)
-                .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
+        if (collapsed.length() > MAX_CLEAN_INPUT) {
+            collapsed = collapsed.substring(0, MAX_CLEAN_INPUT);
+            int lastSpace = collapsed.lastIndexOf(' ');
+            collapsed = lastSpace > 0 ? collapsed.substring(0, lastSpace) : "";
+        }
+        String text = collapsed.replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
         }

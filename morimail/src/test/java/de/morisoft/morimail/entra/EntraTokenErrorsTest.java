@@ -208,6 +208,7 @@ class EntraTokenErrorsTest {
                 });
     }
 
+    // A single word longer than the cut has no word boundary, so none of it is kept (review WR-01).
     @Test
     @Timeout(10)
     void aVeryLongDescriptionIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
@@ -215,7 +216,7 @@ class EntraTokenErrorsTest {
 
         assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
                 .isExactlyInstanceOf(AuthRequiredException.class)
-                .satisfies(e -> assertThat(e.getMessage()).contains("description: " + "x".repeat(300) + "..."));
+                .satisfies(e -> assertThat(e.getMessage()).endsWith("description: -"));
     }
 
     @Test
@@ -226,6 +227,17 @@ class EntraTokenErrorsTest {
         assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
                 .isExactlyInstanceOf(AuthRequiredException.class)
                 .satisfies(e -> assertThat(e.getMessage()).endsWith("description: <address>"));
+    }
+
+    // The first address ends at character 991 and the second starts at 993, so the cut at 1000 falls inside it (review WR-01).
+    @Test
+    void anAddressStraddlingTheCutLeavesNoPartOfItInTheMessage(WireMockRuntimeInfo wm) {
+        stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "x".repeat(980) + "@example.org "
+                + "alice".repeat(5) + "@example.org\"}");
+
+        assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .satisfies(e -> assertThat(e.getMessage()).endsWith("description: <address>").doesNotContain("alice"));
     }
 
     @Test

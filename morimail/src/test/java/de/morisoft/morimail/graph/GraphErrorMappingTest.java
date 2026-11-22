@@ -355,13 +355,14 @@ class GraphErrorMappingTest {
                 .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id <address>");
     }
 
+    // A single word longer than the cut has no word boundary, so none of it is kept (review WR-01).
     @Test
     @Timeout(10)
     void aVeryLongCodeIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
         stubError(400, null, errorBody("a".repeat(100_000), "m"));
 
         assertThat(messageOfFailedSend(wm))
-                .isEqualTo("Graph sendMail failed: HTTP 400, code " + "a".repeat(300) + "..., request-id -");
+                .isEqualTo("Graph sendMail failed: HTTP 400, code -, request-id -");
     }
 
     @Test
@@ -370,6 +371,16 @@ class GraphErrorMappingTest {
 
         assertThat(messageOfFailedSend(wm))
                 .isEqualTo("Graph sendMail failed: HTTP 400, code <address>, request-id -");
+    }
+
+    // The first address ends at character 991 and the second starts at 993, so the cut at 1000 falls inside it (review WR-01).
+    @Test
+    void anAddressStraddlingTheCutLeavesNoPartOfItInTheMessage(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody("x".repeat(980) + "@example.org " + "alice".repeat(5) + "@example.org", "m"));
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code <address>, request-id -")
+                .doesNotContain("alice");
     }
 
     @Test
