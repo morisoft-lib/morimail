@@ -180,7 +180,8 @@ class AccountFileTest {
                 "send", "--account", account.toString(), "--campaign", campaign.toString());
 
         assertThat(run.exit()).isEqualTo(2);
-        assertThat(run.errLines()).contains("account: " + SerialMail.GRAPH_NOT_AVAILABLE);
+        assertThat(run.errLines()).contains(
+                "account: secretEnv: the environment variable it names is not set or is empty");
         assertThat(run.err()).doesNotContain(SENTINEL);
         assertThat(run.out()).doesNotContain(SENTINEL);
     }
@@ -204,7 +205,7 @@ class AccountFileTest {
         assertThat(factoryCalls).hasValue(0);
         assertThat(real.exit()).isEqualTo(2);
         assertThat(real.errLines()).containsExactly(
-                "account: " + SerialMail.GRAPH_NOT_AVAILABLE,
+                "account: secretEnv: the environment variable it names is not set or is empty",
                 "Pre-flight failed with 1 problem(s); nothing was sent.");
     }
 

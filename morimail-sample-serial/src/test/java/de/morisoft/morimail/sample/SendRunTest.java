@@ -122,16 +122,18 @@ class SendRunTest {
     }
 
     @Test
-    void realRunThroughMainStopsBeforeSending() throws IOException {
+    void realRunWithoutTheSecretStopsBeforeSending() throws IOException {
         Path account = SampleFixtures.writeAccount(root, ACCOUNT);
         Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
 
-        SampleFixtures.Run run = SampleFixtures.run(SerialMail::realMailer, new ArrayList<>(),
+        SampleFixtures.Run run = SampleFixtures.run(
+                a -> SerialMail.mailer(a, name -> null, SerialMail.AUTHORITY, SerialMail.GRAPH_BASE_URL),
+                new ArrayList<>(),
                 "send", "--account", account.toString(), "--campaign", campaign.toString());
 
         assertThat(run.exit()).isEqualTo(2);
         assertThat(run.errLines()).containsExactly(
-                "account: " + SerialMail.GRAPH_NOT_AVAILABLE,
+                "account: secretEnv: the environment variable it names is not set or is empty",
                 "Pre-flight failed with 1 problem(s); nothing was sent.");
         assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
     }

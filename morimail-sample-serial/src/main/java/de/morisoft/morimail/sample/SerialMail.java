@@ -1,6 +1,10 @@
 package de.morisoft.morimail.sample;
 
+import de.morisoft.morimail.MailAccount;
 import de.morisoft.morimail.Mailer;
+import de.morisoft.morimail.entra.EntraClientCredentials;
+import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -16,8 +20,8 @@ import picocli.CommandLine.Command;
         description = "Sends one templated mail per CSV row through morimail.")
 public final class SerialMail {
 
-    static final String GRAPH_NOT_AVAILABLE =
-            "the graph transport is not available yet; only --dry-run works in this version";
+    static final URI AUTHORITY = URI.create("https://login.microsoftonline.com");
+    static final String GRAPH_BASE_URL = "https://graph.microsoft.com/v1.0";
 
     private SerialMail() {
     }
@@ -43,12 +47,43 @@ public final class SerialMail {
     }
 
     /**
-     * Builds the Mailer of a real run. This is the one method the Graph and Entra phase replaces.
-     * Any message it produces must name keys and environment-variable names only, never a value
-     * read from the file or the environment.
+     * Builds the Mailer of a real run from the account file and the process environment. Every
+     * message it produces names keys only, never a value from the file or the environment.
      */
     static Mailer realMailer(AccountFile account) {
-        throw new IllegalStateException(GRAPH_NOT_AVAILABLE);
+        return mailer(account, System::getenv, AUTHORITY, GRAPH_BASE_URL);
+    }
+
+    /**
+     * Builds the Mailer for an account file: Entra client credentials (the secret or the
+     * certificate named by the file, read from {@code env}) and a graph account built through the
+     * registry. The tests pass a WireMock authority and base URL and an injected environment.
+     */
+    static Mailer mailer(AccountFile account, Function<String, String> env, URI authority,
+            String graphBaseUrl) {
+        EntraClientCredentials credentials;
+        if (account.secretEnv() != null) {
+            String secret = env.apply(account.secretEnv());
+            if (secret == null || secret.isEmpty()) {
+                throw new IllegalStateException(
+                        "secretEnv: the environment variable it names is not set or is empty");
+            }
+            credentials = EntraClientCredentials.withSecret(account.tenantId(), account.clientId(), secret);
+        } else {
+            String password = env.apply(account.certificatePasswordEnv());
+            if (password == null || password.isEmpty()) {
+                throw new IllegalStateException(
+                        "certificate.passwordEnv: the environment variable it names is not set or is empty");
+            }
+            credentials = EntraClientCredentials.withCertificate(account.tenantId(), account.clientId(),
+                    Path.of(account.certificatePath()), password.toCharArray());
+        }
+        MailAccount mailAccount = MailAccount.builder(account.id())
+                .transport("graph")
+                .auth(credentials.authority(authority))
+                .option("baseUrl", graphBaseUrl)
+                .build();
+        return Mailer.of(mailAccount);
     }
 
     private static void sleep(Duration wait) {
