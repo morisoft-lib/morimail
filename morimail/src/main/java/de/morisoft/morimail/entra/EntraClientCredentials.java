@@ -7,6 +7,7 @@ import de.morisoft.morimail.MailException;
 import de.morisoft.morimail.TokenProvider;
 import de.morisoft.morimail.TransientMailException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -15,25 +16,54 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.KeyStore;
+import java.security.MessageDigest;
 import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.PSSParameterSpec;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Gets access tokens for an Entra app with the client credentials flow. Create an instance with
- * {@link #withSecret(String, String, String)}. The token endpoint is
+ * {@link #withSecret(String, String, String)}, or with a certificate through
+ * {@link #withCertificate(String, String, PrivateKey, X509Certificate)} or
+ * {@link #withCertificate(String, String, Path, char[])}. The token endpoint is
  * {@code {authority}/{tenant}/oauth2/v2.0/token}; the authority is the public cloud unless
  * {@link #authority(URI)} returns a copy that uses another one.
  *
- * <p>Instances are immutable and safe for concurrent use by several threads.
+ * <p>The certificate flow signs a client assertion with PS256 (RSASSA-PSS with SHA-256). The
+ * assertion header carries {@code x5t#S256}, the base64url SHA-256 thumbprint of the certificate,
+ * and the assertion is valid for 10 minutes. A new assertion is built for every token request.
+ * Only RSA keys are supported, and there is no PEM support: pass a key and a certificate, or a
+ * PKCS12 file.
+ *
+ * <p>The configuration is fixed after construction, and an instance is safe for concurrent use by
+ * several threads.
  */
 public final class EntraClientCredentials implements TokenProvider {
 
     private static final URI PUBLIC_CLOUD = URI.create("https://login.microsoftonline.com");
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+    private static final long ASSERTION_LIFETIME_SECONDS = 600;
+    private static final String JWT_BEARER = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    private static final Base64.Encoder BASE64URL = Base64.getUrlEncoder().withoutPadding();
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final String tenantId;
@@ -81,6 +111,86 @@ public final class EntraClientCredentials implements TokenProvider {
     }
 
     /**
+     * Creates credentials that authenticate with a certificate: the token request carries a client
+     * assertion signed with the private key (PS256).
+     *
+     * @param tenantId the directory (tenant) id
+     * @param clientId the application (client) id
+     * @param privateKey the RSA private key that belongs to the certificate
+     * @param certificate the certificate registered for the app
+     * @return new credentials for the public cloud
+     * @throws NullPointerException if an argument is {@code null}
+     * @throws IllegalArgumentException if an id is blank or the key is not an RSA key
+     */
+    public static EntraClientCredentials withCertificate(String tenantId, String clientId,
+            PrivateKey privateKey, X509Certificate certificate) {
+        requireText(tenantId, "tenantId");
+        requireText(clientId, "clientId");
+        Objects.requireNonNull(privateKey, "privateKey");
+        Objects.requireNonNull(certificate, "certificate");
+        if (!"RSA".equals(privateKey.getAlgorithm())) {
+            throw new IllegalArgumentException("privateKey must be an RSA key (PS256)");
+        }
+        return new EntraClientCredentials(tenantId, clientId, null, privateKey, certificate, PUBLIC_CLOUD,
+                Clock.systemUTC(), REQUEST_TIMEOUT);
+    }
+
+    /**
+     * Creates credentials that authenticate with a certificate from a PKCS12 file. The file must
+     * hold exactly one private key entry with an RSA key and its X.509 certificate. The file and
+     * the password are read once, here; the instance keeps only the key and the certificate, and
+     * the password array is neither stored nor modified.
+     *
+     * @param tenantId the directory (tenant) id
+     * @param clientId the application (client) id
+     * @param p12 the PKCS12 file
+     * @param password the password of the file, also used for the key
+     * @return new credentials for the public cloud
+     * @throws NullPointerException if an argument is {@code null}
+     * @throws IllegalArgumentException if an id is blank or the file cannot be used; the message
+     *         names the file and never the password
+     */
+    public static EntraClientCredentials withCertificate(String tenantId, String clientId, Path p12,
+            char[] password) {
+        requireText(tenantId, "tenantId");
+        requireText(clientId, "clientId");
+        Objects.requireNonNull(p12, "p12");
+        Objects.requireNonNull(password, "password");
+        String where = "cannot load the PKCS12 key store " + p12 + ": ";
+        KeyStore store;
+        try (InputStream in = Files.newInputStream(p12)) {
+            store = KeyStore.getInstance("PKCS12");
+            store.load(in, password);
+        } catch (IOException | GeneralSecurityException e) {
+            throw new IllegalArgumentException(where + "the file cannot be read or the password is wrong", e);
+        }
+        try {
+            List<String> keyAliases = new ArrayList<>();
+            for (String alias : Collections.list(store.aliases())) {
+                if (store.isKeyEntry(alias)) {
+                    keyAliases.add(alias);
+                }
+            }
+            if (keyAliases.size() != 1) {
+                throw new IllegalArgumentException(where + "expected exactly one private key entry, found "
+                        + keyAliases.size());
+            }
+            String alias = keyAliases.get(0);
+            Key key = store.getKey(alias, password);
+            if (!(key instanceof PrivateKey privateKey) || !"RSA".equals(key.getAlgorithm())) {
+                throw new IllegalArgumentException(where + "the key entry is not an RSA private key");
+            }
+            Certificate certificate = store.getCertificate(alias);
+            if (!(certificate instanceof X509Certificate x509)) {
+                throw new IllegalArgumentException(where + "the key entry has no X.509 certificate");
+            }
+            return withCertificate(tenantId, clientId, privateKey, x509);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalArgumentException(where + "the key cannot be recovered", e);
+        }
+    }
+
+    /**
      * Returns a copy of these credentials that gets tokens from another authority, for example a
      * sovereign cloud or a test server.
      *
@@ -104,6 +214,12 @@ public final class EntraClientCredentials implements TokenProvider {
                 URI.create(text), clock, requestTimeout);
     }
 
+    /** Test seam: a copy with another clock and request timeout. Used by same-package tests only. */
+    EntraClientCredentials forTest(Clock clock, Duration requestTimeout) {
+        return new EntraClientCredentials(tenantId, clientId, secret, privateKey, certificate, authority,
+                clock, requestTimeout);
+    }
+
     URI tokenUri() {
         return URI.create(authority + "/" + URLEncoder.encode(tenantId, StandardCharsets.UTF_8)
                 + "/oauth2/v2.0/token");
@@ -119,8 +235,11 @@ public final class EntraClientCredentials implements TokenProvider {
      */
     @Override
     public String accessToken(String scope) throws MailException {
-        String form = form("client_id", clientId, "scope", scope, "client_secret", secret,
-                "grant_type", "client_credentials");
+        String form = privateKey == null
+                ? form("client_id", clientId, "scope", scope, "client_secret", secret,
+                        "grant_type", "client_credentials")
+                : form("client_id", clientId, "scope", scope, "client_assertion_type", JWT_BEARER,
+                        "client_assertion", assertion(tokenUri().toString()), "grant_type", "client_credentials");
         HttpRequest request = HttpRequest.newBuilder(tokenUri())
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .timeout(requestTimeout)
@@ -152,6 +271,34 @@ public final class EntraClientCredentials implements TokenProvider {
         }
         throw new AuthRequiredException(failure + ", error " + orDash(text(json, "error"))
                 + ", description: " + orDash(text(json, "error_description")));
+    }
+
+    private String assertion(String audience) throws AuthRequiredException {
+        try {
+            Map<String, Object> header = new LinkedHashMap<>();
+            header.put("alg", "PS256");
+            header.put("typ", "JWT");
+            header.put("x5t#S256", BASE64URL.encodeToString(
+                    MessageDigest.getInstance("SHA-256").digest(certificate.getEncoded())));
+            long now = clock.instant().getEpochSecond();
+            Map<String, Object> claims = new LinkedHashMap<>();
+            claims.put("aud", audience);
+            claims.put("exp", now + ASSERTION_LIFETIME_SECONDS);
+            claims.put("iss", clientId);
+            claims.put("jti", UUID.randomUUID().toString());
+            claims.put("nbf", now);
+            claims.put("sub", clientId);
+            claims.put("iat", now);
+            String signingInput = BASE64URL.encodeToString(MAPPER.writeValueAsBytes(header)) + "."
+                    + BASE64URL.encodeToString(MAPPER.writeValueAsBytes(claims));
+            Signature signature = Signature.getInstance("RSASSA-PSS");
+            signature.setParameter(new PSSParameterSpec("SHA-256", "MGF1", MGF1ParameterSpec.SHA256, 32, 1));
+            signature.initSign(privateKey);
+            signature.update(signingInput.getBytes(StandardCharsets.US_ASCII));
+            return signingInput + "." + BASE64URL.encodeToString(signature.sign());
+        } catch (GeneralSecurityException | IOException e) {
+            throw new AuthRequiredException("cannot sign the client assertion", e);
+        }
     }
 
     private static String form(String... namesAndValues) {

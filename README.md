@@ -28,6 +28,10 @@ A send that ended in a timeout may still have been accepted, so retrying after a
 
 A quick start comes with the first release.
 
+## Tests
+
+The file `morimail/src/test/resources/test-keystore-throwaway.p12` is a throwaway PKCS12 key store for the tests only (password `changeit`, certificate `CN=morimail-test-throwaway`): it protects nothing and is not a leaked credential.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
