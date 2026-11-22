@@ -3,16 +3,16 @@
 ## Milestones
 
 - ✅ **v0.1.0 MVP**: Phases 1-4, shipped 2026-11-22. Full details are in [milestones/v0.1.0-ROADMAP.md](milestones/v0.1.0-ROADMAP.md).
-- 🚧 **v0.2.0 Inline Images**: Phases 5-7, in progress (spec §10.3).
+- 🚧 **v0.2.0 Inline Images**: Phases 5-8, in progress (spec §10.3, §10.4).
 
 ## Overview
 
-v0.2.0 adds inline images (spec §10.3) in three slices. Phase 5 does the library work. The builder gets `.inline(path, contentId)`. `build()` checks the `cid:` references in both directions, and `recording` records the images. The Graph transport sends them as inline file attachments within the existing size limits. Phase 5 also ships the owner's `live` test with one inline image. Phase 6 adds the `inline/` campaign directory to the serial-mail sample, with pre-flight checks and the dry-run rewrite. It runs against `recording` and does not wait for the owner's live run. Phase 7 records the Graph property names and the owner's live result in the docs. It also confirms the release build, so the owner can release 0.2.0.
+v0.2.0 adds inline images (spec §10.3) and the HTML image helper (spec §10.4) in four slices. Phase 5 does the library work. The builder gets `.inline(path, contentId)`. `build()` checks the `cid:` references in both directions, and `recording` records the images. The Graph transport sends them as inline file attachments within the existing size limits. Phase 5 also ships the owner's `live` test with one inline image. Phase 6 adds the `inline/` campaign directory to the serial-mail sample, with pre-flight checks and the dry-run rewrite. It runs against `recording` and does not wait for the owner's live run. Phase 7 adds the helper module `morimail-html`: it turns ordinary image URLs in a template into `cid:` references plus inline images, once per template and before rendering. Phase 8 records the Graph property names and the owner's live result in the docs. It also confirms the release build for both published jars, so the owner can release 0.2.0.
 
 ## Phases
 
 **Phase Numbering:**
-- Integer phases (5, 6, 7): Planned milestone work, continuing from v0.1.0
+- Integer phases (5, 6, 7, 8): Planned milestone work, continuing from v0.1.0
 - Decimal phases (for example 5.1): Urgent insertions (marked with INSERTED), such as a Graph correction after the owner's live inline test
 
 Decimal phases appear between their surrounding integers in numeric order.
@@ -33,9 +33,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 5: Inline Images in Core and Graph** - `.inline(path, contentId)` with two-way `cid:` checks in `build()`, recorded by `recording`, and sent by Graph as inline file attachments within the 3 MiB / 4 MiB limits. Ends with the owner's live-test checkpoint.
 - [ ] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo
-- [ ] **Phase 7: Docs and Release Readiness** - README inline example, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green at `0.2.0-SNAPSHOT`
+- [ ] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images
+- [ ] **Phase 8: Docs and Release Readiness** - README inline and helper examples, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green for `morimail` and `morimail-html` at `0.2.0-SNAPSHOT`
 
-> **Owner checkpoint after Phase 5 (live inline test).** Once Phase 5 is verified and committed, report to the owner. Claude does not run the live test and sends no real mail. The owner runs the `live` test with `-Plive` and checks that the image shows inline in a mail client and not as a separate attachment. Phase 6 does not wait for this. Phase 7 needs the result. If the owner has not run the test by then, Phase 7 asks the owner whether to record it as "not yet confirmed live". A Graph correction found by the live run becomes an inserted Phase 5.1.
+> **Owner checkpoint after Phase 5 (live inline test).** Once Phase 5 is verified and committed, report to the owner. Claude does not run the live test and sends no real mail. The owner runs the `live` test with `-Plive` and checks that the image shows inline in a mail client and not as a separate attachment. Phases 6 and 7 do not wait for this. Phase 8 needs the result. If the owner has not run the test by then, Phase 8 asks the owner whether to record it as "not yet confirmed live". A Graph correction found by the live run becomes an inserted Phase 5.1.
 
 ## Phase Gates
 
@@ -62,7 +63,7 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
      - two inline images with the same content ID
      - an inline file that is missing or unreadable, or whose resolved content type is not an image type
   3. Against WireMock, the Graph transport sends each inline image as a base64 file attachment marked inline with its content ID. The property names come from the current Microsoft `fileAttachment` page, and any difference from the spec is noted in `docs/architecture.md`. Regular attachments in the same mail are not marked inline.
-  4. `validate` rejects a mail when an inline image is 3 MiB or more, or when inline images and regular attachments together reach 4 MiB. The message names the file or the limit, and the rejection comes before any token request or HTTP call.
+  4. `validate` rejects a mail when an inline image is 3 MiB or more, when inline images and regular attachments together reach 3 MiB, or when the estimated request exceeds 4 MiB (the v0.1.0 limits, unchanged; 05-CONTEXT D-15). The message names the file or the limit, and the rejection comes before any token request or HTTP call.
   5. The `live` test (tag `live`, run with `-Plive`, configured through environment variables) sends one mail with one inline image. The default offline `./mvnw verify` excludes it and stays green. Claude does not run it.
 **Plans**: TBD
 **UI hint**: no
@@ -83,15 +84,30 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
 **Plans**: TBD
 **UI hint**: no
 
-### Phase 7: Docs and Release Readiness
+### Phase 7: HTML Image Helper Module
+**Goal**: A template author can write ordinary image URLs in an HTML template, and one call to `HtmlImages` turns them into `cid:` references plus inline images that pass the Phase 5 checks.
+**Depends on**: Phase 5 (not the owner's live inline test, not Phase 6)
+**Requirements**: HTML-01, HTML-02, HTML-03, HTML-04, HTML-05, HTML-06
+**Success Criteria** (what must be TRUE):
+  1. The reactor has a new module `morimail-html` (artifact `de.morisoft:morimail-html`, package `de.morisoft.morimail.html`). It depends on `morimail`, uses no other runtime dependency unless the owner approved one, and is part of the release profile. The `morimail` jar is unchanged.
+  2. `HtmlImages` takes a `MailTemplate` and a base directory. It returns a template whose `<img src>` values for local files are `cid:` references, plus one `Attachment` with `contentId` per distinct image. `cid:`, `data:`, unknown schemes and any `src` with a `$$` placeholder stay unchanged. Subject and text are untouched.
+  3. A local `src` that resolves outside the base directory, or a missing, unreadable or non-image file, fails with `InvalidMailException` naming the `src` as written.
+  4. Generated content IDs follow the file name without extension, pass the Phase 5 content-ID rules, get a numeric suffix on collision, and the same source used twice yields one image.
+  5. `http(s)` sources stay unchanged by default. When the caller passes a download directory, they are downloaded there (tested against WireMock, offline) with a timeout, a size cap and an image content-type check, and a failure maps to the category decided in this phase's discussion.
+  6. End to end: a template converted once, rendered for two data records and sent through `Mailer` to `recording`, gives two mails that each carry the inline images and pass `build()`.
+**Plans**: TBD
+**UI hint**: no
+
+### Phase 8: Docs and Release Readiness
 **Goal**: A developer reading the README and docs can use inline images, and the build is ready for the owner to release 0.2.0.
-**Depends on**: Phase 6, and the owner's live inline result from the Phase 5 checkpoint (or the owner's explicit choice to record it as not yet confirmed)
-**Requirements**: DOCS-05, DOCS-06
+**Depends on**: Phases 6 and 7, and the owner's live inline result from the Phase 5 checkpoint (or the owner's explicit choice to record it as not yet confirmed)
+**Requirements**: DOCS-05, DOCS-06, DOCS-07
 **Success Criteria** (what must be TRUE):
   1. The README shows a copyable inline-image example that uses `.inline(...)` and `<img src="cid:...">`.
   2. Spec §6 and `docs/architecture.md` name the Graph inline property names in use and give the live-test status for inline images, as the owner reported it.
   3. The sample's documentation (`send --help` and the README's sample section) describes the `inline/` directory, the content-ID rule and the dry-run rewrite.
-  4. `./mvnw verify` passes offline, and `./mvnw -Prelease verify -Dgpg.skip -pl morimail -am` passes without warnings at `0.2.0-SNAPSHOT`. The owner can then release 0.2.0 by following `docs/release.md`.
+  4. The README shows a copyable `HtmlImages` example (local images, and the opt-in for remote ones) and the `morimail-html` coordinates.
+  5. `./mvnw verify` passes offline, and the scoped release build (`./mvnw -Prelease verify -Dgpg.skip -pl morimail,morimail-html -am`) passes without warnings at `0.2.0-SNAPSHOT`. `docs/release.md` covers the second published jar, so the owner can release 0.2.0 by following it.
 **Plans**: TBD
 **UI hint**: no
 
@@ -101,16 +117,17 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
 |-------|--------------|-------|
 | 5. Inline Images in Core and Graph | INLN-01..06, GRAPH-10..12 | 9 |
 | 6. Inline Images in the Serial-Mail Sample | CLI-15..18 | 4 |
-| 7. Docs and Release Readiness | DOCS-05, DOCS-06 | 2 |
+| 7. HTML Image Helper Module | HTML-01..06 | 6 |
+| 8. Docs and Release Readiness | DOCS-05..07 | 3 |
 
-Mapped: 15/15 v0.2.0 requirements. No orphans, no duplicates.
+Mapped: 22/22 v0.2.0 requirements. No orphans, no duplicates.
 
 Spec §10.3 also says "a transport that cannot send inline images rejects them in `validate`". No requirement covers this line. Both transports in this repository handle inline images (`graph` sends them, `recording` records them), so no code is needed under Rule 0. It is a rule for external transports.
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 6) → 6 → 7
+Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 6 and 7) → 6 → 7 → 8
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
@@ -120,4 +137,5 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 4. Docs and Release Readiness | v0.1.0 | 5/5 | Complete | 2026-11-22 |
 | 5. Inline Images in Core and Graph | v0.2.0 | 0/TBD | Not started | - |
 | 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 0/TBD | Not started | - |
-| 7. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |
+| 7. HTML Image Helper Module | v0.2.0 | 0/TBD | Not started | - |
+| 8. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |

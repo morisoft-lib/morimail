@@ -50,6 +50,7 @@ All of the above shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0
 ### Active
 
 - [ ] Inline images (CID) per spec §10.3: builder `.inline(...)`, two-way `cid:` checks in `build()`, Graph inline file attachments within the existing size limits, sample `inline/` directory and dry-run rewrite, docs — v0.2.0 (REQ-IDs in REQUIREMENTS.md)
+- [ ] HTML image helper per spec §10.4: new module `morimail-html` with `HtmlImages` (template `<img src>` to `cid:` plus inline images; local under a base directory, `http(s)` opt-in) — v0.2.0 Phase 7 (HTML-01..06)
 
 ### Out of Scope
 

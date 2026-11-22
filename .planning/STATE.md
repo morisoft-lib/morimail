@@ -6,11 +6,11 @@ current_phase: 5
 current_phase_name: Inline Images in Core and Graph
 status: planning
 stopped_at: Phase 5 context gathered
-last_updated: "2026-11-22T21:56:41.924Z"
+last_updated: "2026-11-22T21:59:24.170Z"
 last_activity: "2026-11-22: Roadmap for v0.2.0 created (Phases 5-7, 15/15 requirements mapped)"
-state_head: 53b63e7e031135e2ba0a9a275e3c6b394370770c
+state_head: 27930dd42be3a17a0a354465262091888d8cbb4a
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-22 after starting milestone v0.2.0)
 
 ## Current Position
 
-Phase: 5 of 7 (Inline Images in Core and Graph), first of 3 phases in v0.2.0
+Phase: 5 of 8 (Inline Images in Core and Graph), first of 4 phases in v0.2.0
 Plan: Not started
 Status: Ready to plan
 Last activity: 2026-11-22: Roadmap for v0.2.0 created (Phases 5-7, 15/15 requirements mapped)
@@ -112,6 +112,10 @@ None yet.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
 - [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached. Phase 6 should decide the same rule for `inline/`. Under the CLI-16 non-image check, `Thumbs.db` in `inline/` would fail pre-flight.
+
+### Roadmap Evolution
+
+- Phase 7 added: HTML Image Helper Module (morimail-html, spec §10.4), owner request 2026-11-22; former Phase 7 Docs and Release Readiness renumbered to 8
 
 ## Deferred Items
 

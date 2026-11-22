@@ -38,7 +38,7 @@ Not in this phase: the sample's `inline/` directory (Phase 6), docs and release 
 - **D-14:** Messages name the content ID, for example "no inline image for cid:logo", "inline image logo is not referenced", "duplicate inline content ID logo". The template author chooses the content ID, as with placeholder names, so it is not recipient data. Messages still never echo addresses or data values.
 
 ### Size limits (Graph `validate`)
-- **D-15:** Keep today's limits unchanged. Inline images count in the same loop as regular attachments: each file under 3 MiB, all files together under 3 MiB (spec §6.2), and the request estimate (base64 plus body plus allowance) at or under 4 MiB. Roadmap success criterion 4 and GRAPH-11 say "together ... 4 MiB". That wording mixes up the 3 MiB total with the 4 MiB request estimate. Correct the roadmap and REQUIREMENTS.md wording to match the code. Do not change the code.
+- **D-15:** Keep today's limits unchanged. Inline images count in the same loop as regular attachments: each file under 3 MiB, all files together under 3 MiB (spec §6.2), and the request estimate (base64 plus body plus allowance) at or under 4 MiB. Roadmap success criterion 4 and GRAPH-11 say "together ... 4 MiB". That wording mixes up the 3 MiB total with the 4 MiB request estimate. The roadmap and REQUIREMENTS.md wording was corrected on 2026-11-22. Do not change the code.
 - **D-16:** Size-limit messages stay the same for inline images and regular attachments ("attachment logo.png has N bytes ..."). No new message variants.
 - **D-17:** Rejection still happens in `validate`, before any token request or HTTP call (existing behaviour).
 
@@ -105,7 +105,7 @@ Not in this phase: the sample's `inline/` directory (Phase 6), docs and release 
 <deferred>
 ## Deferred Ideas
 
-### HTML image helper `morimail-html`: new phase in v0.2.0 after Phase 5 (owner decision 2026-11-22)
+### HTML image helper `morimail-html`: now Phase 7 of v0.2.0, spec §10.4, HTML-01..06 (owner decision 2026-11-22)
 The owner wants a helper that turns a mail source with ordinary image URLs into a body with `cid:` references plus a set of image files.
 - **Packaging:** a new Maven sub-module `morimail-html` (its own published jar), package `de.morisoft.morimail.html`, with one final class (working name `HtmlImages`/`HtmlConverter`). This keeps the core jar's Jackson-only rule intact.
 - **Input:** a `MailTemplate`, converted **once, before rendering**, not the rendered mail. This keeps recipient data out of the converter (no path or host injection through placeholders) and means one conversion per campaign. A `src` that contains a placeholder is left unchanged.
@@ -113,7 +113,7 @@ The owner wants a helper that turns a mail source with ordinary image URLs into 
 - **Local images:** relative or `file:` paths, resolved only under a caller-given base directory.
 - **Remote `http(s)://` images:** opt-in. Download into a temp directory (`Attachment` is `Path`-based), with timeout, size cap and image-type check.
 - **Open for that phase's discussion:** a parser dependency (for example jsoup) needs the owner's explicit approval (Rule 0); the error categories for download failures; how content IDs are generated and how the same URL used twice is handled; and who cleans up the temp files.
-- **Before planning:** spec §10 needs a new subsection, ROADMAP.md needs the new phase (via `/gsd-phase`), and REQUIREMENTS.md needs new IDs. The release process (`docs/release.md`, `-pl` scoping, D-20) must cover a second published artifact. This replaces the REQUIREMENTS.md Out of Scope line "Generated content IDs or automatic `cid:` rewriting in the library" for the helper module only. The core still does no rewriting.
+- **Done 2026-11-22:** spec §10.4, ROADMAP.md Phase 7 (docs and release moved to Phase 8) and REQUIREMENTS.md HTML-01..06, DOCS-07 are in place. The release process (`docs/release.md`, `-pl` scoping, D-20) must cover a second published artifact. This replaces the REQUIREMENTS.md Out of Scope line "Generated content IDs or automatic `cid:` rewriting in the library" for the helper module only. The core still does no rewriting.
 
 </deferred>
 

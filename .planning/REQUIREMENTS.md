@@ -1,7 +1,7 @@
 # Requirements: morimail
 
 **Defined:** 2026-11-22
-**Milestone:** v0.2.0 Inline Images (spec §10.3)
+**Milestone:** v0.2.0 Inline Images (spec §10.3, §10.4)
 **Core Value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
 
 ## v0.2.0 Requirements
@@ -20,7 +20,7 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 ### Graph transport
 
 - [ ] **GRAPH-10**: The Graph transport sends each inline image as a file attachment marked inline with its content ID, using the property names from the current Microsoft `fileAttachment` documentation (read before coding; differences from the spec noted in `docs/architecture.md`).
-- [ ] **GRAPH-11**: Inline images count toward the existing limits in `validate` (each file under 3 MiB, all attachments together under 4 MiB), rejected before any token request.
+- [ ] **GRAPH-11**: Inline images count toward the existing limits in `validate` (each file under 3 MiB, all attachments together under 3 MiB, estimated request at most 4 MiB), rejected before any token request.
 - [ ] **GRAPH-12**: The owner-run `live` test sends a mail with one inline image, so the owner can confirm it renders inline (not as a separate attachment).
 
 ### Serial-mail sample
@@ -30,10 +30,20 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 - [ ] **CLI-17**: Dry-run writes the inline images next to each rendered HTML file and rewrites `cid:` references to relative paths in the dry-run output only; sent mails keep `cid:`.
 - [ ] **CLI-18**: The shipped example campaign has a small generated `inline/logo.png` referenced from its HTML template, and its dry-run shows the image.
 
+### HTML image helper (`morimail-html`, spec §10.4)
+
+- [ ] **HTML-01**: A new module `morimail-html` (artifact `de.morisoft:morimail-html`, package `de.morisoft.morimail.html`) depends on `morimail`, has no other runtime dependency unless the owner approves one, and is in the release profile; the `morimail` jar is unchanged.
+- [ ] **HTML-02**: `HtmlImages` converts a `MailTemplate` (before rendering) into a template whose `<img src>` values are `cid:` references plus the matching inline `Attachment`s; `cid:`, `data:`, unknown schemes, `src` values with a `$$` placeholder, the subject and the text stay unchanged.
+- [ ] **HTML-03**: Local sources (relative path or `file:`) resolve only inside a caller-given base directory; a path outside it, a missing or unreadable file, or a non-image file fails with `InvalidMailException` naming the `src` as written.
+- [ ] **HTML-04**: Generated content IDs come from the file name without extension, pass the Phase 5 content-ID rules, get a numeric suffix on collision; the same source used twice yields one image.
+- [ ] **HTML-05**: `http(s)` sources are downloaded only when the caller passes a download directory (opt-in), with a timeout, a size cap and an image content-type check; tested offline against WireMock.
+- [ ] **HTML-06**: A converted template, rendered for several data records and sent to `recording`, passes `build()` and carries the inline images in every mail.
+
 ### Docs and release readiness
 
 - [ ] **DOCS-05**: README shows an inline-image example with `.inline(...)` and `cid:`; `docs/architecture.md` and spec §6 record the Graph inline property names and the live-test status; the sample docs describe `inline/`.
-- [ ] **DOCS-06**: `./mvnw verify` passes offline and `./mvnw -Prelease verify -Dgpg.skip -pl morimail -am` passes without warnings at `0.2.0-SNAPSHOT`, ready for the owner to release 0.2.0 from `docs/release.md`.
+- [ ] **DOCS-06**: `./mvnw verify` passes offline and `./mvnw -Prelease verify -Dgpg.skip -pl morimail,morimail-html -am` passes without warnings at `0.2.0-SNAPSHOT`, ready for the owner to release 0.2.0 from `docs/release.md`.
+- [ ] **DOCS-07**: README shows an `HtmlImages` example (local images, remote opt-in) and the `morimail-html` coordinates; `docs/release.md` covers the second published jar.
 
 ## Future Requirements
 
@@ -53,7 +63,7 @@ Deferred. Tracked but not in this roadmap.
 |---------|--------|
 | Inline images of 3 MiB or more | Same upload-session constraint as regular attachments (spec §6.2) |
 | Non-image inline parts | Spec §10.3: only image content types |
-| Generated content IDs or automatic `cid:` rewriting in the library | Not in the spec; the template author names the ID (Rule 0) |
+| Generated content IDs or automatic `cid:` rewriting in the core library | The core stays as spec §10.3 says; the helper module `morimail-html` (spec §10.4, HTML-01..06) does this outside the core |
 | Rewriting `cid:` in sent mail | Spec §10.3: rewrite in dry-run output only |
 | Per-recipient inline images in the sample | Same as attachments: shared per campaign |
 | Releasing, tagging or the live run | Done by the owner |
@@ -77,14 +87,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-16 | Phase 6 | Pending |
 | CLI-17 | Phase 6 | Pending |
 | CLI-18 | Phase 6 | Pending |
-| DOCS-05 | Phase 7 | Pending |
-| DOCS-06 | Phase 7 | Pending |
+| HTML-01 | Phase 7 | Pending |
+| HTML-02 | Phase 7 | Pending |
+| HTML-03 | Phase 7 | Pending |
+| HTML-04 | Phase 7 | Pending |
+| HTML-05 | Phase 7 | Pending |
+| HTML-06 | Phase 7 | Pending |
+| DOCS-05 | Phase 8 | Pending |
+| DOCS-06 | Phase 8 | Pending |
+| DOCS-07 | Phase 8 | Pending |
 
 **Coverage:**
-- v0.2.0 requirements: 15 total
-- Mapped to phases: 15 (Phase 5: 9, Phase 6: 4, Phase 7: 2)
+- v0.2.0 requirements: 22 total
+- Mapped to phases: 22 (Phase 5: 9, Phase 6: 4, Phase 7: 6, Phase 8: 3)
 - Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-11-22*
-*Last updated: 2026-11-22 after roadmap creation (Phases 5-7)*
+*Last updated: 2026-11-22 after adding Phase 7 (HTML image helper, spec §10.4)*

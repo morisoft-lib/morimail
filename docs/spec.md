@@ -73,7 +73,7 @@ The Graph transport is the first plug-in, not a special case.
 | Item | Choice | Note |
 |---|---|---|
 | Language | Java 17 | Records are used for the model |
-| Build | Maven: parent, one library module, one sample module | Maven wrapper checked in |
+| Build | Maven: parent, one library module, one sample module; from 0.2.0 also the helper module `morimail-html` (section 10.4) | Maven wrapper checked in |
 | HTTP | `java.net.http.HttpClient` | Graph and token endpoint |
 | JSON | Jackson databind | Only runtime dependency of the library |
 | Token and JWT | JDK only: `KeyStore`, `MessageDigest`, `Signature`, `Base64` | No MSAL4J, no JWT library |
@@ -92,6 +92,8 @@ morimail/                      the library: one jar
   de.morisoft.morimail         core: model, builder, renderer, Mailer, registry, errors
   de.morisoft.morimail.graph   Graph transport
   de.morisoft.morimail.entra   Entra client-credentials token client
+morimail-html/                 helper jar (from 0.2.0, section 10.4): depends on morimail
+  de.morisoft.morimail.html    turns image URLs in a template into inline images
 morimail-sample-serial/        CLI sample
 docs/
   spec.md                      this document
@@ -388,6 +390,21 @@ Stop after milestone 4 and report, so the owner can run the live test and feed r
 - Graph transport: send inline images as file attachments marked inline with their content ID. Read the current `fileAttachment` resource documentation for the property names first; they were not verified for this spec.
 - Inline images count toward the same size limits as other attachments.
 - Sample: an optional `inline/` directory in the campaign; the file name without extension is the content ID. Dry-run writes the images next to the rendered HTML and rewrites `cid:` references to relative paths in the dry-run output only.
+- The core library does not rewrite HTML and does not generate content IDs. That is the job of the helper in section 10.4.
+
+### 10.4 Milestone 6, continued: HTML image helper (`morimail-html`)
+
+Added by the owner on 2026-11-22. A convenience for template authors who write ordinary image URLs (`<img src="logo.png">`, `file:`, `https://`) instead of `cid:` references.
+
+- **Module and artifact.** A separate Maven module `morimail-html`, artifact `de.morisoft:morimail-html`, package `de.morisoft.morimail.html`. It depends on `morimail`. The library jar stays unchanged and keeps its Jackson-only allowlist. The helper is not a transport, so it has no `ServiceLoader` entry and adds no extension point.
+- **One class.** A final class `HtmlImages`, which is stateless and safe for concurrent use. It has a static method that takes a `MailTemplate` and returns a result record with the rewritten `MailTemplate` and a `List<Attachment>` whose `contentId` is set. The consumer passes both to the builder (`.template(result.template(), data)`, then each image through `.attach(...)`). The checks from section 10.3 then apply as usual.
+- **Template, not mail.** The helper works on the template **before** rendering, once per template, not once per mail. Recipient data therefore never reaches it: a placeholder value cannot point it at a local file or a network host. A campaign converts its template once, however many mails it sends. A `src` that contains a placeholder (`$$`) is left unchanged.
+- **What is rewritten.** Only `src` attributes of `<img>` elements in the HTML part. Subject and text stay as they are. `cid:` and `data:` sources and unknown schemes stay as they are.
+- **Local images.** A relative path or a `file:` URI is resolved against a base directory that the caller must pass. After normalization the path must lie inside that directory. Otherwise the call fails, as it does for a missing or unreadable file or a non-image content type.
+- **Remote images (opt-in).** `http:` and `https:` sources are left unchanged unless the caller opts in by passing a download directory. The caller owns that directory and cleans it up. A download has a connect and request timeout and a size cap, and it must return an image content type. Downloads use the JDK `HttpClient`.
+- **Content IDs.** The helper generates them from the file name without its extension, reduced to characters that the section 10.3 rules accept, with a numeric suffix when two names collide. The same source used twice gives one image and one content ID.
+- **Errors.** Problems with the template or a local file are `InvalidMailException`. How a failed download is categorized is decided in the phase that builds it (section 12). Messages name the `src` value as written in the template, never recipient data. Logging follows section 11: remote URLs only at DEBUG.
+- **Dependencies.** JDK and `morimail` only, unless the owner approves an HTML parser (section 12).
 
 ## 11. Working rules for Claude Code (copy into `CLAUDE.md`)
 
@@ -427,6 +444,8 @@ Each has a default so work is not blocked. Raise them at the milestone-4 report.
 | `Co-Authored-By` trailer that Claude Code adds to commit messages | Leave Claude Code's default. The owner decides whether a public history should carry it and can switch it off in the Claude Code settings. |
 | HTML plus text both supplied on Graph | Send HTML only in the MVP; MIME format later |
 | Attachment limit | Under 3 MB per file and in total; upload session later |
+| HTML parser for `morimail-html` (10.4) | None: a JDK regular expression over `<img src>`. A parser such as jsoup needs the owner's explicit approval |
+| Failed download in `morimail-html` (10.4) | Decided in the phase that builds it, together with the size cap, the timeouts and the redirect rule |
 
 ## 13. Open source and Maven Central
 
@@ -445,7 +464,7 @@ Decided: MIT license, public repository from the first commit, releases on Maven
 
 - GroupId `de.morisoft`. Maven Central only accepts a groupId whose namespace the publisher has verified in the Central Portal, by DNS for a domain or through a code-hosting account (Postman n.d.). The owner must control `morisoft.de` and verify it before the first release.
 - Repository and SCM URL: `https://github.com/morisoft-lib/morimail`.
-- Published artifacts: the parent POM (`de.morisoft:morimail-parent`) and the library (`de.morisoft:morimail`). These coordinates are final; Maven Central does not allow changing them after the first release.
+- Published artifacts: the parent POM (`de.morisoft:morimail-parent`) and the library (`de.morisoft:morimail`). From 0.2.0 also the helper `de.morisoft:morimail-html` (section 10.4), released with the same version. These coordinates are final; Maven Central does not allow changing them after the first release.
 - Later external transports follow the pattern `morimail-<transport>`, for example `morimail-ses`.
 - The sample module and the test-jar are not published (`maven.deploy.skip` for the sample).
 - Versions: `0.1.0-SNAPSHOT` during the MVP, first release `0.1.0`. Semantic versioning; before 1.0 the API may change between minor versions.
