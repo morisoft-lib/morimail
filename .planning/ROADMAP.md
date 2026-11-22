@@ -108,7 +108,7 @@ Scope notes:
   3. A `graph` account built through the registry, with no `ServiceLoader` entry, sends the expected `POST /users/{from}/sendMail` to WireMock. The request has a percent-encoded from, a bearer token, recipients, an HTML-or-text body and base64 file attachments, and carries `saveToSentItems` only when it is false. A 202 returns normally. Attachments at or above 3 MB (per file or in total) and unknown options are rejected.
   4. Every row of the error table maps to its documented exception. The message carries Graph's `error.code`, message and `request-id`, never tokens or bodies. A 401 triggers exactly one retry, carrying a fresh token, before it is mapped.
   5. `serial-mail send` runs the example campaign end to end against WireMock for both the token endpoint and Graph, and `./mvnw verify` passes offline. A `live`-tagged test is skipped by default and is ready for the owner to run with `-Plive` and environment variables.
-**Plans:** 5/5 plans executed (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05)
+**Plans:** 5/6 plans executed (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05; wave 5: 03-06 gap closure)
 
 Plans:
 **Wave 1**
@@ -123,6 +123,9 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 - [x] 03-05-PLAN.md — Sample: `serial-mail send` end to end against WireMock (once, rerun sends nothing, 403 stops with exit 3), D-14 pre-flight naming keys only, the owner's `live` test, the network-free CI step, and the phase's deviations in `docs/architecture.md`; then the STOP
+
+**Wave 5** *(gap closure, blocked on Wave 4 completion)*
+- [ ] 03-06-PLAN.md — Gaps G-03-2 and G-03-4: Graph failure messages carry status, code and request-id only (no Graph free text, which can name the sender), recorded in `docs/architecture.md`; thread-safe root-logger capture in `EntraTokenErrorsTest` (confirmed by the owner's Temurin 17 CI run)
 **UI hint**: no
 
 Scope notes:
@@ -178,5 +181,5 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 |-------|----------------|--------|-----------|
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
 | 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
-| 3. Graph and Entra | 5/5 | In Progress | - |
+| 3. Graph and Entra | 5/6 | In Progress | - |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |
