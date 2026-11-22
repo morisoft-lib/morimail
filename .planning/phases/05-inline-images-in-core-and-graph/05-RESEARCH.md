@@ -484,21 +484,25 @@ The test class stays tagged `@Tag("live")`; the default `excludedGroups` propert
 | A3 | Windows Outlook desktop renders `isInline` + bare `contentId` images from `sendMail` | Graph JSON | A Microsoft Q&A thread reports a client that did not. Document the live result in Phase 8; no code can fix it from here |
 | A4 | `Files.probeContentType` returns a non-`image/` type (or null) for `.bin`/`.pdf`/`.txt` on every CI platform | Pitfall 5 | A "not an image" test could flake on an exotic platform. Use `.pdf` (built-in table) as the primary negative case to remove the dependency |
 | A5 | Behaviour of `ImageIO` PNG output on Temurin 17 equals JDK 21 (chunks only `IHDR IDAT IEND`) | Live test | Only affects a "no metadata" claim in a test comment. CI round-trip on 17 shows it; the live test itself is not run in CI |
-| A6 | Skipping empty `cid:` matches and adding a lookbehind is acceptable to the owner (a small narrowing of D-04's "a literal cid: in body text also counts") | Pattern 2 | Owner may prefer strict D-04. Cheap to flip, so ask in plan review |
+| A6 | Skipping empty `cid:` matches and adding a lookbehind is acceptable to the owner (a small narrowing of D-04's "a literal cid: in body text also counts") | Pattern 2 | Owner may prefer strict D-04. Cheap to flip, so ask in plan review. Resolved 2026-11-22: owner approved (D-04 amendment in 05-CONTEXT.md) |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Angle brackets on `contentId`?**
    - Known: Microsoft's description is `<img src="cid:contentId">` with the bare value, and the community samples use bare values.
    - Unclear: whether Exchange wraps it in `<...>` itself for the MIME `Content-ID` header. Only a real send shows it.
    - Recommendation: send bare. The live test (GRAPH-12) is the check; a correction becomes Phase 5.1.
+   - **RESOLVED:** send the bare `contentId`, no angle brackets, no `contentLocation`. Recorded in 05-01-PLAN.md (Choices, the Graph bullet; Task 1 step 4; the GRAPH-10/encoding truths). The check is the owner's live run of `LiveGraphTest.sendsOneMailWithAnInlineImage` (05-02-PLAN.md Task 2, GRAPH-12 human-check); a correction becomes an inserted Phase 5.1. The remaining uncertainty is assumption A1/A3, not an open planning question.
 
 2. **Empty-ID matches and the "acid:" lookbehind (A6).**
    - Recommendation: skip empty IDs; add the `(?<![\p{L}\p{N}])` lookbehind. Both are inside "the exact regex" discretion. Tell the owner in the plan.
+   - **RESOLVED:** the owner approved both narrowings in plan review on 2026-11-22. Recorded as the D-04 amendment in 05-CONTEXT.md (Decisions, D-04); implemented by 05-01-PLAN.md Task 2 steps 3 and 6 (pattern `(?i)(?<![\p{L}\p{N}])cid:([^"'\s)>]*)`, empty ID skipped) and tested by `bareCidAndWordsEndingInCidAreNoReference`.
 
 3. **Stale spec text.** `docs/spec.md` §5 (lines 124-125) and §5.1 (line 177) still say `build()` rejects a non-null `contentId`; §10.3 says the opposite. The spec is binding and CONTEXT says Phase 8 records the Graph names in spec §6. Recommendation: leave the spec edit to Phase 8 (DOCS-05), record the deviation in `docs/architecture.md` now, and note it in the plan so the executor does not edit `docs/spec.md` unasked.
+   - **RESOLVED:** `docs/spec.md` is not edited in Phase 5; Phase 8 (DOCS-05) updates it. Recorded in 05-01-PLAN.md (Choices, last bullet) and 05-02-PLAN.md (Choices, the `docs/spec.md` bullet; Task 2 step 4). The deviation is written now by 05-02-PLAN.md Task 2 step 3b, row `| §5 and §5.1 (contentId in build()) |` in `docs/architecture.md`.
 
 4. **Truncating the echoed ID** in "no inline image for cid:X" (Pattern 2, finding 4). Recommendation: cap at 64 characters; trivial and keeps the "no data echo" rule honest.
+   - **RESOLVED:** cut at 64 code points, then `...` (code points rather than chars, so a surrogate pair is never split; `id.offsetByCodePoints(0, 64)`). Recorded in 05-01-PLAN.md (Choices, first bullet; Task 2 steps 6 and 7; threat T-05-02) and tested by `longReferenceIsCutInTheMessage`; the `build()` Javadoc and the `docs/architecture.md` row (05-02-PLAN.md Task 2 step 3b) state the cut in code points. Listed for owner review in 05-01-SUMMARY.md.
 
 ## Environment Availability
 
