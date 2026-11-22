@@ -1,56 +1,41 @@
 ---
 phase: 04-docs-and-release-readiness
-fixed_at: 2026-11-22T22:00:00Z
+fixed_at: 2026-11-22T23:30:00Z
 review_path: /home/coder/morimail/.planning/phases/04-docs-and-release-readiness/04-REVIEW.md
 iteration: 1
-findings_in_scope: 4
-fixed: 4
+findings_in_scope: 1
+fixed: 1
 skipped: 0
 status: all_fixed
 ---
 
 # Phase 4: Code Review Fix Report
 
-**Fixed at:** 2026-11-22T22:00:00Z
-**Source review:** /home/coder/morimail/.planning/phases/04-docs-and-release-readiness/04-REVIEW.md
+**Fixed at:** 2026-11-22T23:30:00Z
+**Source review:** .planning/phases/04-docs-and-release-readiness/04-REVIEW.md
 **Iteration:** 1
 
 **Summary:**
-- Findings in scope: 4
-- Fixed: 4
+- Findings in scope: 1
+- Fixed: 1
 - Skipped: 0
 
-All four findings are in `docs/release.md`. The fixes were made in an isolated worktree and fast-forwarded onto `main`. Each claim was checked against `.planning/debug/release-doc-gpg-signing.md` before it was written. Verification was Tier 1 (re-read of the diff). The file is Markdown, so no syntax check applies, and no build file was touched. The tag command in WR-01 was also run once in the worktree against a temporary local tag, which was then deleted. `git log -1 --grep='^release 0\.1\.0$'` resolves to `72e7f7f`, the CI-green release commit, not to `HEAD`.
+The previous round (WR-01, IN-01, IN-02, IN-03 in `docs/release.md`) was fixed in `794661d`, `49cfe7b`, `7b97943`, `f9096a9`; this report covers the round that followed.
 
 ## Fixed Issues
 
-### WR-01: Step 7 tags HEAD, not the release commit, so the tag lands on unpushed docs commits
+### WR-01: Tracked debug note commits the maintainer's GPG key ID to the public repo
 
-**Files modified:** `docs/release.md`
-**Commit:** 794661d
-**Applied fix:** Step 7 now tags the commit found by `git log -1 --format=%H --grep='^release 0\.1\.0$'`. A `git show --no-patch --format='%h %s' v0.1.0^{commit}` line sits before the push, so the owner can confirm which commit the tag points at. A sentence above the block explains why `HEAD` is not used. The hand-over remark about pushing `main` was not added to the doc. The tag-only push is safe now, because the tagged commit is already on `origin/main` from step 4.
-**Status:** fixed: requires human verification (the command is a logic change in a runbook, so the owner should read it once before the real tag).
+**Files modified:** `.planning/debug/release-doc-gpg-signing.md`, `.planning/phases/04-docs-and-release-readiness/04-REVIEW.md`
+**Commit:** history rewrite of `origin/main..HEAD` (no single commit)
+**Applied fix:** The owner chose to rewrite the unpushed history. `git filter-branch --tree-filter` over the 17 commits after `origin/main` replaced the 16-hex key ID with `<KEYID>` in every tree, and rewrote each in-range short hash cited in phase docs to its new value. A second pass over the last two commits removed a 4+4 fragment of the ID from this review. Author, committer and dates are unchanged. No remote branch contained any of the rewritten commits. The pre-rewrite state is kept locally as `refs/backup/pre-keyid-rewrite`, which a normal push does not send.
 
-### IN-01: The doc puts the "cannot prompt" behaviour on batch mode, but `--pinentry-mode error` is the real cause
+## Skipped Issues
 
-**Files modified:** `docs/release.md`
-**Commit:** 49cfe7b
-**Applied fix:** Step 5 now says the gpg plugin calls gpg with `--pinentry-mode error`, which forbids a passphrase prompt. This replaces "runs gpg in batch mode, where it cannot ask for the passphrase". The diagnosis (GpgSigner bytecode, repro case B) confirms the flag.
-
-### IN-02: "No pinentry means the agent cache was empty" is incomplete when several secret keys exist
-
-**Files modified:** `docs/release.md`
-**Commit:** 7b97943
-**Applied fix:** The failure paragraph now says the agent held no passphrase for the signing key. It also tells the owner with several secret keys to check that the warm-up and the deploy name the same `<KEYID>`. The key ID stays a placeholder.
-
-### IN-03: The warm-up gives no success signal, so a failed warm-up is only discovered by the deploy
-
-**Files modified:** `docs/release.md`
-**Commit:** f9096a9
-**Applied fix:** Added one sentence after the first warm-up block: "The warm-up prints nothing on success. If it prints a `gpg:` line, fix that before you deploy." The optional `&& echo warm-up OK` was not added (Rule 0).
+None.
 
 ---
 
-_Fixed: 2026-11-22T22:00:00Z_
-_Fixer: Claude (gsd-code-fixer)_
+_Fixed: 2026-11-22_
+_Fixer: Claude (orchestrator, per owner decision)_
 _Iteration: 1_
