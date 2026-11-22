@@ -52,6 +52,8 @@ final class GraphTransport implements MailTransport {
     static final long JSON_ALLOWANCE = 16L * 1024;
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final int MAX_ERROR_TEXT = 300;
+    private static final int MAX_CLEAN_INPUT = 1000;
     private static final System.Logger LOG = System.getLogger(GraphTransport.class.getName());
 
     private final String baseUrl;
@@ -316,15 +318,15 @@ final class GraphTransport implements MailTransport {
         // Collapse first, then cut, then replace addresses: the address pattern is quadratic on a long
         // token without "@", and a cut before collapsing could split an address and leave its start.
         String collapsed = sb.toString().replaceAll(" {2,}", " ");
-        String text = (collapsed.length() > 1000 ? collapsed.substring(0, 1000) : collapsed)
+        String text = (collapsed.length() > MAX_CLEAN_INPUT ? collapsed.substring(0, MAX_CLEAN_INPUT) : collapsed)
                 .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
         }
-        if (text.length() <= 300) {
+        if (text.length() <= MAX_ERROR_TEXT) {
             return text;
         }
-        int end = Character.isHighSurrogate(text.charAt(299)) ? 299 : 300;
+        int end = Character.isHighSurrogate(text.charAt(MAX_ERROR_TEXT - 1)) ? MAX_ERROR_TEXT - 1 : MAX_ERROR_TEXT;
         return text.substring(0, end) + "...";
     }
 }

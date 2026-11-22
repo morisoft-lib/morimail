@@ -70,6 +70,7 @@ public final class EntraClientCredentials implements TokenProvider {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
     private static final Duration EXPIRY_MARGIN = Duration.ofMinutes(5);
     private static final int MAX_ERROR_TEXT = 300;
+    private static final int MAX_CLEAN_INPUT = 1000;
     private static final long MAX_EXPIRES_IN_SECONDS = 31_536_000L;
     private static final long ASSERTION_LIFETIME_SECONDS = 600;
     private static final String JWT_BEARER = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
@@ -383,7 +384,7 @@ public final class EntraClientCredentials implements TokenProvider {
         // Collapse first, then cut, then replace addresses: the address pattern is quadratic on a long
         // token without "@", and a cut before collapsing could split an address and leave its start.
         String collapsed = spaced.toString().replaceAll("\\s+", " ");
-        String text = (collapsed.length() > 1000 ? collapsed.substring(0, 1000) : collapsed)
+        String text = (collapsed.length() > MAX_CLEAN_INPUT ? collapsed.substring(0, MAX_CLEAN_INPUT) : collapsed)
                 .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
