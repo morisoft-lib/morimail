@@ -30,7 +30,7 @@ status: all_fixed
 **Commit:** 2f1e499
 **Applied fix:** Both `clean()` methods (Graph and Entra use the same pattern) now cut the text to 1000 characters before the whitespace and address regexes run. The 300-character output cut is unchanged. Two tests send a 100000-character `error.code` and `error_description`, assert the 300-character plus `...` result, and carry `@Timeout(10)` so a regression to the quadratic cost fails the build.
 
-### IN-01: The "no addresses in exception messages" claim is still best effort
+### IN-01: The "no addresses in exception messages" claim is still a best-effort statement for `code` and `request-id`
 
 **Files modified:** `docs/architecture.md`
 **Commit:** f084394
