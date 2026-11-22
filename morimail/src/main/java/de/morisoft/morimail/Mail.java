@@ -5,10 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * One mail for one account: the account id plus the message to send.
@@ -38,6 +42,10 @@ public record Mail(String accountId, MailMessage message) {
      * immutable.
      */
     public static final class Builder {
+
+        // A cid: reference in any case, not preceded by a letter or digit; its id ends at a quote, whitespace, ) or > (D-04 as amended 2026-11-22, D-05, D-06).
+        private static final Pattern CID_REFERENCE =
+                Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)>]*)");
 
         private static final Map<String, String> CONTENT_TYPES = Map.ofEntries(
                 Map.entry("pdf", "application/pdf"),
@@ -301,8 +309,9 @@ public record Mail(String accountId, MailMessage message) {
         /**
          * Attaches a file described by an {@link Attachment}, for a file name or content type of
          * your choice. A {@code null} file name or content type is filled in by {@link #build()}
-         * as for {@link #attach(Path)}. {@code build()} rejects a {@code null} file and a
-         * non-null content id.
+         * as for {@link #attach(Path)}. An attachment with a non-null content id is an inline
+         * image and gets the checks of {@link #inline(Path, String)}; {@code build()} rejects a
+         * {@code null} file.
          *
          * @param attachment the attachment
          * @return this builder
@@ -341,9 +350,22 @@ public record Mail(String accountId, MailMessage message) {
         /**
          * Checks the parts and builds the mail. Only the first problem found is reported, in this
          * order: account id, template mixed with explicit content, template rendering,
-         * recipients, subject, body, addresses, line break in the subject, attachments. The
-         * message names the field and never repeats the rejected value. Calling this method does
-         * not change the builder, so it can be called again.
+         * recipients, subject, body, addresses, line break in the subject, attachments and inline
+         * images in the order added (for each the file, the file name and the content type, and
+         * for an inline image its content id, its image type and a repeated content id), and
+         * last the {@code cid:} references of the HTML body (a reference without an inline
+         * image, then an inline image without a reference).
+         *
+         * <p>A reference is {@code cid:} in any case that does not follow a letter or a digit.
+         * Its id ends at a quote, whitespace, {@code )} or {@code >}, is compared exactly and is
+         * never decoded. An empty id is ignored. Only the HTML body is read, so an HTML body
+         * with such a reference fails even in a mail without inline images. The HTML body is
+         * never rewritten.
+         *
+         * <p>The message names the field and never repeats the rejected value; the inline-image
+         * messages name the content id, and an id read from the HTML body is cut at
+         * 64 code points. Calling this method does not change the builder, so it can be called
+         * again.
          *
          * @return the mail
          * @throws InvalidMailException if the mail cannot be sent as it is
@@ -382,7 +404,7 @@ public record Mail(String accountId, MailMessage message) {
             if (MailAddress.hasLineBreak(subject)) {
                 throw new InvalidMailException("subject contains a line break");
             }
-            List<Attachment> resolved = resolveAttachments();
+            List<Attachment> resolved = resolveAttachments(html);
             return new Mail(accountId, new MailMessage(from, to, cc, bcc, replyTo,
                     subject, html, text, resolved));
         }
@@ -411,8 +433,9 @@ public record Mail(String accountId, MailMessage message) {
             }
         }
 
-        private List<Attachment> resolveAttachments() throws InvalidMailException {
+        private List<Attachment> resolveAttachments(String html) throws InvalidMailException {
             List<Attachment> resolved = new ArrayList<>(attachments.size());
+            Set<String> inlineIds = new LinkedHashSet<>();
             for (int i = 0; i < attachments.size(); i++) {
                 Attachment attachment = attachments.get(i);
                 String field = "attachments[" + i + "]: ";
@@ -444,9 +467,68 @@ public record Mail(String accountId, MailMessage message) {
                 if (MailAddress.hasLineBreak(contentType) || contentType.indexOf('/') < 1) {
                     throw new InvalidMailException(field + "contentType is not a media type");
                 }
-                resolved.add(new Attachment(filename, contentType, file, attachment.contentId()));
+                String contentId = attachment.contentId();
+                if (contentId != null) {
+                    String reason = contentIdProblem(contentId);
+                    if (reason != null) {
+                        throw new InvalidMailException(field + "contentId " + reason);
+                    }
+                    if (!contentType.regionMatches(true, 0, "image/", 0, 6)) {
+                        throw new InvalidMailException(field + "inline image " + contentId
+                                + " has content type " + contentType + ", which is not an image type");
+                    }
+                    if (!inlineIds.add(contentId)) {
+                        throw new InvalidMailException(
+                                field + "duplicate inline content ID " + contentId);
+                    }
+                }
+                resolved.add(new Attachment(filename, contentType, file, contentId));
             }
+            checkReferences(html, inlineIds);
             return resolved;
+        }
+
+        private static String contentIdProblem(String contentId) {
+            if (contentId.isBlank()) {
+                return "is blank";
+            }
+            if (MailAddress.hasLineBreak(contentId)) {
+                return "contains a line break";
+            }
+            for (int i = 0; i < contentId.length(); i++) {
+                char c = contentId.charAt(i);
+                if (Character.isWhitespace(c) || c == '"' || c == '\'' || c == '(' || c == ')'
+                        || c == '<' || c == '>') {
+                    return "contains whitespace, a quote, a parenthesis or an angle bracket";
+                }
+            }
+            return null;
+        }
+
+        private static void checkReferences(String html, Set<String> inlineIds)
+                throws InvalidMailException {
+            Set<String> referenced = new LinkedHashSet<>();
+            if (html != null) {
+                Matcher matcher = CID_REFERENCE.matcher(html);
+                while (matcher.find()) {
+                    if (!matcher.group(1).isEmpty()) {
+                        referenced.add(matcher.group(1));
+                    }
+                }
+            }
+            for (String id : referenced) {
+                if (!inlineIds.contains(id)) {
+                    String shown = id.codePointCount(0, id.length()) <= 64
+                            ? id : id.substring(0, id.offsetByCodePoints(0, 64)) + "...";
+                    throw new InvalidMailException("no inline image for cid:" + shown);
+                }
+            }
+            for (String id : inlineIds) {
+                if (!referenced.contains(id)) {
+                    throw new InvalidMailException(
+                            "inline image " + id + " is not referenced in the HTML body");
+                }
+            }
         }
 
         private static String contentTypeOf(Path file, String filename) {

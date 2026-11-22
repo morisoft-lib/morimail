@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class MailBuilderTest {
@@ -397,6 +398,225 @@ class MailBuilderTest {
         assertThat(inline.filename()).isEqualTo("logo.png");
         assertThat(inline.contentType()).isEqualTo("image/png");
         assertThat(inline.file()).isEqualTo(logo);
+    }
+
+    // ---- inline images and cid: references ----
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   "})
+    void blankContentIdIsRejected(String contentId) throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<p>x</p>").inline(png, contentId).build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments[0]: contentId is blank");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a\nb", "a\rb", "logo\r\n"})
+    void contentIdWithALineBreakIsRejected(String contentId) throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<p>x</p>").inline(png, contentId).build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments[0]: contentId contains a line break");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"a b", "a\tb", "a\"b", "a'b", "a(b", "a)b", "a<b", "a>b"})
+    void contentIdWithAReferenceEndingCharacterIsRejected(String contentId) throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<p>x</p>").inline(png, contentId).build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments[0]: contentId contains whitespace, a quote, a parenthesis"
+                        + " or an angle bracket");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"logo", "logo-1", "a.b_c", "logo:1", "ü", "%41"})
+    void acceptedContentIdIsMatchedExactly(String contentId) throws Exception {
+        Path png = file("logo.png");
+
+        Mail mail = valid().html("<img src=\"cid:" + contentId + "\">").inline(png, contentId)
+                .build();
+
+        assertThat(mail.message().attachments()).hasSize(1);
+        assertThat(mail.message().attachments().get(0).contentId()).isEqualTo(contentId);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "<img src=\"cid:logo\">",
+            "<img src='cid:logo'>",
+            "<td background=cid:logo>",
+            "<div style=\"background:url(cid:logo)\">",
+            "<img src=\"CID:logo\">",
+            "<img src=\"Cid:logo\">",
+            "<p>see cid:logo here</p>"})
+    void referenceIsFoundInAnyAttributeStyleOrCase(String html) throws Exception {
+        Path png = file("logo.png");
+
+        Mail mail = valid().html(html).inline(png, "logo").build();
+
+        assertThat(mail.message().attachments()).hasSize(1);
+        assertThat(mail.message().html()).isEqualTo(html);
+    }
+
+    @Test
+    void referenceIdIsCaseSensitive() throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:Logo\">").inline(png, "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:Logo");
+    }
+
+    @Test
+    void referenceWithoutInlineImageFails() {
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:logo\">").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:logo");
+    }
+
+    @Test
+    void unreferencedInlineImageFails() throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<p>No image</p>").inline(png, "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("inline image logo is not referenced in the HTML body");
+    }
+
+    @Test
+    void inlineImageInATextOnlyMailIsUnreferenced() throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().inline(png, "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("inline image logo is not referenced in the HTML body");
+    }
+
+    @Test
+    void cidInTheTextBodyIsNoReference() throws Exception {
+        Mail mail = valid().html("<p>Hi</p>").text("see cid:logo").build();
+
+        assertThat(mail.message().attachments()).isEmpty();
+    }
+
+    @Test
+    void bareCidAndWordsEndingInCidAreNoReference() throws Exception {
+        Mail mail = valid()
+                .html("<p>Folic acid: 5 mg, acid:x</p><a href=\"cid:\">x</a>").build();
+
+        assertThat(mail.message().attachments()).isEmpty();
+    }
+
+    @Test
+    void missingImageIsReportedBeforeAnUnreferencedOne() throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:a\">").inline(png, "b").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:a");
+    }
+
+    @Test
+    void longReferenceIsCutInTheMessage() {
+        String id = "a".repeat(100);
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:" + id + "\">").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:" + "a".repeat(64) + "...");
+    }
+
+    @Test
+    void duplicateContentIdFails() throws Exception {
+        Path a = file("a.png");
+        Path b = file("b.png");
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:logo\">")
+                .inline(a, "logo").inline(b, "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments[1]: duplicate inline content ID logo");
+    }
+
+    @ParameterizedTest
+    @CsvSource({"doc.pdf,application/pdf", "notes.txt,text/plain"})
+    void nonImageInlineFileFails(String name, String type) throws Exception {
+        Path file = file(name);
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:doc\">").inline(file, "doc").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments[0]: inline image doc has content type " + type
+                        + ", which is not an image type");
+    }
+
+    @Test
+    void missingInlineFileFails() {
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:logo\">")
+                .inline(tempDir.resolve("gone.png"), "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessageContaining("attachments[0]")
+                .hasMessageContaining("not found");
+    }
+
+    @Test
+    void unreadableInlineFileFails() throws Exception {
+        Path file = file("secret.png");
+        file.toFile().setReadable(false, false);
+        Assumptions.assumeTrue(!Files.isReadable(file),
+                "file stays readable (running as root or on a file system without permissions)");
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:logo\">").inline(file, "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessageContaining("attachments[0]")
+                .hasMessageContaining("not readable");
+    }
+
+    @Test
+    void attachWithContentIdIsAnInlineImage() throws Exception {
+        Path x = file("x.bin");
+        Path y = file("y.bin");
+        Path z = file("z.png");
+
+        Mail mail = valid().html("<img src=\"cid:logo\"><img src=\"cid:pic\">")
+                .attach(new Attachment("brand.png", null, x, "logo"))
+                .attach(new Attachment(null, "image/PNG", y, "pic"))
+                .build();
+
+        assertThat(mail.message().attachments()).extracting(Attachment::contentType)
+                .containsExactly("image/png", "image/PNG");
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:doc\">")
+                .attach(new Attachment(null, "application/pdf", z, "doc")).build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments[0]: inline image doc has content type application/pdf,"
+                        + " which is not an image type");
+    }
+
+    @Test
+    void regularAttachmentNextToAnInlineImageKeepsNoContentId() throws Exception {
+        Mail mail = valid().html("<img src=\"cid:logo\">")
+                .attach(file("info.pdf")).inline(file("logo.png"), "logo").build();
+
+        assertThat(mail.message().attachments()).hasSize(2);
+        assertThat(mail.message().attachments().get(0).contentId()).isNull();
+        assertThat(mail.message().attachments().get(1).contentId()).isEqualTo("logo");
+    }
+
+    @Test
+    void repeatedBuildWithAnInlineImageGivesEqualMails() throws Exception {
+        Mail.Builder builder = valid().html("<img src=\"cid:logo\">").inline(file("logo.png"), "logo");
+
+        assertThat(builder.build()).isEqualTo(builder.build());
+    }
+
+    @Test
+    void inlineNullArgumentsThrowNullPointerException() throws Exception {
+        Path png = file("x.png");
+
+        assertThatThrownBy(() -> valid().inline(null, "x")).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> valid().inline(png, null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
