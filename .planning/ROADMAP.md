@@ -68,7 +68,10 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
 **Plans:** 2 plans
 
 Plans:
+**Wave 1**
 - [ ] 05-01-PLAN.md — Tracer: one inline image end to end through Graph, then the `build()` checks (INLN-01..06, GRAPH-10 code)
+
+**Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 05-02-PLAN.md — Inline images in the Graph size limits, the owner's live test, the Graph notes in `docs/architecture.md`, phase gate (GRAPH-10 docs, GRAPH-11, GRAPH-12)
 
 **UI hint**: no
