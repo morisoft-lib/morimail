@@ -72,6 +72,8 @@ export GPG_TTY=$(tty)
 echo test | gpg --clearsign > /dev/null
 ```
 
+The warm-up prints nothing on success. If it prints a `gpg:` line, fix that before you deploy.
+
 By default the agent keeps the passphrase for 10 minutes after its last use. If more time passes before the deploy, warm up again. If you have several secret keys, add `--local-user <KEYID>` to the `gpg` line and `-Dgpg.keyname=<KEYID>` to both deploy commands.
 
 First, an optional check that sends nothing. It builds and signs the bundle and skips the upload:
