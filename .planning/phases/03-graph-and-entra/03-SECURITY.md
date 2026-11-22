@@ -57,13 +57,16 @@ created: "2026-11-22"
 | T-03-20 | Elevation of Privilege | CI network-free step | low | mitigate | sudo only for `unshare` and loopback, Maven via `setpriv --reuid` as runner user; `permissions: contents: read`, no secrets, actions pinned by SHA | closed |
 | T-03-21 | Tampering | the checked-in example campaign | low | mitigate | `GraphEndToEndTest` passes `--journal` to a temp file (`:123-126`); `ExampleCampaignTest:57` asserts `example-campaign/journal.jsonl` does not exist | closed |
 | T-03-22 | Information Disclosure | both-bodies INFO record, attachment and option errors | medium | mitigate | One fixed INFO text without address, subject or body (`GraphTransport.java:136-137`); attachment errors name file names and sizes only; option errors key-only (parameterized `GraphValidateTest`) | closed |
-| T-03-SC | Tampering | Maven artifacts (org.wiremock:wiremock 3.13.2) | high | mitigate | Version pinned once in parent `dependencyManagement`; `test` scope in `morimail/pom.xml:34-35` and `morimail-sample-serial/pom.xml:57-58`; plans 03-02 to 03-04 add no dependency | closed |
+| T-03-23 | Information Disclosure | GraphTransport failure message (Graph error.message naming the sender) | medium | mitigate | `GraphTransport` never reads `error.message`; the exception keeps status, cleaned code and cleaned request-id only. `GraphErrorMappingTest.graphsOwnMessageNeverReachesTheExceptionMessage` (`:379`) pins plain and percent-encoded addresses; `GraphEndToEndTest:321` pins the journal `errorMessage` | closed |
+| T-03-24 | Denial of Service | EntraTokenErrorsTest root-logger capture (CI pipeline) | medium | mitigate | Records collected in `CopyOnWriteArrayList` (`EntraTokenErrorsTest.java:406-407`); every assertion kept, ENTRA-09 secret check unchanged | closed |
+| T-03-25 | Repudiation | task commits and CI evidence | low | mitigate | Commits `e648406`, `b2d99cc`, `b388ae9` authored and committed as the maintainer identity; none on a remote branch; owner reads the Temurin 17 run | closed |
+| T-03-SC | Tampering | Maven artifacts (org.wiremock:wiremock 3.13.2) | high | mitigate | Version pinned once in parent `dependencyManagement`; `test` scope in `morimail/pom.xml:34-35` and `morimail-sample-serial/pom.xml:57-58`; plans 03-02 to 03-04 and 03-06 add no dependency | closed |
 
 *Status: open · closed · open — below high threshold (non-blocking)*
 *Severity: critical > high > medium > low — only open threats at or above workflow.security_block_on count toward threats_open*
 *Disposition: mitigate (implementation required) · accept (documented risk) · transfer (third-party)*
 
-T-03-SC appears in all five plans; each row covers that plan's own dependency changes, so it is recorded here once.
+T-03-SC appears in all six plans; each row covers that plan's own dependency changes, so it is recorded here once.
 
 ---
 
@@ -82,6 +85,7 @@ T-03-SC appears in all five plans; each row covers that plan's own dependency ch
 | Audit Date | Threats Total | Closed | Open | Run By |
 |------------|---------------|--------|------|--------|
 | 2026-11-22 | 23 | 23 | 0 | /gsd-secure-phase (L1 grep-depth, auditor skipped by short-circuit rule) |
+| 2026-11-22 | 26 | 26 | 0 | /gsd-secure-phase re-run after gap closure 03-06 (T-03-23 to T-03-25 added, L1 grep-depth) |
 
 ---
 
@@ -93,3 +97,11 @@ T-03-SC appears in all five plans; each row covers that plan's own dependency ch
 - [x] `status: verified` set in frontmatter
 
 **Approval:** verified 2026-11-22
+
+## Security Audit 2026-11-22
+
+| Metric | Count |
+|---|---|
+| Threats found | 26 |
+| Closed | 26 |
+| Open | 0 |
