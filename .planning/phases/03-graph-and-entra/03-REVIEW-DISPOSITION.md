@@ -9,7 +9,7 @@ findings:
     title: "`clean()` address regex is quadratic on a long, address-free token"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The \"no addresses in exception messages\" claim is still a best-effort statement for `code` and `request-id`"
   - id: IN-02
     severity: info
@@ -39,9 +39,9 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 1
+open: 0
 total: 9
-recorded: 2026-11-22T16:09:22.511Z
+recorded: 2026-11-22T16:09:34.959Z
 ---
 
 # Phase 03: Code Review Disposition
@@ -49,7 +49,7 @@ recorded: 2026-11-22T16:09:22.511Z
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
 | WR-01 | warning | fixed | 03-REVIEW-FIX.md |
-| IN-01 | info | open | - |
+| IN-01 | info | fixed | 03-REVIEW-FIX.md |
 | IN-02 | info | fixed | 03-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
