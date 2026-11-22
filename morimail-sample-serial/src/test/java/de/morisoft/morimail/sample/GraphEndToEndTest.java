@@ -293,7 +293,7 @@ class GraphEndToEndTest {
                 .atPriority(1).willReturn(aResponse().withStatus(403)
                         .withHeader("request-id", ZERO_GUID)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"error\":{\"code\":\"ErrorAccessDenied\",\"message\":\"Access is denied.\"}}")));
+                        .withBody("{\"error\":{\"code\":\"ErrorAccessDenied\",\"message\":\"Access to newsletter@example.com is denied.\"}}")));
         Path account = certificateAccount();
         Path journal = root.resolve("rejected.jsonl");
 
@@ -309,7 +309,8 @@ class GraphEndToEndTest {
         assertThat(run.errLines()).hasSize(1);
         assertThat(run.err()).startsWith("Stopped: SenderRejectedException: Graph sendMail failed: HTTP 403")
                 .contains("ErrorAccessDenied").contains(ZERO_GUID)
-                .doesNotContain("e2e-token").doesNotContain("Bearer");
+                .doesNotContain("e2e-token").doesNotContain("Bearer")
+                .doesNotContain("newsletter").doesNotContain("Access to");
         List<JsonNode> lines = SampleFixtures.journalLines(journal);
         assertThat(lines).hasSize(3);
         assertThat(lines.get(0).get("outcome").asText()).isEqualTo("accepted");
@@ -317,6 +318,8 @@ class GraphEndToEndTest {
         assertThat(lines.get(2).get("email").asText()).isEqualTo("clara@example.org");
         assertThat(lines.get(2).get("outcome").asText()).isEqualTo("failed");
         assertThat(lines.get(2).get("errorClass").asText()).isEqualTo("SenderRejectedException");
+        assertThat(lines.get(2).get("errorMessage").asText()).startsWith("Graph sendMail failed: HTTP 403")
+                .doesNotContain("newsletter").doesNotContain("Access to");
         assertThat(sendRequests()).hasSize(3);
         assertThat(sendRequests()).noneMatch(r -> r.getBodyAsString().contains("david@example.org")
                 || r.getBodyAsString().contains("emma@example.org"));

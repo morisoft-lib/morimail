@@ -194,15 +194,14 @@ class GraphErrorMappingTest {
     }
 
     @Test
-    void aFailureMessageHasStatusCodeRequestIdAndMessageInThatOrder(WireMockRuntimeInfo wm) throws Exception {
+    void aFailureMessageHasStatusCodeAndRequestIdInThatOrder(WireMockRuntimeInfo wm) throws Exception {
         stubFor(post(urlEqualTo(SEND_PATH)).willReturn(aResponse().withStatus(403)
                 .withHeader("request-id", ZERO_ID)
                 .withBody(errorBody("ErrorAccessDenied", "Access is denied."))));
 
         assertThatThrownBy(() -> transport(wm).send(mail()))
                 .isInstanceOf(SenderRejectedException.class)
-                .hasMessage("Graph sendMail failed: HTTP 403, code ErrorAccessDenied, request-id "
-                        + ZERO_ID + ", message: Access is denied.");
+                .hasMessage("Graph sendMail failed: HTTP 403, code ErrorAccessDenied, request-id " + ZERO_ID);
     }
 
     // Task 2: the status table, Retry-After, redirects, no hidden repeat.
@@ -318,7 +317,7 @@ class GraphErrorMappingTest {
                 + "\":{\"request-id\":\"rid-inner\"}}}");
 
         assertThat(messageOfFailedSend(wm))
-                .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id rid-inner, message: m");
+                .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id rid-inner");
     }
 
     @ParameterizedTest
@@ -327,39 +326,53 @@ class GraphErrorMappingTest {
         stubError(500, null, body);
 
         assertThat(messageOfFailedSend(wm))
-                .isEqualTo("Graph sendMail failed: HTTP 500, code -, request-id -, message: -");
+                .isEqualTo("Graph sendMail failed: HTTP 500, code -, request-id -");
     }
 
     @Test
     void controlCharactersBecomeSingleSpaces(WireMockRuntimeInfo wm) {
-        stubError(400, null, errorBody("C", "line one\\r\\nline\\ttwo\\u0007"));
+        stubError(400, null, errorBody("line one\\r\\nline\\ttwo\\u0007", "m"));
 
         assertThat(messageOfFailedSend(wm))
-                .isEqualTo("Graph sendMail failed: HTTP 400, code C, request-id -, message: line one line two");
+                .isEqualTo("Graph sendMail failed: HTTP 400, code line one line two, request-id -");
     }
 
     @Test
-    void aMailAddressInTheServiceTextIsReplaced(WireMockRuntimeInfo wm) {
-        stubError(404, null, errorBody("ErrorInvalidUser",
-                "The requested user 'x@example.org' is invalid, try <y@example.org>."));
+    void aMailAddressInTheCodeIsReplaced(WireMockRuntimeInfo wm) {
+        stubError(404, null, errorBody("'x@example.org' <y@example.org>", "m"));
 
-        assertThat(messageOfFailedSend(wm)).isEqualTo("Graph sendMail failed: HTTP 404, code ErrorInvalidUser, "
-                + "request-id -, message: The requested user '<address>' is invalid, try <<address>>.");
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 404, code '<address>' <<address>>, request-id -");
+    }
+
+    // Graph's text can name the sender (live 404 ErrorInvalidUser, UAT G-03-2), so it never enters the message.
+    @ParameterizedTest
+    @ValueSource(strings = {"The requested user 'newsletter@example.com' is invalid.",
+        "The requested user 'newsletter%40example.com' is invalid."})
+    void graphsOwnMessageNeverReachesTheExceptionMessage(String text, WireMockRuntimeInfo wm) {
+        stubError(404, ZERO_ID, errorBody("ErrorInvalidUser", text));
+
+        assertThatThrownBy(() -> transport(wm).send(mail()))
+                .isInstanceOf(SenderRejectedException.class)
+                .hasMessage("Graph sendMail failed: HTTP 404, code ErrorInvalidUser, request-id " + ZERO_ID)
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain("newsletter"));
     }
 
     @Test
-    void aLongMessageIsCutAt300CharactersPlusDots(WireMockRuntimeInfo wm) {
-        stubError(400, null, errorBody("C", "a".repeat(1000)));
+    void aLongCodeIsCutAt300CharactersPlusDots(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody("a".repeat(1000), "m"));
 
-        assertThat(messageOfFailedSend(wm)).endsWith("message: " + "a".repeat(300) + "...");
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code " + "a".repeat(300) + "..., request-id -");
     }
 
     @Test
     void aCutNeverSplitsASurrogatePair(WireMockRuntimeInfo wm) {
         // Characters 300 and 301 (1-based) are the two halves of one emoji.
-        stubError(400, null, errorBody("C", "a".repeat(299) + "\\ud83d\\ude00" + "b".repeat(100)));
+        stubError(400, null, errorBody("a".repeat(299) + "\\ud83d\\ude00" + "b".repeat(100), "m"));
 
-        assertThat(messageOfFailedSend(wm)).endsWith("message: " + "a".repeat(299) + "...");
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code " + "a".repeat(299) + "..., request-id -");
     }
 
     @Test
@@ -507,9 +520,9 @@ class GraphErrorMappingTest {
                 () -> transport.send(mailTo("b@example.org")));
 
         assertThat(results.get(0)).hasMessage(
-                "Graph sendMail failed: HTTP 400, code CodeA, request-id rid-a, message: first");
+                "Graph sendMail failed: HTTP 400, code CodeA, request-id rid-a");
         assertThat(results.get(1)).hasMessage(
-                "Graph sendMail failed: HTTP 400, code CodeB, request-id rid-b, message: second");
+                "Graph sendMail failed: HTTP 400, code CodeB, request-id rid-b");
     }
 
     @Test

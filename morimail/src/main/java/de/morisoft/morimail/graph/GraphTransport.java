@@ -247,17 +247,19 @@ final class GraphTransport implements MailTransport {
         return errorCode != null && errorCode.toLowerCase(Locale.ROOT).contains("mailbox");
     }
 
-    /** Maps the answer of a failed call (a 401 reaches this only after the one retry) to its exception; the message never holds the raw body. */
+    /**
+     * Maps the answer of a failed call (a 401 reaches this only after the one retry) to its exception.
+     * The message holds the HTTP status, the cleaned error code and the request-id only: never the raw
+     * body, and never Graph's free-text error message, which can name the sender.
+     */
     private MailException failure(HttpResponse<byte[]> r) {
         int status = r.statusCode();
         String code = null;
-        String text = null;
         String requestId = r.headers().firstValue("request-id").orElse(null);
         try {
             JsonNode error = MAPPER.readTree(r.body()).get("error");
             if (error != null && error.isObject()) {
                 code = textOf(error.get("code"));
-                text = textOf(error.get("message"));
                 if (requestId == null) {
                     requestId = textOf(innerRequestId(error.get("innerError")));
                 }
@@ -269,7 +271,7 @@ final class GraphTransport implements MailTransport {
             // Not JSON, or not the expected shape: the fields stay empty.
         }
         String message = "Graph sendMail failed: HTTP " + status + ", code " + clean(code)
-                + ", request-id " + clean(requestId) + ", message: " + clean(text);
+                + ", request-id " + clean(requestId);
         if (status == 401) {
             return mailboxHint(code) ? new SenderRejectedException(message) : new AuthRequiredException(message);
         }
