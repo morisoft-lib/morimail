@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
@@ -26,6 +27,10 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -257,9 +262,25 @@ final class GraphTransport implements MailTransport {
             return new SenderRejectedException(message);
         }
         if (status == 429 || status >= 500 && status <= 599) {
-            return new TransientMailException(message);
+            Duration retryAfter = retryAfter(r.headers());
+            return new TransientMailException(message, retryAfter);
         }
         return new PermanentMailException(message);
+    }
+
+    /** The {@code Retry-After} header as a delay (seconds or an HTTP date), or null when absent or unreadable. */
+    private static Duration retryAfter(HttpHeaders headers) {
+        String value = headers.firstValue("Retry-After").map(String::trim).orElse("");
+        if (value.matches("[0-9]{1,9}")) {
+            return Duration.ofSeconds(Long.parseLong(value));
+        }
+        try {
+            Duration wait = Duration.between(Instant.now(),
+                    ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant());
+            return wait.isNegative() ? Duration.ZERO : wait;
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     private static String textOf(JsonNode node) {
