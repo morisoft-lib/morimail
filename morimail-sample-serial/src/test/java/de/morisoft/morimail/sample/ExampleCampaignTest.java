@@ -25,7 +25,6 @@ class ExampleCampaignTest {
 
     private static final Path CAMPAIGN = Path.of("example-campaign");
     private static final Path ACCOUNT = CAMPAIGN.resolve("account.properties");
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\$(!?)([A-Za-z0-9_.-]+)\\$\\$");
     private static final List<String> NAMES = List.of("anna", "ben", "clara", "david", "emma");
 
     @TempDir
@@ -82,7 +81,7 @@ class ExampleCampaignTest {
     void usesThreePlaceholdersAndFiveExampleRows() throws IOException {
         Set<String> names = new TreeSet<>();
         for (String file : List.of("subject.txt", "body.html", "body.txt")) {
-            Matcher matcher = PLACEHOLDER.matcher(Files.readString(CAMPAIGN.resolve(file), StandardCharsets.UTF_8));
+            Matcher matcher = Campaign.PLACEHOLDER.matcher(Files.readString(CAMPAIGN.resolve(file), StandardCharsets.UTF_8));
             while (matcher.find()) {
                 names.add(matcher.group(2));
             }

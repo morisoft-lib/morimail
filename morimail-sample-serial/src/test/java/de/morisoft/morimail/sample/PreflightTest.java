@@ -169,7 +169,7 @@ class PreflightTest {
 
         assertThat(run.exit()).isEqualTo(2);
         assertThat(run.errLines()).containsExactly(
-                "body.html: placeholder $$banner$$ has no column in recipients.csv",
+                "body.html: placeholder $$!banner$$ has no column in recipients.csv",
                 "Pre-flight failed with 1 problem(s); nothing was sent.");
     }
 
@@ -192,7 +192,7 @@ class PreflightTest {
     void extractedNamesSatisfyTheCoreRenderer() throws InvalidMailException {
         String text = "A $$a$$ $$!b$$ $$c.d-e_f$$ $$ä$$ $$x y$$ $$";
 
-        assertThat(Campaign.placeholders(text)).containsExactly("a", "b", "c.d-e_f");
+        assertThat(Campaign.placeholders(text).keySet()).containsExactly("a", "b", "c.d-e_f");
 
         MailTemplate template = new MailTemplate("subject", text, null);
         Map<String, String> data = new LinkedHashMap<>();

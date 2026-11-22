@@ -167,28 +167,29 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
     }
 
     /**
-     * The placeholder names of a template text in order of first appearance, {@code $$name$$} and
-     * {@code $$!name$$} alike.
+     * The placeholders of a template text in order of first appearance, {@code $$name$$} and
+     * {@code $$!name$$} alike: each name mapped to the placeholder as first written.
      */
-    static Set<String> placeholders(String text) {
-        Set<String> names = new LinkedHashSet<>();
+    static Map<String, String> placeholders(String text) {
+        Map<String, String> found = new LinkedHashMap<>();
         if (text != null) {
             Matcher matcher = PLACEHOLDER.matcher(text);
             while (matcher.find()) {
-                names.add(matcher.group(2));
+                found.putIfAbsent(matcher.group(2), matcher.group());
             }
         }
-        return names;
+        return found;
     }
 
     /** Adds one problem for every placeholder of {@code text} that is no header cell; returns those names. */
     private static Set<String> missingColumns(String file, String text, List<String> header,
             List<String> problems) {
         Set<String> missing = new LinkedHashSet<>();
-        for (String name : placeholders(text)) {
-            if (!header.contains(name)) {
-                problems.add(file + ": placeholder $$" + name + "$$ has no column in recipients.csv");
-                missing.add(name);
+        for (Map.Entry<String, String> placeholder : placeholders(text).entrySet()) {
+            if (!header.contains(placeholder.getKey())) {
+                problems.add(file + ": placeholder " + placeholder.getValue()
+                        + " has no column in recipients.csv");
+                missing.add(placeholder.getKey());
             }
         }
         return missing;
