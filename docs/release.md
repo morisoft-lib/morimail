@@ -5,7 +5,7 @@ The owner runs every step on their own machine. Claude prepares the build and re
 ## Before the first release
 
 - Enable GitHub private vulnerability reporting (Settings, Code security), because `SECURITY.md` routes reports there.
-- CI must be green on Temurin 17 for the commit you release. That includes the release build with `-Prelease verify -Dgpg.skip -pl morimail -am`.
+- CI must be green on Temurin 17 for the commit you release. That includes the release build with `-Prelease verify -Dgpg.skip -pl morimail -am`. Step 4 pushes that commit and waits for CI before the deploy.
 
 ## 1. Verify the namespace
 
@@ -60,7 +60,8 @@ The owner runs every step on their own machine. Claude prepares the build and re
    ```
 
 2. `git diff` must show exactly three changed lines.
-3. Run `./mvnw -B -ntp verify`, then commit with the message "release 0.1.0".
+3. Run `./mvnw -B -ntp verify`, then commit with the message "release 0.1.0" and push the commit.
+4. Wait until CI is green on that commit. Only then go on to the deploy, because publishing to Central cannot be undone.
 
 ## 5. Deploy
 
@@ -105,7 +106,7 @@ Tests run, and gpg asks for the passphrase. `autoPublish` is false, and the plug
 
 ```
 git tag -a v0.1.0 -m "morimail 0.1.0"
-git push origin main v0.1.0
+git push origin v0.1.0
 ```
 
 ## 8. Bump to the next SNAPSHOT
