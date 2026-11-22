@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 04
 current_phase_name: Docs and Release Readiness
 status: executing
-stopped_at: Phase 4 context gathered
-last_updated: "2026-11-22T19:17:49.678Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-11-22T19:24:12.903Z"
 last_activity: 2026-11-22
-last_activity_desc: Phase 03 complete, transitioned to Phase 4
-state_head: d1766ae86f08af658a0420bd393aeefb9784bd27
+last_activity_desc: Phase 04 execution started
+state_head: 6ceade2a5fc532e437cba3ad7b53569bac7d3452
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 21
-  completed_plans: 17
+  completed_plans: 18
   percent: 75
 ---
 
@@ -23,14 +23,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-22)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 4 — Docs and Release Readiness
+**Current focus:** Phase 04 — Docs and Release Readiness
 
 ## Current Position
 
-Phase: 04 (Docs and Release Readiness) — READY TO EXECUTE
-Plan: Not started
+Phase: 04 (Docs and Release Readiness) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-11-22 — Phase 03 complete, transitioned to Phase 4
+Last activity: 2026-11-22 — Phase 04 execution started
 
 Progress: [████████░░] 75%
 
@@ -75,6 +75,7 @@ Progress: [████████░░] 75%
 | Phase 03 P04 | 25min | 3 tasks | 2 files |
 | Phase 03 P05 | 45min | 3 tasks | 8 files |
 | Phase 03 P06 | 8 min | 3 tasks | 7 files |
+| Phase 04 P01 | 12 min | 3 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 03-05: No new account.properties key and no defaultFrom on the sample account; key-store path and load failures are fixed texts naming keys only
 - [Phase 03]: 03-05: CI network-free step uses unshare --net with setpriv back to the runner user; not rehearsable in this workspace
 - [Phase 03]: 03-06: Graph failure messages carry HTTP status, code and request-id only; Graph's error.message is dropped (G-03-2)
+- [Phase 04]: 04-01: server text is cut back to a word boundary before the address pattern runs; a single word over 1000 characters gives '-' (WR-01)
+- [Phase 04]: 04-01: the error mapping, the 3 MiB and 4 MiB constants and the sample --rate default are unchanged; live results matched them (D-01)
 
 ### Pending Todos
 
@@ -129,7 +132,7 @@ None yet.
 
 - [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
-- [Phase 3]: Review WR-01 (advisory): `clean()` cuts at 1000 characters before replacing addresses, so a contrived address straddling the cut leaks its start. Small fix: cut at a token boundary plus one test per class.
+- [Phase 3]: Review WR-01 and IN-01 fixed in 04-01 (word-boundary cut plus one straddle test per class).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
 - [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached.
 - [Phase 4]: The Central `excludeArtifacts` behaviour for the test-jar classifier is unverified. Confirm it with the `-DskipUpload=true` rehearsal.
@@ -144,6 +147,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T17:22:36.211Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-docs-and-release-readiness/04-CONTEXT.md
+Last session: 2026-11-22T19:24:12.596Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None
