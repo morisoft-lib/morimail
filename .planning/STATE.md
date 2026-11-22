@@ -1,43 +1,43 @@
 ---
 gsd_state_version: "1.0"
-current_phase: 02
-current_phase_name: Serial-Mail Sample
-status: verifying
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-11-21T18:08:25.126Z"
-last_activity: 2026-11-21
-last_activity_desc: Phase 02 execution started
-state_head: 09f14b6eba71ec900a12388d3cd1356fc679c1db
+current_phase: 3
+current_phase_name: Graph and Entra
+status: planning
+stopped_at: Phase 02 complete, ready to plan Phase 3
+last_updated: "2026-11-22T06:51:30.667Z"
+last_activity: 2026-11-22
+last_activity_desc: Phase 02 complete, transitioned to Phase 3
+state_head: 4537e37dafd6ce81f8dd5b8d300d707c04ad9834
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
   completed_plans: 11
-  percent: 25
+  percent: 50
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-21)
+See: .planning/PROJECT.md (updated 2026-11-22)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 02 — Serial-Mail Sample
+**Current focus:** Phase 3 — Graph and Entra
 
 ## Current Position
 
-Phase: 02 (Serial-Mail Sample) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-11-21 — Phase 02 execution started
+Phase: 3 — Graph and Entra
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-22 — Phase 02 complete, transitioned to Phase 3
 
-Progress: [███░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 11
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -46,6 +46,7 @@ Progress: [███░░░░░░░] 25%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 | 7 | - | - |
+| 02 | 4 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -101,6 +102,7 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-03: pre-flight checks every CSV row even with --limit
 - [Phase 02]: Sample runnable jar uses a jar manifest classpath over target/lib (copy-dependencies, runtime scope); no shade plugin
 - [Phase 02]: Example attachments are generated once outside the repository; only the committed bytes are the source of truth
+- [Phase 02]: UAT complete (rendered pages, PDF, PNG checked), SECURITY.md threats_open 0, verification re-run after code-review fixes passed; phase complete 2026-11-22
 
 ### Pending Todos
 
@@ -111,6 +113,7 @@ None yet.
 - [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: PS256 acceptance, the §6.3 error table, the request-size ceiling (about 4 MB, LOW confidence) and the `from` display name can only be proven by the owner's live test. Research flagged Phase 3 for deeper research.
 - [Checkpoint]: The owner still has to confirm the `LICENSE` holder, the `SECURITY.md` contact, the `Co-Authored-By` trailer, the `saveToSentItems` default in the sample, and the 20/min rate default.
+- [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached.
 - [Phase 4]: The Central `excludeArtifacts` behaviour for the test-jar classifier is unverified. Confirm it with the `-DskipUpload=true` rehearsal.
 
 ## Deferred Items
@@ -123,6 +126,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-21T18:08:25.017Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-11-22
+Stopped at: Phase 02 complete, ready to plan Phase 3
 Resume file: None

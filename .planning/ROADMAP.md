@@ -13,7 +13,7 @@ morimail goes from an almost empty repository to a 0.1.0 release candidate in fo
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Library Core** - Templated mail built, validated and sent through a `Mailer` account to the `recording` transport, on a CI-checked, release-shaped build (completed 2026-11-21)
-- [ ] **Phase 2: Serial-Mail Sample** - The `serial-mail` CLI dry-runs and sends a CSV campaign against `recording`, with pre-flight, journal, resume, rate limit and exit codes
+- [x] **Phase 2: Serial-Mail Sample** - The `serial-mail` CLI dry-runs and sends a CSV campaign against `recording`, with pre-flight, journal, resume, rate limit and exit codes (completed 2026-11-22)
 - [ ] **Phase 3: Graph and Entra** - Entra client-credentials tokens and the built-in Graph transport, wired through the registry and run end to end against WireMock; ends at the owner's live-test STOP
 - [ ] **Phase 4: Docs and Release Readiness** - Live-test findings applied, then the setup guide, architecture page, README quick start and a release rehearsal the owner can publish from
 
@@ -81,7 +81,7 @@ Scope notes:
   3. Run against `recording`, each row is sent once, with one progress line per recipient and one forced journal line per attempt. Rerunning the same campaign sends nothing and counts every row as skipped.
   4. A transient failure waits `retryAfter` (capped) or 30 s and is retried up to 3 times, then recorded, and the run continues. A sender-rejected or auth-required failure stops the run at once with exit code 3. The run ends by printing accepted, skipped and failed counts, and exits 0 only if nothing failed.
   5. Sends are spaced by `--rate` and skipped rows don't wait. `--limit`, `--campaign-id` and `--journal` behave as specified. `account.properties` and the campaign files are read as UTF-8, secrets come from env vars only, and `./mvnw verify` stays green offline.
-**Plans:** 4/4 plans executed (wave 1: 02-01; wave 2: 02-02, 02-03, 02-04)
+**Plans:** 4/4 plans complete (wave 1: 02-01; wave 2: 02-02, 02-03, 02-04)
 
 Plans:
 **Wave 1**
@@ -163,6 +163,6 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
-| 2. Serial-Mail Sample | 4/4 | In Progress | - |
+| 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
 | 3. Graph and Entra | 0/0 | Not started | - |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |

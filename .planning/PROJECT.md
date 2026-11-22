@@ -23,13 +23,13 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 - ✓ `RecordingTransport` in library test sources, built as a test-jar shared inside the reactor only (`attach=false` under `release`, never published), registered via `ServiceLoader` as `recording` — Phase 1
 - ✓ Repo hygiene: parent POM with Central metadata, Maven wrapper, `LICENSE`, `README.md`, `SECURITY.md`, CI workflow (`mvn verify`, Java 17), `CLAUDE.md` with spec §11 rules — Phase 1
 - ✓ `release` Maven profile (sources, Javadoc, GPG, Central publishing plugin); `mvn -Prelease verify -Dgpg.skip` passes without warnings — Phase 1
+- ✓ Serial-mail CLI (picocli): account.properties, campaign dir, pre-flight check (exit 2), journal + resume, rate limit, transient retry ×3, stop on sender/auth errors (exit 3), dry-run output, counts and exit codes — Phase 2 (real sending waits for the Graph transport, Phase 3)
+- ✓ Example campaign with three placeholders, two small generated attachments (PDF, PNG), five `example.org` rows — Phase 2
 
 ### Active
 
 - [ ] Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping
 - [ ] Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, 3 MB per-file and total limit in `validate`, error mapping table, one retry after 401 with a fresh token
-- [ ] Serial-mail CLI (picocli): account.properties, campaign dir, pre-flight check (exit 2), journal + resume, rate limit, transient retry ×3, stop on sender/auth errors (exit 3), dry-run output, counts and exit codes
-- [ ] Example campaign with three placeholders, two small generated attachments (PDF, PNG), five `example.org` rows
 - [ ] Docs: `docs/entra-setup.md` (admin guide, RBAC for Applications recommended), `docs/architecture.md`, README quick start
 - [ ] `mvn verify` passes with no network access; live test tagged `live`, enabled with `-Plive`, run by the owner only
 
@@ -76,7 +76,9 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | No MSAL4J, no Graph SDK, no JWT library | REST calls plus JDK crypto are enough; keeps the jar to Jackson only | — Pending |
-| Sample CLI built before the Graph transport | Exercises the contracts against `RecordingTransport` first, so contract mistakes surface early | — Pending |
+| Sample CLI built before the Graph transport | Exercises the contracts against `RecordingTransport` first, so contract mistakes surface early | ✓ Good — Phase 2 drove the whole send loop through `Mailer` and `recording` with no library change |
+| Sample delivery is at-least-once; a damaged journal line resends its row | A mail in flight at a crash has no journal line; a duplicate beats a silently skipped recipient | ✓ Documented in `send --help` (Phase 2) |
+| Hand-written comma-only CSV reader, runnable jar via manifest classpath over `target/lib` | Rule 0: no CSV library, no shade plugin | ✓ Good (Phase 2) |
 | HTML only when both bodies are given on Graph (log once at INFO) | JSON sendMail carries one body; MIME later | — Pending |
 | Attachments limited to under 3 MB per file and in total | Upload session needs draft flow and `Mail.ReadWrite` | — Pending |
 | Recommend Exchange RBAC for Applications over tenant-wide Entra consent | Scopes sending to chosen mailboxes; the Entra grant must be removed or it overrides | — Pending |
@@ -103,4 +105,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-21 after Phase 1*
+*Last updated: 2026-11-22 after Phase 2*
