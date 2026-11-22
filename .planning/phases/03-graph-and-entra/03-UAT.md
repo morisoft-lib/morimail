@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: complete
 phase: 03-graph-and-entra
 source: [03-VERIFICATION.md]
 started: 2026-11-22T09:27:25Z
-updated: 2026-11-22T12:21:31.000Z
+updated: 2026-11-22T17:08:25.416Z
 ---
 
 ## Current Test
@@ -47,26 +47,30 @@ notes: "Owner accepts seconds-only Retry-After (HTTP-date form yields no delay),
 
 ### 7. Optional live re-check of G-03-2: re-run the live main test with a sender that has no Exchange mailbox (the case that returned 404 ErrorInvalidUser)
 expected: The printed line reads 'Graph sendMail failed: HTTP 404, code ErrorInvalidUser, request-id <guid>' with no address and no Graph sentence, and the exception is SenderRejectedException
-result: [pending]
+result: pass
+notes: "2026-11-22: live main test with a mailbox-less sender printed 'Graph sendMail failed: HTTP 404, code ErrorInvalidUser, request-id <guid>' (two tests), no address, SenderRejectedException."
 
 ### 8. Optional: re-run secure-phase 03
 expected: T-03-19 in 03-SECURITY.md assumed address-free messages; 03-06 makes that true for Graph, so the threat can be re-confirmed
-result: [pending]
+result: skipped
+reason: "Optional; owner skipped. /gsd-secure-phase 03 already re-ran after 03-06 (commit 3138ea3, threats_open 0, T-03-19 closed)."
 
 ## Summary
 
 total: 8
-passed: 4
+passed: 5
 issues: 2
-pending: 2
-skipped: 0
+pending: 0
+skipped: 1
 blocked: 0
 
 ## Gaps
 
 - gap_id: G-03-2
   truth: "Exception messages and live-test output never contain a mail address (addresses at DEBUG only)"
-  status: failed
+  status: resolved
+  resolved_by: 03-06-PLAN.md
+  resolved_at: 2026-11-22
   reason: "User reported: pass, log the address issue. Live 404 ErrorInvalidUser: Graph's error message names the sender address, and GraphTransport.failure copies the message into the SenderRejectedException text, so the LiveGraphTest output line shows the address despite its Javadoc and consumers logging the exception write the address at ERROR."
   severity: major
   test: 2
@@ -86,7 +90,9 @@ blocked: 0
 
 - gap_id: G-03-4
   truth: "./mvnw verify, the release build and the network-free unshare --net step all pass on Temurin 17 in GitHub Actions"
-  status: failed
+  status: resolved
+  resolved_by: 03-06-PLAN.md
+  resolved_at: 2026-11-22
   reason: "User reported: push it and watch the CI run for me. CI run 45016998414 failed on both attempts: EntraTokenErrorsTest.nothingSecretReachesALogOrAMessage (line 451) throws ConcurrentModificationException. The test adds a Handler to the root logger at Level.ALL that appends to plain ArrayLists (seen, loggers) while JDK HttpClient and WireMock threads keep logging, and the test iterates the list concurrently. Passes locally on JDK 21; fails reliably on CI. Release build and unshare --net steps were skipped, so they remain unverified."
   severity: blocker
   test: 4
