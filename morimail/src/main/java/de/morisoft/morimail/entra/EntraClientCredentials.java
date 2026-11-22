@@ -61,7 +61,10 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <p>The configuration is fixed after construction; the token cache is guarded by a lock, so an
  * instance is safe for concurrent use by several threads. An instance makes one token request at a
- * time, reuses a token until five minutes before it expires, and never caches a failure.
+ * time, reuses a token until five minutes before it expires, and never caches a failure. While
+ * the token endpoint does not answer, callers are served one after another, each with its own
+ * request of up to 10 seconds to connect and 30 seconds to answer, and a thread that waits for
+ * its turn cannot be interrupted.
  */
 public final class EntraClientCredentials implements TokenProvider {
 
