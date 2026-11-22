@@ -207,4 +207,41 @@ class PreflightTest {
                 .to("anna@example.org").template(template, data).build())
                 .isInstanceOf(InvalidMailException.class);
     }
+
+    @Test
+    void aDefectOfEveryMailIsReportedOnce() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, SampleFixtures.THREE_ROWS);
+        Files.writeString(campaign.resolve("subject.txt"), "Hello\nthere");
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
+                new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
+                campaign.toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.errLines()).containsExactly(
+                "subject contains a line break (all 3 rows)",
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
+    }
+
+    @Test
+    void theSameDefectInSomeRowsIsReportedOnceWithItsLines() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        String csv = String.join("\n", "email,firstName,city",
+                "anna@example.org,Anna,Berlin",
+                "not-an-address,Ben,Hamburg",
+                "ben@example.org,Ben,Hamburg",
+                "also-bad,Clara,Köln") + "\n";
+        Path campaign = SampleFixtures.writeCampaign(root, csv);
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
+                new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
+                campaign.toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.errLines()).containsExactly(
+                "to[0]: email must contain exactly one '@' with text before and after it "
+                        + "(recipients.csv lines 3, 5)",
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
+    }
 }

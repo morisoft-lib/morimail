@@ -16,7 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -96,6 +98,22 @@ final class SendCommand implements Callable<Integer> {
         return e.getClass().getSimpleName() + ": " + e.getMessage();
     }
 
+    /** One pre-flight problem for an {@code InvalidMailException} message and the rows it hit. */
+    private static String invalidMail(String message, List<Integer> lines, int rows) {
+        if (lines.size() == 1) {
+            return "recipients.csv line " + lines.get(0) + ": " + message;
+        }
+        if (lines.size() == rows) {
+            return message + " (all " + rows + " rows)";
+        }
+        List<String> shown = new ArrayList<>();
+        for (Integer line : lines.subList(0, Math.min(lines.size(), 5))) {
+            shown.add(String.valueOf(line));
+        }
+        return message + " (recipients.csv lines " + String.join(", ", shown)
+                + (lines.size() > 5 ? ", ... " + lines.size() + " rows" : "") + ")";
+    }
+
     private static String counts(int accepted, int skipped, int failed) {
         return "accepted " + accepted + ", skipped " + skipped + ", failed " + failed;
     }
@@ -131,6 +149,8 @@ final class SendCommand implements Callable<Integer> {
         Campaign campaign = Campaign.read(campaignDir, problems);
 
         List<Mail> mails = new ArrayList<>();
+        // The same defect (a bad sender, attachment or subject) hits every row: report it once.
+        Map<String, List<Integer>> invalid = new LinkedHashMap<>();
         if (campaign != null && account != null && account.id() != null && account.from() != null) {
             for (Campaign.Row row : campaign.rows()) {
                 try {
@@ -144,8 +164,11 @@ final class SendCommand implements Callable<Integer> {
                     mails.add(builder.build());
                 } catch (InvalidMailException e) {
                     mails.add(null);
-                    problems.add("recipients.csv line " + row.line() + ": " + e.getMessage());
+                    invalid.computeIfAbsent(e.getMessage(), m -> new ArrayList<>()).add(row.line());
                 }
+            }
+            for (Map.Entry<String, List<Integer>> entry : invalid.entrySet()) {
+                problems.add(invalidMail(entry.getKey(), entry.getValue(), campaign.rows().size()));
             }
         }
 
