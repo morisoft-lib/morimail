@@ -5,12 +5,12 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "Cutting at 1000 raw characters before whitespace collapse can leave a partial mail address in the message"
+    disposition: open
+    title: "The 1000-character cut can still split a mail address and leave its start in the message"
   - id: IN-01
     severity: info
-    disposition: skipped
-    title: "The \"quickly\" regression tests have a thin time margin"
+    disposition: open
+    title: "The two new regression tests cover only the whitespace-padding route to the cut boundary"
   - id: IN-02
     severity: info
     disposition: fixed
@@ -39,18 +39,18 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 0
+open: 2
 total: 9
-recorded: 2026-11-22T16:22:10.117Z
+recorded: 2026-11-22T17:14:28.030Z
 ---
 
 # Phase 03: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 03-REVIEW-FIX.md |
-| IN-01 | info | skipped | 03-REVIEW-FIX.md |
-| IN-02 | info | fixed | 03-REVIEW-FIX.md |
+| WR-01 | warning | open | - |
+| IN-01 | info | open | - |
+| IN-02 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | IN-03 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
