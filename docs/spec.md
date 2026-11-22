@@ -221,19 +221,19 @@ One final class, `TemplateRenderer`. No interface.
 
 ### 6.3 Error mapping
 
-Starting table. Verify each row against real responses after milestone 4 and correct it in code and here.
+Checked against real responses in the owner's live test on 2026-11-22, after milestone 4. The last column says which rows were seen live. When a real response differs from a row, correct it in code and here.
 
-| Response | Exception |
-|---|---|
-| 202 | none |
-| 429, 503, 504 | `TransientMailException`, with `Retry-After` when present |
-| Network or timeout error | `TransientMailException` |
-| 401 after a fresh token was obtained | `SenderRejectedException` if the body points at the mailbox, otherwise `AuthRequiredException` |
-| 403 | `SenderRejectedException` (mailbox outside the app's scope) |
-| 404 | `SenderRejectedException` (mailbox does not exist) |
-| 400, 413 | `PermanentMailException` |
+| Response | Exception | Live status (2026-11-22) |
+|---|---|---|
+| 202 | none | Confirmed for the certificate flow and the secret flow |
+| 429, 503, 504 | `TransientMailException`, with `Retry-After` when present | WireMock only |
+| Network or timeout error | `TransientMailException` | WireMock only |
+| 401 after a fresh token was obtained | `SenderRejectedException` if the body points at the mailbox, otherwise `AuthRequiredException` | Not provoked live (WireMock only) |
+| 403 | `SenderRejectedException` (mailbox outside the app's scope) | Confirmed: `ErrorAccessDenied`. Also seen for minutes after a permission grant, while Exchange applies it |
+| 404 | `SenderRejectedException` (mailbox does not exist) | Confirmed: `ErrorInvalidUser` for a sender without an Exchange Online mailbox |
+| 400, 413 | `PermanentMailException` | WireMock only. No 413 seen: attachments of 2,900,000 and 3,100,000 bytes were accepted |
 
-On a 401, ask the token provider for a new token once and repeat the call one time before mapping the error. A forum answer reports 401 for a sender without an Exchange Online mailbox; treat that as unconfirmed until reproduced.
+On a 401, ask the token provider for a new token once and repeat the call one time before mapping the error. In the live test a sender without an Exchange Online mailbox got 404 `ErrorInvalidUser`, not a 401, so the 404 row covers it. `MailboxNotEnabledForRESTAPI` and the refusal of a mailbox outside an RBAC scope were not provoked.
 
 The transport performs no other retries. Retrying is the caller's decision.
 
@@ -322,7 +322,7 @@ serial-mail send
 
 Dry-run writes `out/<n>-<email>.html`, `.txt` and `.subject.txt` per recipient, lists the attachments, and touches neither the network nor the journal.
 
-The default of 20 mails per minute is a guess. Exchange Online sending limits apply per mailbox; look up the current documented limits after milestone 4 and adjust the default and this paragraph.
+The default of 20 mails per minute stays below the Exchange Online limit of 30 messages per minute per mailbox; a mailbox can also send to at most 10,000 recipients per day (Microsoft n.d.-g). The owner confirmed the default after milestone 4.
 
 ## 9. Admin setup guide (`docs/entra-setup.md`)
 
@@ -490,6 +490,8 @@ Microsoft. n.d.-d. "[Microsoft Identity Platform and the OAuth 2.0 Client Creden
 Microsoft. n.d.-e. "[Understanding Application-Only Access](https://learn.microsoft.com/entra/identity-platform/app-only-access-primer)." Microsoft Learn. Accessed November 21, 2026.
 
 Microsoft. n.d.-f. "[user: sendMail](https://learn.microsoft.com/en-us/graph/api/user-sendmail)." Microsoft Graph REST API v1.0 reference, Microsoft Learn. Accessed November 21, 2026.
+
+Microsoft. n.d.-g. "[Exchange Online Limits](https://learn.microsoft.com/en-us/office365/servicedescriptions/exchange-online-service-description/exchange-online-limits)." Exchange Online service description, Microsoft Learn. Accessed November 22, 2026.
 
 Postman. n.d. "[Publish Java SDKs Manually](https://learning.postman.com/docs/sdk-generator/publish/java-manual)." Postman Docs. Accessed November 21, 2026.
 
