@@ -104,7 +104,7 @@ class CampaignTest {
 
     @Test
     void bomBeforeHeaderIsRemoved() throws IOException {
-        Path dir = campaign("﻿email,city\nanna@example.org,Berlin\n");
+        Path dir = campaign("\uFEFFemail,city\nanna@example.org,Berlin\n");
 
         Campaign campaign = Campaign.read(dir, problems);
 
@@ -188,7 +188,7 @@ class CampaignTest {
     @Test
     void subjectBomIsRemoved() throws IOException {
         Path dir = campaign("email\nanna@example.org\n");
-        Files.write(dir.resolve("subject.txt"), "﻿Hi\n".getBytes(StandardCharsets.UTF_8));
+        Files.write(dir.resolve("subject.txt"), "\uFEFFHi\n".getBytes(StandardCharsets.UTF_8));
 
         assertThat(Campaign.read(dir, problems).template().subject()).isEqualTo("Hi");
     }

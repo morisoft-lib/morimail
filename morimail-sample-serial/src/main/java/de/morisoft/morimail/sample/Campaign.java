@@ -216,7 +216,7 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
             problems.add(name + " cannot be read");
             return null;
         }
-        return text.startsWith("﻿") ? text.substring(1) : text;
+        return text.startsWith("\uFEFF") ? text.substring(1) : text;
     }
 
     /**
