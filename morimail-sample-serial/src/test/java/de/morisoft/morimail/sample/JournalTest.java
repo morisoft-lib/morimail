@@ -288,4 +288,14 @@ class JournalTest {
         // picocli wraps the footer at the terminal width, so compare with line breaks folded
         assertThat(run.err().replaceAll("\\s+", " ")).contains("the next run sends it again");
     }
+
+    @Test
+    void theHelpTextListsTheExitCodes() {
+        SampleFixtures.Run run = SampleFixtures.run(a -> {
+            throw new AssertionError("no mailer");
+        }, new ArrayList<>(), "send");
+
+        assertThat(run.err().replaceAll("\\s+", " ")).contains("3 the run was stopped by a rejected "
+                + "sender or required authentication");
+    }
 }

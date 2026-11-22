@@ -24,7 +24,8 @@ public final class SerialMail {
 
     /**
      * Runs the command line and exits with its exit code: 0 nothing failed, 1 at least one mail
-     * failed or the journal could not be written, 2 a pre-flight or argument problem.
+     * failed or the journal could not be written, 2 a pre-flight or argument problem, 3 the run was
+     * stopped by a rejected sender or required authentication.
      *
      * @param args the command-line arguments
      */

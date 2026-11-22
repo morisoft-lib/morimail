@@ -35,8 +35,11 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "send",
         description = "Sends one mail per row of recipients.csv, or renders them with --dry-run.",
-        footer = "A mail that is in flight when the run is stopped has no journal line, "
-                + "so the next run sends it again.")
+        footer = {"A mail that is in flight when the run is stopped has no journal line, "
+                + "so the next run sends it again.",
+                "Exit codes: 0 nothing failed, 1 a mail failed or the journal could not be "
+                + "written, 2 a pre-flight or argument problem, 3 the run was stopped by a "
+                + "rejected sender or required authentication."})
 final class SendCommand implements Callable<Integer> {
 
     @Spec
