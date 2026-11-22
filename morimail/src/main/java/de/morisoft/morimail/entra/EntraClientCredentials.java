@@ -30,6 +30,7 @@ import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.PSSParameterSpec;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Gets access tokens for an Entra app with the client credentials flow. Create an instance with
@@ -53,14 +55,17 @@ import java.util.UUID;
  * Only RSA keys are supported, and there is no PEM support: pass a key and a certificate, or a
  * PKCS12 file.
  *
- * <p>The configuration is fixed after construction, and an instance is safe for concurrent use by
- * several threads.
+ * <p>The configuration is fixed after construction; the token cache is guarded by a lock, so an
+ * instance is safe for concurrent use by several threads. An instance makes one token request at a
+ * time, reuses a token until five minutes before it expires, and never caches a failure.
  */
 public final class EntraClientCredentials implements TokenProvider {
 
     private static final URI PUBLIC_CLOUD = URI.create("https://login.microsoftonline.com");
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+    private static final Duration EXPIRY_MARGIN = Duration.ofMinutes(5);
+    private static final long MAX_EXPIRES_IN_SECONDS = 31_536_000L;
     private static final long ASSERTION_LIFETIME_SECONDS = 600;
     private static final String JWT_BEARER = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     private static final Base64.Encoder BASE64URL = Base64.getUrlEncoder().withoutPadding();
@@ -75,6 +80,11 @@ public final class EntraClientCredentials implements TokenProvider {
     private final Clock clock;
     private final Duration requestTimeout;
     private final HttpClient http;
+    private final ReentrantLock lock = new ReentrantLock();
+    private volatile Token cached;
+
+    private record Token(String scope, String value, Instant usableUntil) {
+    }
 
     private EntraClientCredentials(String tenantId, String clientId, String secret, PrivateKey privateKey,
             X509Certificate certificate, URI authority, Clock clock, Duration requestTimeout) {
@@ -226,7 +236,9 @@ public final class EntraClientCredentials implements TokenProvider {
     }
 
     /**
-     * Requests an access token for the scope from the token endpoint.
+     * Returns an access token for the scope. A cached token is reused until five minutes before it
+     * expires; otherwise one request at a time goes to the token endpoint, and the other callers
+     * wait for its result.
      *
      * @param scope the scope the token is for
      * @return the access token
@@ -235,6 +247,58 @@ public final class EntraClientCredentials implements TokenProvider {
      */
     @Override
     public String accessToken(String scope) throws MailException {
+        Token token = cached;
+        if (usable(token, scope)) {
+            return token.value();
+        }
+        lock.lock();
+        try {
+            return cachedOrFetch(scope);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /**
+     * Returns a token after the service rejected {@code rejectedToken}. The cached token is dropped
+     * only when it equals {@code rejectedToken}; with any other cached token that newer token is
+     * returned without a request. Callers that reject the same token share one new request.
+     *
+     * @param scope the scope the token is for
+     * @param rejectedToken the token the service rejected
+     * @return a token for the scope
+     * @throws TransientMailException if the endpoint cannot be reached or answers 429 or 5xx
+     * @throws AuthRequiredException if the endpoint rejects the credentials
+     */
+    @Override
+    public String freshAccessToken(String scope, String rejectedToken) throws MailException {
+        lock.lock();
+        try {
+            Token token = cached;
+            if (token != null && token.value().equals(rejectedToken)) {
+                cached = null;
+            }
+            return cachedOrFetch(scope);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private String cachedOrFetch(String scope) throws MailException {
+        Token token = cached;
+        if (usable(token, scope)) {
+            return token.value();
+        }
+        token = fetch(scope);
+        cached = token;
+        return token.value();
+    }
+
+    private boolean usable(Token token, String scope) {
+        return token != null && token.scope().equals(scope) && clock.instant().isBefore(token.usableUntil());
+    }
+
+    private Token fetch(String scope) throws MailException {
         String form = privateKey == null
                 ? form("client_id", clientId, "scope", scope, "client_secret", secret,
                         "grant_type", "client_credentials")
@@ -263,7 +327,9 @@ public final class EntraClientCredentials implements TokenProvider {
                 throw new AuthRequiredException("Entra token request failed: HTTP " + status
                         + ", the response has no access_token");
             }
-            return token;
+            long expiresIn = expiresIn(json);
+            return new Token(scope, token,
+                    clock.instant().plusSeconds(expiresIn).minus(EXPIRY_MARGIN));
         }
         String failure = "Entra token request failed: HTTP " + status;
         if (status == 429 || status >= 500) {
@@ -271,6 +337,14 @@ public final class EntraClientCredentials implements TokenProvider {
         }
         throw new AuthRequiredException(failure + ", error " + orDash(text(json, "error"))
                 + ", description: " + orDash(text(json, "error_description")));
+    }
+
+    private static long expiresIn(JsonNode json) {
+        JsonNode node = json == null ? null : json.get("expires_in");
+        if (node != null && (node.isNumber() || node.isTextual() && node.asText().matches("\\d{1,9}"))) {
+            return Math.max(-1, Math.min(node.asLong(), MAX_EXPIRES_IN_SECONDS));
+        }
+        return 0;
     }
 
     private String assertion(String audience) throws AuthRequiredException {
