@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
@@ -31,6 +32,9 @@ import java.security.spec.PSSParameterSpec;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -65,6 +69,7 @@ public final class EntraClientCredentials implements TokenProvider {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
     private static final Duration EXPIRY_MARGIN = Duration.ofMinutes(5);
+    private static final int MAX_ERROR_TEXT = 300;
     private static final long MAX_EXPIRES_IN_SECONDS = 31_536_000L;
     private static final long ASSERTION_LIFETIME_SECONDS = 600;
     private static final String JWT_BEARER = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
@@ -323,20 +328,56 @@ public final class EntraClientCredentials implements TokenProvider {
         JsonNode json = parse(response.body());
         if (status >= 200 && status <= 299) {
             String token = text(json, "access_token");
-            if (token == null) {
-                throw new AuthRequiredException("Entra token request failed: HTTP " + status
-                        + ", the response has no access_token");
-            }
             long expiresIn = expiresIn(json);
-            return new Token(scope, token,
-                    clock.instant().plusSeconds(expiresIn).minus(EXPIRY_MARGIN));
+            if (token == null || expiresIn <= 0) {
+                throw new AuthRequiredException("Entra token response is not usable: HTTP " + status
+                        + " without access_token and expires_in");
+            }
+            return new Token(scope, token, clock.instant().plusSeconds(expiresIn).minus(EXPIRY_MARGIN));
         }
-        String failure = "Entra token request failed: HTTP " + status;
-        if (status == 429 || status >= 500) {
-            throw new TransientMailException(failure);
+        if (status == 429 || status >= 500 && status <= 599) {
+            Duration retryAfter = retryAfter(response.headers());
+            throw new TransientMailException("Entra token request failed: HTTP " + status, retryAfter);
         }
-        throw new AuthRequiredException(failure + ", error " + orDash(text(json, "error"))
-                + ", description: " + orDash(text(json, "error_description")));
+        throw new AuthRequiredException("Entra token request failed: HTTP " + status + ", error "
+                + clean(text(json, "error")) + ", description: " + clean(text(json, "error_description")));
+    }
+
+    private Duration retryAfter(HttpHeaders headers) {
+        String value = headers.firstValue("Retry-After").map(String::trim).orElse("");
+        if (value.matches("\\d{1,9}")) {
+            return Duration.ofSeconds(Long.parseLong(value));
+        }
+        try {
+            Instant at = ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();
+            Duration wait = Duration.between(clock.instant(), at);
+            return wait.isNegative() ? Duration.ZERO : wait;
+        } catch (DateTimeParseException e) {
+            return null;
+        }
+    }
+
+    private static String clean(String value) {
+        if (value == null) {
+            return "-";
+        }
+        StringBuilder spaced = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            spaced.append(Character.isISOControl(c) ? ' ' : c);
+        }
+        String text = spaced.toString().replaceAll("\\s+", " ").trim();
+        if (text.isEmpty()) {
+            return "-";
+        }
+        if (text.length() > MAX_ERROR_TEXT) {
+            int end = MAX_ERROR_TEXT;
+            if (Character.isHighSurrogate(text.charAt(end - 1))) {
+                end--;
+            }
+            return text.substring(0, end) + "...";
+        }
+        return text;
     }
 
     private static long expiresIn(JsonNode json) {
@@ -402,10 +443,6 @@ public final class EntraClientCredentials implements TokenProvider {
         }
         String value = json.get(field).asText();
         return value.isEmpty() ? null : value;
-    }
-
-    private static String orDash(String value) {
-        return value == null ? "-" : value;
     }
 
     private static void requireText(String value, String name) {
