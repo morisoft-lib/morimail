@@ -96,9 +96,10 @@ final class SendCommand implements Callable<Integer> {
         return Duration.ofMillis((60_000L + rate - 1) / rate);
     }
 
-    /** The display form of a failure: its simple class name, a colon and its message. */
+    /** The display form of a failure: its simple class name, and a colon and its message if it has one. */
     private static String describe(MailException e) {
-        return e.getClass().getSimpleName() + ": " + e.getMessage();
+        return e.getMessage() == null ? e.getClass().getSimpleName()
+                : e.getClass().getSimpleName() + ": " + e.getMessage();
     }
 
     /** One pre-flight problem for an {@code InvalidMailException} message and the rows it hit. */

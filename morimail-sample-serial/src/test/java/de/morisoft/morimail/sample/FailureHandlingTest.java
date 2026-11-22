@@ -250,4 +250,19 @@ class FailureHandlingTest {
                 + "a rerun sends it again.");
         assertThat(SampleFixtures.journalLines(campaign.resolve("journal.jsonl"))).hasSize(1);
     }
+
+    @Test
+    void aFailureWithoutMessageIsShownWithoutNull() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        MailAccount recording = SampleFixtures.recordingAccount();
+        ((RecordingTransport) recording.transport()).failNext(new PermanentMailException(null));
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(recording), new ArrayList<>(),
+                args(account, campaign));
+
+        assertThat(run.exit()).isEqualTo(1);
+        assertThat(run.outLines()).contains("[1/3] anna@example.org failed: PermanentMailException");
+        assertThat(run.out()).doesNotContain("null");
+    }
 }
