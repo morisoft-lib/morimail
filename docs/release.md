@@ -112,7 +112,7 @@ Then deploy:
 
 Tests run. The deploy signs from the agent cache and cannot prompt, because of `-B`. `autoPublish` is false, and the plugin waits until the deployment is validated, so nothing is public yet.
 
-If a deploy fails with `maven-gpg-plugin:3.2.8:sign` and `Exit code: 2`, that line gives no reason. gpg's own message is a `gpg:` line without `[INFO]` or `[ERROR]`, under `--- gpg:3.2.8:sign` and above the Reactor Summary. `gpg: signing failed: No pinentry` means the agent cache was empty: warm up and run the same command again.
+If a deploy fails with `maven-gpg-plugin:3.2.8:sign` and `Exit code: 2`, that line gives no reason. gpg's own message is a `gpg:` line without `[INFO]` or `[ERROR]`, under `--- gpg:3.2.8:sign` and above the Reactor Summary. `gpg: signing failed: No pinentry` means the agent held no passphrase for the signing key: warm up and run the same command again. If you have several secret keys, check that the warm-up and the deploy name the same `<KEYID>`.
 
 ## 6. Review and publish in the Portal
 
