@@ -10,6 +10,18 @@ The full, binding specification is `spec.md` (moved to `docs/spec.md` in the fir
 
 A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
 
+## Current Milestone: v0.2.0 Inline Images
+
+**Goal:** A consumer can embed images in a templated HTML mail with `cid:` references and send it through Graph with the images shown inline (spec §10.3).
+
+**Target features:**
+- Builder `.inline(Path image, String contentId)`; `build()` checks every `cid:` reference against the inline attachments both ways, unique content IDs, image content types only
+- Graph transport sends inline images as file attachments marked inline (property names verified against the current `fileAttachment` docs); inline images count toward the existing 3 MiB / 4 MiB limits
+- Sample: optional `inline/` campaign directory (file name without extension = content ID); dry-run writes the images next to the rendered HTML and rewrites `cid:` to relative paths in the dry-run output only
+- Docs updated and release-ready (`-Prelease verify -Dgpg.skip` green); the owner runs the live inline test, the deploy and the tag
+
+Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
+
 ## Requirements
 
 ### Validated
@@ -37,7 +49,7 @@ All of the above shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0
 
 ### Active
 
-- [ ] Inline images (CID), spec §10.3: `.inline(Path, contentId)`, two-way `cid:` checks in `build()`, Graph inline file attachments, sample `inline/` directory. Candidate for the next milestone (v0.2.0); requirements are defined by `/gsd-new-milestone`.
+- [ ] Inline images (CID) per spec §10.3: builder `.inline(...)`, two-way `cid:` checks in `build()`, Graph inline file attachments within the existing size limits, sample `inline/` directory and dry-run rewrite, docs — v0.2.0 (REQ-IDs in REQUIREMENTS.md)
 
 ### Out of Scope
 
@@ -114,4 +126,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-22 after v0.1.0 milestone*
+*Last updated: 2026-11-22 after starting milestone v0.2.0*
