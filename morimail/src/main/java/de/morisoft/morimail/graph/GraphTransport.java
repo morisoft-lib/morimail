@@ -306,7 +306,8 @@ final class GraphTransport implements MailTransport {
 
     /**
      * Makes a text from the server safe for a message: control characters become spaces, whitespace runs
-     * collapse, the result is cut at 300 characters (never inside a surrogate pair), and nothing becomes "-".
+     * collapse, anything that looks like a mail address becomes "&lt;address&gt;", the result is cut at
+     * 300 characters (never inside a surrogate pair), and nothing becomes "-".
      */
     static String clean(String value) {
         if (value == null) {
@@ -317,7 +318,8 @@ final class GraphTransport implements MailTransport {
             char c = value.charAt(i);
             sb.append(Character.isISOControl(c) || Character.isWhitespace(c) ? ' ' : c);
         }
-        String text = sb.toString().replaceAll(" {2,}", " ").trim();
+        String text = sb.toString().replaceAll(" {2,}", " ")
+                .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
         }

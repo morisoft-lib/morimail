@@ -370,7 +370,8 @@ public final class EntraClientCredentials implements TokenProvider {
             char c = value.charAt(i);
             spaced.append(Character.isISOControl(c) ? ' ' : c);
         }
-        String text = spaced.toString().replaceAll("\\s+", " ").trim();
+        String text = spaced.toString().replaceAll("\\s+", " ")
+                .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
         }

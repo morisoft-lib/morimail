@@ -167,6 +167,16 @@ class EntraTokenErrorsTest {
     }
 
     @Test
+    void aMailAddressInTheDescriptionIsReplaced(WireMockRuntimeInfo wm) {
+        stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"No user x@example.org here\"}");
+
+        assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .hasMessageContaining("description: No user <address> here")
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain("example.org"));
+    }
+
+    @Test
     void aLongDescriptionIsCutToThreeHundredCharacters(WireMockRuntimeInfo wm) {
         stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "x".repeat(1000) + "\"}");
 

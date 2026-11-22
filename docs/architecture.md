@@ -26,7 +26,7 @@ This page summarises the contracts of morimail and the reasons for them. The ful
 
 - `Mail.Builder.build()` checks that attachment files exist and are readable, but a file can still disappear before the transport reads it. A transport reports an attachment it cannot read at send time as an `InvalidMailException` that names the file and never carries its content.
 - The Graph transport sends a request once and retries only after a 401, with a fresh token. Every other failure is mapped and thrown; retries, backoff and queues belong to the consumer.
-- `entra` writes no log records. `graph` writes one fixed INFO record per transport when a mail has both an HTML and a text body. Exception messages never carry tokens, secrets, assertions, mail bodies or addresses.
+- `entra` writes no log records. `graph` writes one fixed INFO record per transport when a mail has both an HTML and a text body. Exception messages never carry tokens, secrets, assertions, mail bodies or mail addresses. They do quote the service's own error text, cleaned of control characters, cut at 300 characters and with anything that looks like a mail address replaced by `<address>`; the Entra description can still name the application and tenant ids.
 
 ## Differences from the Microsoft documentation
 

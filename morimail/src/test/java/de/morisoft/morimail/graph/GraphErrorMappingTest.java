@@ -341,6 +341,15 @@ class GraphErrorMappingTest {
     }
 
     @Test
+    void aMailAddressInTheServiceTextIsReplaced(WireMockRuntimeInfo wm) {
+        stubError(404, null, errorBody("ErrorInvalidUser",
+                "The requested user 'x@example.org' is invalid, try <y@example.org>."));
+
+        assertThat(messageOfFailedSend(wm)).isEqualTo("Graph sendMail failed: HTTP 404, code ErrorInvalidUser, "
+                + "request-id -, message: The requested user '<address>' is invalid, try <<address>>.");
+    }
+
+    @Test
     void aLongMessageIsCutAt300CharactersPlusDots(WireMockRuntimeInfo wm) {
         stubError(400, null, errorBody("C", "a".repeat(1000)));
 
