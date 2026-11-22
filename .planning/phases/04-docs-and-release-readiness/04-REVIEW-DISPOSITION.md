@@ -13,7 +13,7 @@ findings:
     title: "entra-setup step 2 tells the reader to delete the key, then needs it"
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "release.md asks for CI on the release commit, but the commit is made after CI could run and before the irreversible step"
   - id: IN-01
     severity: info
@@ -21,7 +21,7 @@ findings:
     title: "Review and plan identifiers leak into public source and docs"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The two `clean()` methods sanitise differently, though both documents say the same thing"
   - id: IN-03
     severity: info
@@ -29,11 +29,11 @@ findings:
     title: "Test names and coverage no longer match the new behaviour"
   - id: IN-04
     severity: info
-    disposition: open
+    disposition: fixed
     title: "`.gitignore` covers the key formats in the guide but not the common neighbours"
-open: 3
+open: 0
 total: 7
-recorded: 2026-11-22T19:45:17.186Z
+recorded: 2026-11-22T19:45:28.599Z
 ---
 
 # Phase 04: Code Review Disposition
@@ -42,11 +42,11 @@ recorded: 2026-11-22T19:45:17.186Z
 |---------|----------|-------------|--------|
 | WR-01 | warning | fixed | 04-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 04-REVIEW-FIX.md |
-| WR-03 | warning | open | - |
+| WR-03 | warning | fixed | 04-REVIEW-FIX.md |
 | IN-01 | info | fixed | 04-REVIEW-FIX.md |
-| IN-02 | info | open | - |
+| IN-02 | info | fixed | 04-REVIEW-FIX.md |
 | IN-03 | info | fixed | 04-REVIEW-FIX.md |
-| IN-04 | info | open | - |
+| IN-04 | info | fixed | 04-REVIEW-FIX.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
