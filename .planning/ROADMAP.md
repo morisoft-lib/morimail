@@ -108,11 +108,11 @@ Scope notes:
   3. A `graph` account built through the registry, with no `ServiceLoader` entry, sends the expected `POST /users/{from}/sendMail` to WireMock. The request has a percent-encoded from, a bearer token, recipients, an HTML-or-text body and base64 file attachments, and carries `saveToSentItems` only when it is false. A 202 returns normally. Attachments at or above 3 MB (per file or in total) and unknown options are rejected.
   4. Every row of the error table maps to its documented exception. The message carries Graph's `error.code`, message and `request-id`, never tokens or bodies. A 401 triggers exactly one retry, carrying a fresh token, before it is mapped.
   5. `serial-mail send` runs the example campaign end to end against WireMock for both the token endpoint and Graph, and `./mvnw verify` passes offline. A `live`-tagged test is skipped by default and is ready for the owner to run with `-Plive` and environment variables.
-**Plans:** 5 plans (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05)
+**Plans:** 1/5 plans executed (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05)
 
 Plans:
 **Wave 1**
-- [ ] 03-01-PLAN.md — Tracer: a secret-authenticated Entra app sends one text mail through a registry-built `graph` account to WireMock (202), with `graph` registered as the built-in, timeouts and no redirects from the first HTTP call
+- [x] 03-01-PLAN.md — Tracer: a secret-authenticated Entra app sends one text mail through a registry-built `graph` account to WireMock (202), with `graph` registered as the built-in, timeouts and no redirects from the first HTTP call
 
 **Wave 2** *(blocked on Wave 1 completion; 03-02 and 03-03 share no file)*
 - [ ] 03-02-PLAN.md — Entra: certificate flow from the checked-in throwaway PKCS12 with a PS256 assertion that verifies independently, cache until 5 min before expiry with single flight and compare-and-drop, full token error mapping, no secret in any log or message
@@ -178,5 +178,5 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 |-------|----------------|--------|-----------|
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
 | 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
-| 3. Graph and Entra | 0/0 | Not started | - |
+| 3. Graph and Entra | 1/5 | In Progress | - |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |

@@ -54,14 +54,14 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Entra Token Client (ENTRA)
 
-- [ ] **ENTRA-01**: `EntraClientCredentials.withSecret(tenant, clientId, secret)` obtains a token by POSTing the form `client_id`, `scope`, `client_secret`, `grant_type=client_credentials` to `{authority}/{tenant}/oauth2/v2.0/token` (§7.1).
+- [x] **ENTRA-01**: `EntraClientCredentials.withSecret(tenant, clientId, secret)` obtains a token by POSTing the form `client_id`, `scope`, `client_secret`, `grant_type=client_credentials` to `{authority}/{tenant}/oauth2/v2.0/token` (§7.1).
 - [ ] **ENTRA-02**: `withCertificate(tenant, clientId, privateKey, certificate)` sends a `client_assertion` JWT (§7.2):
   - Header: PS256 and `typ` JWT, plus `x5t#S256`, the base64url SHA-256 of the certificate's DER encoding.
   - Claims: `aud` is the token URL, `iss` and `sub` are the client ID, `jti` is a new GUID, `nbf` and `iat` are now, `exp` is at most 10 minutes later.
   - Signature: RSASSA-PSS with SHA-256, MGF1 SHA-256 and salt 32.
   - Encoding: base64url without padding; a new assertion is built per request.
 - [ ] **ENTRA-03**: `withCertificate(tenant, clientId, Path p12, password)` loads the key and certificate from a PKCS12 file. There is no PEM support (§7.2).
-- [ ] **ENTRA-04**: The authority host is overridden with the copy method `authority(URI)`, which returns a new instance and defaults to the public cloud, so tests can point it at WireMock (§7.1 says "constructor option"; Phase 3 D-01 chose the copy method, recorded in `docs/architecture.md`).
+- [x] **ENTRA-04**: The authority host is overridden with the copy method `authority(URI)`, which returns a new instance and defaults to the public cloud, so tests can point it at WireMock (§7.1 says "constructor option"; Phase 3 D-01 chose the copy method, recorded in `docs/architecture.md`).
 - [ ] **ENTRA-05**: The token is cached in memory and reused until 5 minutes before expiry. Concurrent callers trigger at most one token request at a time. Failed requests are not cached (§7.3).
 - [ ] **ENTRA-06**: `freshAccessToken` drops the cached token only if it equals the rejected token, then fetches a new one (CORE-02).
 - [ ] **ENTRA-07**: 4xx responses map to `AuthRequiredException` carrying `error` and `error_description`. 5xx, 429 and network or timeout errors map to `TransientMailException` (§7.3).
@@ -70,7 +70,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Graph Transport (GRAPH)
 
-- [ ] **GRAPH-01**: The built-in transport `graph` sends `POST {baseUrl}/users/{from}/sendMail` with a bearer token for scope `https://graph.microsoft.com/.default`. The from-address is percent-encoded in the path, and 202 counts as accepted (§6.1).
+- [x] **GRAPH-01**: The built-in transport `graph` sends `POST {baseUrl}/users/{from}/sendMail` with a bearer token for scope `https://graph.microsoft.com/.default`. The from-address is percent-encoded in the path, and 202 counts as accepted (§6.1).
 - [ ] **GRAPH-02**: The JSON body carries to/cc/bcc/replyTo, subject and one body. HTML is used if present, otherwise text. When both are given, only the HTML is sent, and this is logged once at INFO (§6.1).
 - [ ] **GRAPH-03**: Attachments are sent as `#microsoft.graph.fileAttachment` with base64 `contentBytes` (§6.2).
 - [ ] **GRAPH-04**: The options are `saveToSentItems` (boolean, default true, sent only when false) and `baseUrl` (default `https://graph.microsoft.com/v1.0`) **[decided]**. Unknown option keys are rejected (§6.1).
@@ -198,16 +198,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CORE-07 | Phase 1 | Complete |
 | ERR-01 | Phase 1 | Complete |
 | ERR-02 | Phase 1 | Complete |
-| ENTRA-01 | Phase 3 | Pending |
+| ENTRA-01 | Phase 3 | Complete |
 | ENTRA-02 | Phase 3 | Pending |
 | ENTRA-03 | Phase 3 | Pending |
-| ENTRA-04 | Phase 3 | Pending |
+| ENTRA-04 | Phase 3 | Complete |
 | ENTRA-05 | Phase 3 | Pending |
 | ENTRA-06 | Phase 3 | Pending |
 | ENTRA-07 | Phase 3 | Pending |
 | ENTRA-08 | Phase 3 | Pending |
 | ENTRA-09 | Phase 3 | Pending |
-| GRAPH-01 | Phase 3 | Pending |
+| GRAPH-01 | Phase 3 | Complete |
 | GRAPH-02 | Phase 3 | Pending |
 | GRAPH-03 | Phase 3 | Pending |
 | GRAPH-04 | Phase 3 | Pending |
