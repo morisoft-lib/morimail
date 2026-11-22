@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: Graph and Entra
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-11-22T09:00:06.400Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-11-22T09:06:13.157Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 03 execution started
-state_head: 525cc37becefb6026ec0ae22358f6199a77e0636
+state_head: 41fe019acb0cab7f84c44d3469c42d65db6c58b1
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 16
-  completed_plans: 13
+  completed_plans: 14
   percent: 50
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-22)
 ## Current Position
 
 Phase: 03 (Graph and Entra) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-11-22 — Phase 03 execution started
 
@@ -70,6 +70,7 @@ Progress: [█████░░░░░] 50%
 | Phase 02 P04 | 3 min | 2 tasks | 10 files |
 | Phase 03 P01 | 25min | 2 tasks | 8 files |
 | Phase 03 P02 | 25min | 3 tasks | 6 files |
+| Phase 03 P03 | 20 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 03-01: tracer gaps stay as missing branches; unusable 200 token response raises AuthRequiredException until 03-02 fixes the rule
 - [Phase 03]: Unusable 2xx Entra token response (no access_token or non-positive expires_in) is AuthRequiredException
 - [Phase 03]: expires_in is clamped to one year so a hostile value cannot overflow the expiry arithmetic
+- [Phase 03]: 03-03: Graph request body is built before the token is requested, so an unreadable attachment costs no token request and no POST
+- [Phase 03]: 03-03: Request-size estimate measures the body with the same ObjectMapper send uses, so it bounds the posted bytes by construction; an emoji counts 12 bytes (JSON escape pair), not 4
 
 ### Pending Todos
 
@@ -131,6 +134,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T09:00:06.283Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-11-22T09:06:13.028Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None

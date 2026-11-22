@@ -71,10 +71,10 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 ### Graph Transport (GRAPH)
 
 - [x] **GRAPH-01**: The built-in transport `graph` sends `POST {baseUrl}/users/{from}/sendMail` with a bearer token for scope `https://graph.microsoft.com/.default`. The from-address is percent-encoded in the path, and 202 counts as accepted (§6.1).
-- [ ] **GRAPH-02**: The JSON body carries to/cc/bcc/replyTo, subject and one body. HTML is used if present, otherwise text. When both are given, only the HTML is sent, and this is logged once at INFO (§6.1).
-- [ ] **GRAPH-03**: Attachments are sent as `#microsoft.graph.fileAttachment` with base64 `contentBytes` (§6.2).
-- [ ] **GRAPH-04**: The options are `saveToSentItems` (boolean, default true, sent only when false) and `baseUrl` (default `https://graph.microsoft.com/v1.0`) **[decided]**. Unknown option keys are rejected (§6.1).
-- [ ] **GRAPH-05**: `validate` rejects any attachment of 3 MB or more and attachments that together reach 3 MB, naming the file and the limit. It also rejects an estimated base64 request size above the limit, defined as one constant (§6.2).
+- [x] **GRAPH-02**: The JSON body carries to/cc/bcc/replyTo, subject and one body. HTML is used if present, otherwise text. When both are given, only the HTML is sent, and this is logged once at INFO (§6.1).
+- [x] **GRAPH-03**: Attachments are sent as `#microsoft.graph.fileAttachment` with base64 `contentBytes` (§6.2).
+- [x] **GRAPH-04**: The options are `saveToSentItems` (boolean, default true, sent only when false) and `baseUrl` (default `https://graph.microsoft.com/v1.0`) **[decided]**. Unknown option keys are rejected (§6.1).
+- [x] **GRAPH-05**: `validate` rejects any attachment of 3 MB or more and attachments that together reach 3 MB, naming the file and the limit. It also rejects an estimated base64 request size above the limit, defined as one constant (§6.2).
 - [ ] **GRAPH-06**: Errors are mapped as follows (§6.3):
   - 429, 503 and 504 become `TransientMailException`, with `Retry-After` parsed when present.
   - Network and timeout errors become `TransientMailException`.
@@ -208,10 +208,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENTRA-08 | Phase 3 | Complete |
 | ENTRA-09 | Phase 3 | Complete |
 | GRAPH-01 | Phase 3 | Complete |
-| GRAPH-02 | Phase 3 | Pending |
-| GRAPH-03 | Phase 3 | Pending |
-| GRAPH-04 | Phase 3 | Pending |
-| GRAPH-05 | Phase 3 | Pending |
+| GRAPH-02 | Phase 3 | Complete |
+| GRAPH-03 | Phase 3 | Complete |
+| GRAPH-04 | Phase 3 | Complete |
+| GRAPH-05 | Phase 3 | Complete |
 | GRAPH-06 | Phase 3 | Pending |
 | GRAPH-07 | Phase 3 | Pending |
 | GRAPH-08 | Phase 3 | Pending |
