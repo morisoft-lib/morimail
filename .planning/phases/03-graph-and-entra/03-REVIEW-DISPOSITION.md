@@ -13,7 +13,7 @@ findings:
     title: "Server-echoed text goes into exception messages, journal and stdout, but the docs promise \"never addresses\""
   - id: WR-03
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Plain `http` is accepted for the token authority and the Graph base URL, so the client secret and bearer token can travel in cleartext"
   - id: IN-01
     severity: info
@@ -25,11 +25,11 @@ findings:
     title: "A 401 that is not about the token still discards a valid cached token"
   - id: IN-03
     severity: info
-    disposition: open
+    disposition: fixed
     title: "The request-size estimate is looser than its Javadoc suggests, and the MB/MiB limits are unverified"
   - id: IN-04
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Under a token-endpoint outage, waiting threads are served one after another, each with its own timeout"
   - id: IN-05
     severity: info
@@ -39,9 +39,9 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 3
+open: 0
 total: 9
-recorded: 2026-11-22T09:35:38.856Z
+recorded: 2026-11-22T09:35:51.114Z
 ---
 
 # Phase 03: Code Review Disposition
@@ -50,11 +50,11 @@ recorded: 2026-11-22T09:35:38.856Z
 |---------|----------|-------------|--------|
 | WR-01 | warning | fixed | 03-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md |
-| WR-03 | warning | open | - |
+| WR-03 | warning | fixed | 03-REVIEW-FIX.md |
 | IN-01 | info | fixed | 03-REVIEW-FIX.md |
 | IN-02 | info | skipped | 03-REVIEW-FIX.md |
-| IN-03 | info | open | - |
-| IN-04 | info | open | - |
+| IN-03 | info | fixed | 03-REVIEW-FIX.md |
+| IN-04 | info | fixed | 03-REVIEW-FIX.md |
 | IN-05 | info | fixed | 03-REVIEW-FIX.md |
 | IN-06 | info | fixed | 03-REVIEW-FIX.md |
 
