@@ -61,7 +61,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
   - Signature: RSASSA-PSS with SHA-256, MGF1 SHA-256 and salt 32.
   - Encoding: base64url without padding; a new assertion is built per request.
 - [ ] **ENTRA-03**: `withCertificate(tenant, clientId, Path p12, password)` loads the key and certificate from a PKCS12 file. There is no PEM support (§7.2).
-- [ ] **ENTRA-04**: The authority host is a constructor option, defaulting to the public cloud, so tests can point it at WireMock (§7.1).
+- [ ] **ENTRA-04**: The authority host is overridden with the copy method `authority(URI)`, which returns a new instance and defaults to the public cloud, so tests can point it at WireMock (§7.1 says "constructor option"; Phase 3 D-01 chose the copy method, recorded in `docs/architecture.md`).
 - [ ] **ENTRA-05**: The token is cached in memory and reused until 5 minutes before expiry. Concurrent callers trigger at most one token request at a time. Failed requests are not cached (§7.3).
 - [ ] **ENTRA-06**: `freshAccessToken` drops the cached token only if it equals the rejected token, then fetches a new one (CORE-02).
 - [ ] **ENTRA-07**: 4xx responses map to `AuthRequiredException` carrying `error` and `error_description`. 5xx, 429 and network or timeout errors map to `TransientMailException` (§7.3).

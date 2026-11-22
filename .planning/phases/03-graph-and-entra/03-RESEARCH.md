@@ -540,21 +540,25 @@ Skipped: `workflow.nyquist_validation` is explicitly `false` in `.planning/confi
 | A8 | PS256 assertions are accepted by the live token endpoint | ENTRA-02 | Medium: the docs say PS256, nothing here proves acceptance; owner's live test |
 | A9 | The Graph 4 MB figure ("generally around") is close enough to use as the estimate ceiling | D-09 | Medium: too high gives a 413 mapped to Permanent; too low rejects valid mails |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **How should the sample phrase env-var problems (D-14) given the Phase 2 "no value from the file" tests?**
+1. **How should the sample phrase env-var problems (D-14) given the Phase 2 "no value from the file" tests?** (RESOLVED)
    - Known: `SendCommand` prints `account: <message>` and exits 2 for `IllegalStateException`/`IllegalArgumentException`; Phase 2 tests use a sentinel in `secretEnv`.
    - Unclear: whether to name the variable or the key.
    - Recommendation: name the key (`secretEnv`, `certificate.passwordEnv`, `certificate.path`); no existing test needs changing except the three `GRAPH_NOT_AVAILABLE` lines.
+   - **Resolution:** adopted as recommended. Messages name the key, never the variable or its value. 03-05 Task 1 adds `secretEnv: ...` and `certificate.passwordEnv: ...` and updates the three Phase 2 assertions that used `GRAPH_NOT_AVAILABLE`. 03-05 Task 2 adds the `certificate.path: ...` messages and wraps the library's key-store message, which names the file.
 
-2. **Does the recipient see the mailbox's display name when `message.from` is not sent?**
+2. **Does the recipient see the mailbox's display name when `message.from` is not sent?** (RESOLVED)
    - Known: spec §6.1 sends no `from`; the docs say `from` must match the actual mailbox.
    - Unclear: display-name behaviour (STATE.md lists "the `from` display name" as live-test knowledge).
    - Recommendation: do not send `from`; ask the owner to note what the recipient sees in the STOP report. `MailAddress.displayName()` of `from` is simply unused by this transport.
+   - **Resolution:** adopted as recommended. 03-03 Task 1 builds the sendMail JSON with no `from` key (flagged assumption "No `from` in the body"), and the display-name behaviour is an item of the STOP report in 03-05's success criteria.
 
-3. **JSON allowance and `validate` message wording.** Pick one constant (suggest 16 KiB) and one message format naming the file or "estimated request size" and the limit in MiB. Planner's call.
+3. **JSON allowance and `validate` message wording.** Pick one constant (suggest 16 KiB) and one message format naming the file or "estimated request size" and the limit in MiB. Planner's call. (RESOLVED)
+   - **Resolution:** 03-03 Task 2 sets `JSON_ALLOWANCE = 16L * 1024` and uses three messages: "attachment <filename> has <size> bytes; Graph takes attachments below 3 MiB (3145728 bytes)", "attachments <names> have <total> bytes together; Graph takes below 3 MiB (3145728 bytes) in total" (names: every attachment file name, comma-separated, in attach order) and "estimated request size <estimate> bytes is above the limit of 4 MiB (4194304 bytes)". The body text is counted as the JSON-escaped UTF-8 bytes that send writes, so the allowance has to cover only the subject, the addresses and the JSON syntax.
 
-4. **Where `LiveGraphTest` fails fast.** Recommendation: a `@BeforeAll` that reads all env vars and throws one `IllegalStateException` listing the missing required names; probe methods use `Assumptions.assumeTrue` on their own optional variable.
+4. **Where `LiveGraphTest` fails fast.** Recommendation: a `@BeforeAll` that reads all env vars and throws one `IllegalStateException` listing the missing required names; probe methods use `Assumptions.assumeTrue` on their own optional variable. (RESOLVED)
+   - **Resolution:** adopted as recommended. In 03-05 Task 3, `@BeforeAll` throws `IllegalStateException` "Live test: missing environment variables: <names>" before any network call, and the out-of-scope and big-attachment probes use `Assumptions.assumeTrue` on their own variables.
 
 ## Notes for the Planner (waves and gotchas)
 

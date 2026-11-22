@@ -108,7 +108,21 @@ Scope notes:
   3. A `graph` account built through the registry, with no `ServiceLoader` entry, sends the expected `POST /users/{from}/sendMail` to WireMock. The request has a percent-encoded from, a bearer token, recipients, an HTML-or-text body and base64 file attachments, and carries `saveToSentItems` only when it is false. A 202 returns normally. Attachments at or above 3 MB (per file or in total) and unknown options are rejected.
   4. Every row of the error table maps to its documented exception. The message carries Graph's `error.code`, message and `request-id`, never tokens or bodies. A 401 triggers exactly one retry, carrying a fresh token, before it is mapped.
   5. `serial-mail send` runs the example campaign end to end against WireMock for both the token endpoint and Graph, and `./mvnw verify` passes offline. A `live`-tagged test is skipped by default and is ready for the owner to run with `-Plive` and environment variables.
-**Plans**: TBD
+**Plans:** 5 plans (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05)
+
+Plans:
+**Wave 1**
+- [ ] 03-01-PLAN.md — Tracer: a secret-authenticated Entra app sends one text mail through a registry-built `graph` account to WireMock (202), with `graph` registered as the built-in, timeouts and no redirects from the first HTTP call
+
+**Wave 2** *(blocked on Wave 1 completion; 03-02 and 03-03 share no file)*
+- [ ] 03-02-PLAN.md — Entra: certificate flow from the checked-in throwaway PKCS12 with a PS256 assertion that verifies independently, cache until 5 min before expiry with single flight and compare-and-drop, full token error mapping, no secret in any log or message
+- [ ] 03-03-PLAN.md — Graph request: full sendMail JSON with attachments and `saveToSentItems`, option rules, 3 MiB and 4 MiB limits in `validate`
+
+**Wave 3** *(blocked on Wave 2 completion; 03-04 changes GraphTransport.java after 03-03)*
+- [ ] 03-04-PLAN.md — Graph errors: the single 401 retry with a fresh token, every error-table row and the status-class rule with Retry-After, messages with code and request-id only, cleaned and free of tokens and bodies
+
+**Wave 4** *(blocked on Wave 3 completion)*
+- [ ] 03-05-PLAN.md — Sample: `serial-mail send` end to end against WireMock (once, rerun sends nothing, 403 stops with exit 3), D-14 pre-flight naming keys only, the owner's `live` test, the network-free CI step, and the phase's deviations in `docs/architecture.md`; then the STOP
 **UI hint**: no
 
 Scope notes:
@@ -118,7 +132,7 @@ Scope notes:
 **STOP checkpoint (hard stop after this phase, spec §10.2 milestone 4):** When Phase 3 is verified and committed, report to the owner and stop. Claude does not run the live test and sends no real mail. The owner runs the `live` test with `-Plive` and feeds back sanitised results on the following:
 - whether Entra accepts the PS256 certificate assertion (and any clock-skew issue)
 - the real Graph responses behind each §6.3 row (403 vs 404 vs `MailboxNotEnabledForRESTAPI`, a 401 after a fresh token)
-- the attachment and request-size boundary (sends at about 2.9 MB and about 3.5 MB)
+- the attachment and request-size boundary: a library send at about 2.9 MB (the live test's opt-in probe); about 3.5 MB only if the owner wants it, as a hand-made request outside the library, because `validate` rejects it before sending (deferred in `phases/03-graph-and-entra/03-CONTEXT.md`)
 - the RBAC for Applications scope (a mailbox outside the scope is refused)
 - whether the `from` display name works, and whether a shared mailbox works
 - the Exchange per-mailbox limits behind the `--rate 20` default
