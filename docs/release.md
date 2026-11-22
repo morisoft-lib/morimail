@@ -65,7 +65,7 @@ The owner runs every step on their own machine. Claude prepares the build and re
 
 ## 5. Deploy
 
-Run this step in a real terminal, not as a `!` command in Claude Code, where `tty` prints `not a tty`. Both deploy commands use `-B`, so the gpg plugin runs gpg in batch mode, where it cannot ask for the passphrase. It signs only if gpg-agent already holds the passphrase. So warm up the agent right before each deploy command, and enter the passphrase when asked:
+Run this step in a real terminal, not as a `!` command in Claude Code, where `tty` prints `not a tty`. Both deploy commands use `-B`, so the gpg plugin calls gpg with `--pinentry-mode error`, which forbids a passphrase prompt. It signs only if gpg-agent already holds the passphrase. So warm up the agent right before each deploy command, and enter the passphrase when asked:
 
 ```
 export GPG_TTY=$(tty)
