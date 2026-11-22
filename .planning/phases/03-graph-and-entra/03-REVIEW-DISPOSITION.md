@@ -5,8 +5,16 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "A malformed access token escapes `send` as an unchecked exception that contains the token"
+    disposition: open
+    title: "The new address-redaction regex is quadratic on server-controlled text and can hang a send"
+  - id: IN-01
+    severity: info
+    disposition: open
+    title: "The address pattern misses some forms and swallows trailing punctuation"
+  - id: IN-02
+    severity: info
+    disposition: open
+    title: "The Entra header-safety check is a second copy and sits next to the spec line \"Do not parse or validate the access token\""
   - id: WR-02
     severity: warning
     disposition: fixed
@@ -15,14 +23,6 @@ findings:
     severity: warning
     disposition: fixed
     title: "Plain `http` is accepted for the token authority and the Graph base URL, so the client secret and bearer token can travel in cleartext"
-  - id: IN-01
-    severity: info
-    disposition: fixed
-    title: "The private `Token` record's `toString()` prints the access token"
-  - id: IN-02
-    severity: info
-    disposition: skipped
-    title: "A 401 that is not about the token still discards a valid cached token"
   - id: IN-03
     severity: info
     disposition: fixed
@@ -39,24 +39,24 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 0
+open: 3
 total: 9
-recorded: 2026-11-22T09:35:51.114Z
+recorded: 2026-11-22T10:04:58.177Z
 ---
 
 # Phase 03: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 03-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 03-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 03-REVIEW-FIX.md |
-| IN-01 | info | fixed | 03-REVIEW-FIX.md |
-| IN-02 | info | skipped | 03-REVIEW-FIX.md |
-| IN-03 | info | fixed | 03-REVIEW-FIX.md |
-| IN-04 | info | fixed | 03-REVIEW-FIX.md |
-| IN-05 | info | fixed | 03-REVIEW-FIX.md |
-| IN-06 | info | fixed | 03-REVIEW-FIX.md |
+| WR-01 | warning | open | - |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
+| WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
+| WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
+| IN-03 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
+| IN-04 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
+| IN-05 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
+| IN-06 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
