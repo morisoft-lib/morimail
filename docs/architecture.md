@@ -1,6 +1,19 @@
 # morimail architecture
 
-This page summarises the contracts of morimail and the reasons for them. The full contract summary follows with the 0.1.0 documentation. Deviations from the spec are recorded here as they are made (spec §5: signatures are binding in intent).
+This page summarises the contracts of morimail and the reasons for them. It records every deviation from the spec (spec §5: signatures are binding in intent) and every difference from the Microsoft documentation.
+
+## Contracts
+
+- **One mail, one call.** `Mail.using(accountId)...build()`, then `Mailer.send(mail)`. The Mailer finds the account by id, applies `defaultFrom` and hands the message to the account's transport. Batching, retries, queues and scheduling belong to the consumer (spec §2).
+- **Two extension points.** `TransportProvider` (`id()`, `create(options, auth)`) and `TokenProvider` (`accessToken(scope)`). The default method `freshAccessToken(scope, rejectedToken)` lets a transport get a new token after a 401 without importing `entra`. There is no other SPI (Rule 0).
+- **Registry.** An explicit built-in list (`graph`) plus `ServiceLoader`. A duplicate or blank id fails with `IllegalStateException` when the registry loads. An unknown id fails with an `IllegalArgumentException` that lists the available ids. Options pass to the transport unread; the transport checks them in `create` and its size limits in `validate`.
+- **Errors say what to do.** `build()` throws `InvalidMailException` naming the problem. `send` throws a checked `MailException`. `TransientMailException` means try again later, after `retryAfter()` when the service gave it. `PermanentMailException` means this mail will not be accepted as it is; beneath it are `InvalidMailException` (fix the mail) and `SenderRejectedException` (fix the sending mailbox or its grant). `AuthRequiredException` means fix the credentials or the consent. Configuration mistakes are unchecked `IllegalArgumentException` and `IllegalStateException`.
+- **Accepted, not delivered.** A normal return means the service accepted the mail. A send that timed out may still have been accepted, so a retry can deliver twice: delivery is at-least-once. The Graph transport sends once and retries only a 401, once, with a fresh token.
+- **Attachments.** `build()` checks that the files exist and are readable. A file that disappears before sending is an `InvalidMailException` that names the file and never carries its content.
+- **Thread safety.** `Mailer`, `MailAccount`, transports and token providers are safe for concurrent use, and the records are immutable.
+- **Imports.** The core imports only the JDK, apart from the built-in list. `graph` and `entra` do not import each other, so the lines they share (`Retry-After`, the cleaning of server text) are written twice on purpose. `ImportRulesTest` enforces this.
+- **Logs and messages.** Nothing logs tokens, secrets, assertions or mail bodies, and a recipient address may appear at DEBUG only. `entra` writes no log records. `graph` writes one fixed INFO record per transport for a mail with both HTML and text.
+- **Server text in messages.** A Graph failure message holds the HTTP status, `error.code` and `request-id` only (G-03-2). An Entra failure message quotes `error` and `error_description` (spec §7.3). These fields are cleaned: control characters become spaces, runs collapse, a text over 1000 characters is cut back to the last space before character 1000 (review WR-01), anything that looks like a mail address becomes `<address>`, and the result is cut at 300 characters. This is a best-effort safeguard; the Entra description can still name the application and tenant ids.
 
 ## Deviations from the spec
 
@@ -24,12 +37,6 @@ This page summarises the contracts of morimail and the reasons for them. The ful
 | §10.1 (test key store) | The key store is `morimail/src/test/resources/test-keystore-throwaway.p12`, password `changeit`, legacy PKCS12 (`keytool -J-Dkeystore.pkcs12.legacy`). | `keytool` rejects passwords shorter than six characters, and the legacy format loads on every JDK 17 patch level. |
 | §10.1 (one live test) | The live test is one class, `LiveGraphTest`, with a main test and two opt-in probe methods (out-of-scope mailbox, big attachment) that are skipped unless their variable is set. It is excluded by tag and run with `-Plive`. | One run answers the STOP report items; each probe prints one line the owner can paste (D-16). |
 | §8.3 (rate default) | docs/spec.md §8.3 states the documented Exchange Online limits (30 messages per minute and 10,000 recipients per day per mailbox) and that the owner confirmed the default of 20 mails per minute. `--rate` stays 20. | Spec §8.3 asks for the paragraph and the default to be checked after milestone 4 (Phase 4 D-01). |
-
-## Contracts
-
-- `Mail.Builder.build()` checks that attachment files exist and are readable, but a file can still disappear before the transport reads it. A transport reports an attachment it cannot read at send time as an `InvalidMailException` that names the file and never carries its content.
-- The Graph transport sends a request once and retries only after a 401, with a fresh token. Every other failure is mapped and thrown; retries, backoff and queues belong to the consumer.
-- `entra` writes no log records. `graph` writes one fixed INFO record per transport when a mail has both an HTML and a text body. Exception messages never carry tokens, secrets, assertions or mail bodies. A Graph failure message holds only the HTTP status, `error.code` and `request-id`, never Graph's free-text message (G-03-2); those fields are identifiers in practice. An Entra failure message quotes `error` and `error_description` (spec §7.3). These service fields are cleaned of control characters, cut at 300 characters, and have anything that looks like a mail address replaced by `<address>`. That pattern is a best-effort safeguard, not a guarantee; the Entra description can still name the application and tenant ids.
 
 ## Differences from the Microsoft documentation
 
