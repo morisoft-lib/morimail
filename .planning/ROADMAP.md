@@ -195,4 +195,4 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
 | 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
 | 3. Graph and Entra | 6/6 | Complete    | 2026-11-22 |
-| 4. Docs and Release Readiness | 0/3 | Planned | - |
+| 4. Docs and Release Readiness | 0/4 | Planned | - |

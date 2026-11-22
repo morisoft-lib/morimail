@@ -429,17 +429,20 @@ Existing deviation rows already cover: `freshAccessToken`, `Map<String, ?>`, unc
 | A6 | An OpenSSL-3-format `.p12` loads on every JDK 17 patch level (only JDK 21 tested locally; Temurin 17 CI loaded the legacy-format test file) | Code Examples | A `KeyStoreException`-style `IllegalArgumentException` at load; D-05's `-legacy` fallback covers it |
 | A7 | No release-affecting Portal validation rule beyond the Sonatype requirements page is hit (the Portal's POM validation cannot be run locally) | Release rehearsal | Owner sees a validation error in the Portal at the real deploy; the deployment is not published until the owner acts, and fixes need a new version only after publishing |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Will the owner switch the tenant from path A to path B before the final rehearsal?**
    - What we know: the owner's tenant is on A; B is the recommended path and untested live.
    - What's unclear: whether DOCS-01's "follow the guide" check (success criterion 2) is done on A or B.
    - Recommendation: write the guide for B with A described and flagged as the live-verified path (D-04); the plan's last task is an owner checkpoint ("follow the guide, send the example campaign to test addresses, run again, expect nothing sent"), not an executor task.
+   - Resolution: 04-02 Task 1 writes the guide for path B as recommended, with A marked as the path verified live on 2026-11-22 (D-04); the owner's walk-through on the tenant is the backstop truth of 04-04 (criterion 2), not an executor step.
 
 2. **Whether to add `*.p12`/`*.key`/`*.pem` to `.gitignore` (Pitfall 8).**
    - Recommendation: yes, one line each, with the negation for the tracked test keystore; it is hygiene under REPO-11, not a feature. Planner's call.
+   - Resolution: yes; 04-02 Task 1 step 3 adds `*.p12`, `*.key`, `*.pem` and `*.cer` after the `*.pfx` line, with the negation for `morimail/src/test/resources/test-keystore-throwaway.p12`, and its check-ignore gate proves both.
 
 3. **Whether the first real `deploy` should run tests.** The rehearsal used `-DskipTests` for speed; the earlier offline run executed all 312 tests green. Recommendation: the owner's `release.md` command keeps the tests on.
+   - Resolution: tests stay on; 04-04 runs the rehearsal with tests (only a 10-minute tool timeout allows one rerun with `-DskipTests`), and its `docs/release.md` step "5. Deploy" gives the real command `./mvnw -B -ntp -Prelease clean deploy -pl morimail -am` without `-DskipTests` and says that tests run.
 
 ## Environment Availability
 
