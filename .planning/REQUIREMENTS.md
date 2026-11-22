@@ -81,7 +81,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
   - 403 and 404 become `SenderRejectedException`.
   - 400 and 413 become `PermanentMailException`.
 - [x] **GRAPH-07**: On a 401, the transport calls `freshAccessToken` once and repeats the call one time. If the second call also fails, the 401 maps to `SenderRejectedException` when the body points at the mailbox, and to `AuthRequiredException` otherwise. There are no other retries (§6.3).
-- [x] **GRAPH-08**: Exception messages include Graph's `error.code`, its message and the `request-id`, but never tokens or bodies (G3).
+- [x] **GRAPH-08**: Exception messages include Graph's `error.code` and the `request-id`, but never Graph's free-text `error.message` (it can name the sender, UAT G-03-2), tokens or bodies (G3).
 - [x] **GRAPH-09**: Graph HTTP requests have explicit connect and request timeouts (G1).
 
 ### Serial-Mail CLI Sample (CLI)
