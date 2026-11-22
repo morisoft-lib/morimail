@@ -80,7 +80,10 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
         Path attachmentDir = dir.resolve("attachments");
         if (Files.isDirectory(attachmentDir)) {
             try (Stream<Path> files = Files.list(attachmentDir)) {
-                files.filter(Files::isRegularFile).forEach(attachments::add);
+                // Hidden files such as .DS_Store are editor and OS leftovers, never attachments.
+                files.filter(Files::isRegularFile)
+                        .filter(file -> !file.getFileName().toString().startsWith("."))
+                        .forEach(attachments::add);
             } catch (IOException e) {
                 problems.add("attachments/ cannot be listed");
             }

@@ -227,6 +227,19 @@ class CampaignTest {
     }
 
     @Test
+    void hiddenFilesAreNotAttached() throws IOException {
+        Path dir = campaign("email\nanna@example.org\n");
+        Path attachments = Files.createDirectories(dir.resolve("attachments"));
+        Files.writeString(attachments.resolve("a.txt"), "a");
+        Files.writeString(attachments.resolve(".DS_Store"), "junk");
+
+        Campaign campaign = Campaign.read(dir, problems);
+
+        assertThat(campaign.attachments()).extracting(file -> file.getFileName().toString())
+                .containsExactly("a.txt");
+    }
+
+    @Test
     void missingAttachmentsDirectoryMeansNone() throws IOException {
         Path dir = campaign("email\nanna@example.org\n");
 
