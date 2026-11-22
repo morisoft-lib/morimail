@@ -55,18 +55,18 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 ### Entra Token Client (ENTRA)
 
 - [x] **ENTRA-01**: `EntraClientCredentials.withSecret(tenant, clientId, secret)` obtains a token by POSTing the form `client_id`, `scope`, `client_secret`, `grant_type=client_credentials` to `{authority}/{tenant}/oauth2/v2.0/token` (§7.1).
-- [ ] **ENTRA-02**: `withCertificate(tenant, clientId, privateKey, certificate)` sends a `client_assertion` JWT (§7.2):
+- [x] **ENTRA-02**: `withCertificate(tenant, clientId, privateKey, certificate)` sends a `client_assertion` JWT (§7.2):
   - Header: PS256 and `typ` JWT, plus `x5t#S256`, the base64url SHA-256 of the certificate's DER encoding.
   - Claims: `aud` is the token URL, `iss` and `sub` are the client ID, `jti` is a new GUID, `nbf` and `iat` are now, `exp` is at most 10 minutes later.
   - Signature: RSASSA-PSS with SHA-256, MGF1 SHA-256 and salt 32.
   - Encoding: base64url without padding; a new assertion is built per request.
-- [ ] **ENTRA-03**: `withCertificate(tenant, clientId, Path p12, password)` loads the key and certificate from a PKCS12 file. There is no PEM support (§7.2).
+- [x] **ENTRA-03**: `withCertificate(tenant, clientId, Path p12, password)` loads the key and certificate from a PKCS12 file. There is no PEM support (§7.2).
 - [x] **ENTRA-04**: The authority host is overridden with the copy method `authority(URI)`, which returns a new instance and defaults to the public cloud, so tests can point it at WireMock (§7.1 says "constructor option"; Phase 3 D-01 chose the copy method, recorded in `docs/architecture.md`).
-- [ ] **ENTRA-05**: The token is cached in memory and reused until 5 minutes before expiry. Concurrent callers trigger at most one token request at a time. Failed requests are not cached (§7.3).
-- [ ] **ENTRA-06**: `freshAccessToken` drops the cached token only if it equals the rejected token, then fetches a new one (CORE-02).
-- [ ] **ENTRA-07**: 4xx responses map to `AuthRequiredException` carrying `error` and `error_description`. 5xx, 429 and network or timeout errors map to `TransientMailException` (§7.3).
-- [ ] **ENTRA-08**: HTTP requests have explicit connect and request timeouts (G1).
-- [ ] **ENTRA-09**: The secret, the assertion and the token are never logged (§7.3).
+- [x] **ENTRA-05**: The token is cached in memory and reused until 5 minutes before expiry. Concurrent callers trigger at most one token request at a time. Failed requests are not cached (§7.3).
+- [x] **ENTRA-06**: `freshAccessToken` drops the cached token only if it equals the rejected token, then fetches a new one (CORE-02).
+- [x] **ENTRA-07**: 4xx responses map to `AuthRequiredException` carrying `error` and `error_description`. 5xx, 429 and network or timeout errors map to `TransientMailException` (§7.3).
+- [x] **ENTRA-08**: HTTP requests have explicit connect and request timeouts (G1).
+- [x] **ENTRA-09**: The secret, the assertion and the token are never logged (§7.3).
 
 ### Graph Transport (GRAPH)
 
@@ -103,8 +103,8 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 
 ### Test Assets (TEST)
 
-- [ ] **TEST-01**: A throwaway PKCS12 test keystore, created with `keytool` (legacy PKCS12, password `changeit`) and clearly named, is checked in under `src/test/resources`. It is explained in one README sentence **[decided]** (§10.1).
-- [ ] **TEST-02**: Entra tests:
+- [x] **TEST-01**: A throwaway PKCS12 test keystore, created with `keytool` (legacy PKCS12, password `changeit`) and clearly named, is checked in under `src/test/resources`. It is explained in one README sentence **[decided]** (§10.1).
+- [x] **TEST-02**: Entra tests:
   - Assertion: decode the JWT and check the header and claims; verify the signature with the certificate's public key independently.
   - WireMock: check the form fields for the secret and certificate flows; reuse on a second call; a refetch after expiry; error mapping; single-flight under concurrency; compare-and-drop invalidation (§10.1).
 - [ ] **TEST-03**: Graph tests against WireMock with a stub `TokenProvider` cover:
@@ -199,14 +199,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ERR-01 | Phase 1 | Complete |
 | ERR-02 | Phase 1 | Complete |
 | ENTRA-01 | Phase 3 | Complete |
-| ENTRA-02 | Phase 3 | Pending |
-| ENTRA-03 | Phase 3 | Pending |
+| ENTRA-02 | Phase 3 | Complete |
+| ENTRA-03 | Phase 3 | Complete |
 | ENTRA-04 | Phase 3 | Complete |
-| ENTRA-05 | Phase 3 | Pending |
-| ENTRA-06 | Phase 3 | Pending |
-| ENTRA-07 | Phase 3 | Pending |
-| ENTRA-08 | Phase 3 | Pending |
-| ENTRA-09 | Phase 3 | Pending |
+| ENTRA-05 | Phase 3 | Complete |
+| ENTRA-06 | Phase 3 | Complete |
+| ENTRA-07 | Phase 3 | Complete |
+| ENTRA-08 | Phase 3 | Complete |
+| ENTRA-09 | Phase 3 | Complete |
 | GRAPH-01 | Phase 3 | Complete |
 | GRAPH-02 | Phase 3 | Pending |
 | GRAPH-03 | Phase 3 | Pending |
@@ -230,8 +230,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-12 | Phase 2 | Complete |
 | CLI-13 | Phase 2 | Complete |
 | CLI-14 | Phase 3 | Pending |
-| TEST-01 | Phase 3 | Pending |
-| TEST-02 | Phase 3 | Pending |
+| TEST-01 | Phase 3 | Complete |
+| TEST-02 | Phase 3 | Complete |
 | TEST-03 | Phase 3 | Pending |
 | DOCS-01 | Phase 4 | Pending |
 | DOCS-02 | Phase 4 | Pending |

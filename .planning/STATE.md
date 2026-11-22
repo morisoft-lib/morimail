@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: Graph and Entra
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-11-22T08:53:38.634Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-11-22T09:00:06.400Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 03 execution started
-state_head: 2eda26761861a46803d11a312b903ea0c0508146
+state_head: 525cc37becefb6026ec0ae22358f6199a77e0636
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 16
-  completed_plans: 12
+  completed_plans: 13
   percent: 50
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-22)
 ## Current Position
 
 Phase: 03 (Graph and Entra) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-11-22 — Phase 03 execution started
 
@@ -69,6 +69,7 @@ Progress: [█████░░░░░] 50%
 | Phase 02 P03 | 5 min | 3 tasks | 5 files |
 | Phase 02 P04 | 3 min | 2 tasks | 10 files |
 | Phase 03 P01 | 25min | 2 tasks | 8 files |
+| Phase 03 P02 | 25min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -105,6 +106,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Example attachments are generated once outside the repository; only the committed bytes are the source of truth
 - [Phase 02]: UAT complete (rendered pages, PDF, PNG checked), SECURITY.md threats_open 0, verification re-run after code-review fixes passed; phase complete 2026-11-22
 - [Phase 03]: 03-01: tracer gaps stay as missing branches; unusable 200 token response raises AuthRequiredException until 03-02 fixes the rule
+- [Phase 03]: Unusable 2xx Entra token response (no access_token or non-positive expires_in) is AuthRequiredException
+- [Phase 03]: expires_in is clamped to one year so a hostile value cannot overflow the expiry arithmetic
 
 ### Pending Todos
 
@@ -128,6 +131,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T08:53:38.516Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-11-22T09:00:06.283Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
