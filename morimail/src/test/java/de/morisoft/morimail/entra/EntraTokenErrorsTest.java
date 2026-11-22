@@ -48,6 +48,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -205,6 +206,16 @@ class EntraTokenErrorsTest {
                     assertThat(message).contains("description: " + "x".repeat(300) + "...");
                     assertThat(message).doesNotContain("x".repeat(301));
                 });
+    }
+
+    @Test
+    @Timeout(10)
+    void aVeryLongDescriptionIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
+        stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "x".repeat(100_000) + "\"}");
+
+        assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .satisfies(e -> assertThat(e.getMessage()).contains("description: " + "x".repeat(300) + "..."));
     }
 
     @Test

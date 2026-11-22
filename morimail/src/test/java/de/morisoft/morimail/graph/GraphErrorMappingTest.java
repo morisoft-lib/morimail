@@ -46,6 +46,7 @@ import java.util.logging.Logger;
 import java.util.stream.Stream;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -335,6 +336,15 @@ class GraphErrorMappingTest {
 
         assertThat(messageOfFailedSend(wm))
                 .isEqualTo("Graph sendMail failed: HTTP 400, code line one line two, request-id -");
+    }
+
+    @Test
+    @Timeout(10)
+    void aVeryLongCodeIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody("a".repeat(100_000), "m"));
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code " + "a".repeat(300) + "..., request-id -");
     }
 
     @Test
