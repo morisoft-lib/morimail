@@ -75,14 +75,14 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [x] **GRAPH-03**: Attachments are sent as `#microsoft.graph.fileAttachment` with base64 `contentBytes` (§6.2).
 - [x] **GRAPH-04**: The options are `saveToSentItems` (boolean, default true, sent only when false) and `baseUrl` (default `https://graph.microsoft.com/v1.0`) **[decided]**. Unknown option keys are rejected (§6.1).
 - [x] **GRAPH-05**: `validate` rejects any attachment of 3 MB or more and attachments that together reach 3 MB, naming the file and the limit. It also rejects an estimated base64 request size above the limit, defined as one constant (§6.2).
-- [ ] **GRAPH-06**: Errors are mapped as follows (§6.3):
+- [x] **GRAPH-06**: Errors are mapped as follows (§6.3):
   - 429, 503 and 504 become `TransientMailException`, with `Retry-After` parsed when present.
   - Network and timeout errors become `TransientMailException`.
   - 403 and 404 become `SenderRejectedException`.
   - 400 and 413 become `PermanentMailException`.
-- [ ] **GRAPH-07**: On a 401, the transport calls `freshAccessToken` once and repeats the call one time. If the second call also fails, the 401 maps to `SenderRejectedException` when the body points at the mailbox, and to `AuthRequiredException` otherwise. There are no other retries (§6.3).
-- [ ] **GRAPH-08**: Exception messages include Graph's `error.code`, its message and the `request-id`, but never tokens or bodies (G3).
-- [ ] **GRAPH-09**: Graph HTTP requests have explicit connect and request timeouts (G1).
+- [x] **GRAPH-07**: On a 401, the transport calls `freshAccessToken` once and repeats the call one time. If the second call also fails, the 401 maps to `SenderRejectedException` when the body points at the mailbox, and to `AuthRequiredException` otherwise. There are no other retries (§6.3).
+- [x] **GRAPH-08**: Exception messages include Graph's `error.code`, its message and the `request-id`, but never tokens or bodies (G3).
+- [x] **GRAPH-09**: Graph HTTP requests have explicit connect and request timeouts (G1).
 
 ### Serial-Mail CLI Sample (CLI)
 
@@ -107,7 +107,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [x] **TEST-02**: Entra tests:
   - Assertion: decode the JWT and check the header and claims; verify the signature with the certificate's public key independently.
   - WireMock: check the form fields for the secret and certificate flows; reuse on a second call; a refetch after expiry; error mapping; single-flight under concurrency; compare-and-drop invalidation (§10.1).
-- [ ] **TEST-03**: Graph tests against WireMock with a stub `TokenProvider` cover:
+- [x] **TEST-03**: Graph tests against WireMock with a stub `TokenProvider` cover:
   - The URL, headers and JSON body with attachments.
   - `saveToSentItems`.
   - Every row of the error table.
@@ -212,10 +212,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRAPH-03 | Phase 3 | Complete |
 | GRAPH-04 | Phase 3 | Complete |
 | GRAPH-05 | Phase 3 | Complete |
-| GRAPH-06 | Phase 3 | Pending |
-| GRAPH-07 | Phase 3 | Pending |
-| GRAPH-08 | Phase 3 | Pending |
-| GRAPH-09 | Phase 3 | Pending |
+| GRAPH-06 | Phase 3 | Complete |
+| GRAPH-07 | Phase 3 | Complete |
+| GRAPH-08 | Phase 3 | Complete |
+| GRAPH-09 | Phase 3 | Complete |
 | CLI-01 | Phase 2 | Complete |
 | CLI-02 | Phase 2 | Complete |
 | CLI-03 | Phase 2 | Complete |
@@ -232,7 +232,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-14 | Phase 3 | Pending |
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 3 | Complete |
-| TEST-03 | Phase 3 | Pending |
+| TEST-03 | Phase 3 | Complete |
 | DOCS-01 | Phase 4 | Pending |
 | DOCS-02 | Phase 4 | Pending |
 | DOCS-03 | Phase 4 | Pending |

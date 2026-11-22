@@ -3,16 +3,16 @@ gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: Graph and Entra
 status: executing
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-11-22T09:06:13.157Z"
+stopped_at: Completed 03-04-PLAN.md
+last_updated: "2026-11-22T09:12:02.062Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 03 execution started
-state_head: 41fe019acb0cab7f84c44d3469c42d65db6c58b1
+state_head: 0519e6ca05726bd8e3429be63a45facd7d0f17b3
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 16
-  completed_plans: 14
+  completed_plans: 15
   percent: 50
 ---
 
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-11-22)
 ## Current Position
 
 Phase: 03 (Graph and Entra) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-11-22 — Phase 03 execution started
 
@@ -71,6 +71,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03 P01 | 25min | 2 tasks | 8 files |
 | Phase 03 P02 | 25min | 3 tasks | 6 files |
 | Phase 03 P03 | 20 min | 2 tasks | 5 files |
+| Phase 03 P04 | 25min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,8 @@ Recent decisions affecting current work:
 - [Phase 03]: expires_in is clamped to one year so a hostile value cannot overflow the expiry arithmetic
 - [Phase 03]: 03-03: Graph request body is built before the token is requested, so an unreadable attachment costs no token request and no POST
 - [Phase 03]: 03-03: Request-size estimate measures the body with the same ObjectMapper send uses, so it bounds the posted bytes by construction; an emoji counts 12 bytes (JSON escape pair), not 4
+- [Phase 03]: The graph transport retries a 401 once with a fresh token and makes no other retry; a second 401 is SenderRejectedException only when error.code contains mailbox
+- [Phase 03]: Graph failure messages carry only HTTP status, cleaned error.code, request-id and cleaned error.message; the raw body, request body and tokens never enter a message
 
 ### Pending Todos
 
@@ -134,6 +137,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T09:06:13.028Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-11-22T09:12:01.954Z
+Stopped at: Completed 03-04-PLAN.md
 Resume file: None
