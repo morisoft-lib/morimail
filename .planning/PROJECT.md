@@ -31,15 +31,18 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 - ✓ Docs: `docs/entra-setup.md` (admin guide, RBAC for Applications), `docs/architecture.md`, README quick start, `docs/release.md` (gpg-agent warm-up for `-B` deploys, tag the release commit) — Phase 4
 - ✓ Release 0.1.0: signed deploy validated by the Central Portal (30-entry bundle), tag `v0.1.0` on the CI-green release commit — Phase 4 (run by the owner)
 
+- ✓ Address scrub in `clean()` cuts at a word boundary, so an address straddling the 1000-character cut cannot leak its start (review WR-01) — v0.1.0 (Phase 4, 04-01)
+
+All of the above shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
+
 ### Active
 
-- [ ] Address scrub in `clean()` cuts at 1000 characters before replacing addresses, so an address straddling the cut can leak its start (review WR-01, advisory)
+- [ ] Inline images (CID), spec §10.3: `.inline(Path, contentId)`, two-way `cid:` checks in `build()`, Graph inline file attachments, sample `inline/` directory. Candidate for the next milestone (v0.2.0); requirements are defined by `/gsd-new-milestone`.
 
 ### Out of Scope
 
 - SMTP, SES, Gmail transports — later milestones; contracts must accept them without change
 - Delegated (user) OAuth, token store, interactive consent — later milestones
-- Inline images (CID) — milestone 6, the first after the MVP; `Attachment.contentId` is prepared
 - Attachments of 3 MB or more (upload session) — needs a draft-then-send flow and `Mail.ReadWrite`
 - HTML and text as two alternative parts on Graph — needs the MIME format; MVP sends HTML only
 - Queue integration, idempotency keys, expiry — the consumer wraps the mail in its own message
@@ -53,13 +56,12 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 
 ## Context
 
-- Greenfield. The repository holds only `LICENSE` (MIT, Stephan Wald), `.gitignore` and `spec.md`.
-- Repository: https://github.com/morisoft-lib/morimail (origin remote corrected from the old StephanWald URL on 2026-11-21). Public from the first commit; git history is permanent.
-- Published artifacts: `de.morisoft:morimail-parent` and `de.morisoft:morimail`. The sample and the test-jar are not published. Versions `0.1.0-SNAPSHOT` → first release `0.1.0`.
-- Microsoft docs to read before coding against an endpoint: Graph `user: sendMail`, large attachments, Entra client-credentials flow, certificate credentials (PS256, `x5t#S256`, not the older RS256/SHA-1 copy), app-only access, Exchange RBAC for Applications.
-- Spec §6.3's error table is a starting point. Verify it against real responses after the Graph phase; the owner runs the live test.
-- The default rate of 20 mails per minute is a guess. Check Exchange Online per-mailbox limits after the Graph phase.
-- The `.gitignore` ignores `*.jar`, which would exclude `.mvn/wrapper/maven-wrapper.jar`. Handle this when adding the Maven wrapper.
+- Shipped v0.1.0 (2026-11-22): about 3,350 lines of main Java and 10,600 lines in total with tests, in the library and the sample. Java 17, Maven 3.10.1 wrapper, Jackson 2.23.0 only at runtime, picocli in the sample, JUnit 6, AssertJ and WireMock for tests.
+- Repository: https://github.com/morisoft-lib/morimail. Public from the first commit; git history is permanent. The `v0.1.0` tag was set by the owner on the CI-green release commit; `main` is now at `0.2.0-SNAPSHOT`.
+- Published artifacts: `de.morisoft:morimail-parent` and `de.morisoft:morimail`. The sample and the test-jar are not published. The release build only works scoped (`-Prelease ... -pl morimail -am`, D-20).
+- Microsoft docs to read before coding against an endpoint: Graph `user: sendMail` and `fileAttachment` (inline properties are unverified), Entra client-credentials flow, certificate credentials (PS256, `x5t#S256`), Exchange RBAC for Applications.
+- The live test confirmed PS256, the 403/404 error rows and the binary MiB limits. The spec §6.3 table has a live-status column.
+- Known tech debt (v0.1.0 audit): a quoted local part is not redacted; `isHeaderSafe` duplicates Graph's `requireToken`; Entra messages can name app and tenant IDs; settable timeouts and authority/`baseUrl` keys in `account.properties` are deferred; `SerialMail` duplicates the Graph base URL constant; `TransportRegistry.load()` runs on every account build.
 
 ## Constraints
 
@@ -81,11 +83,13 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 | Sample CLI built before the Graph transport | Exercises the contracts against `RecordingTransport` first, so contract mistakes surface early | ✓ Good — Phase 2 drove the whole send loop through `Mailer` and `recording` with no library change |
 | Sample delivery is at-least-once; a damaged journal line resends its row | A mail in flight at a crash has no journal line; a duplicate beats a silently skipped recipient | ✓ Documented in `send --help` (Phase 2) |
 | Hand-written comma-only CSV reader, runnable jar via manifest classpath over `target/lib` | Rule 0: no CSV library, no shade plugin | ✓ Good (Phase 2) |
-| HTML only when both bodies are given on Graph (log once at INFO) | JSON sendMail carries one body; MIME later | — Pending |
-| Attachments limited to under 3 MB per file and in total | Upload session needs draft flow and `Mail.ReadWrite` | — Pending |
-| Recommend Exchange RBAC for Applications over tenant-wide Entra consent | Scopes sending to chosen mailboxes; the Entra grant must be removed or it overrides | — Pending |
-| Planning docs (`.planning/`) committed to the public repo | Owner's choice at initialization | — Pending |
-| Roadmap phases derived by the roadmapper rather than mirrored 1:1 from spec milestones | Owner's choice. The spec's order constraints (sample before Graph, stop after Graph/Entra) still apply | — Pending |
+| HTML only when both bodies are given on Graph (log once at INFO) | JSON sendMail carries one body; MIME later | ✓ Good — shipped in v0.1.0; revisit with a MIME transport |
+| Attachments limited to under 3 MiB per file and 4 MiB in total | Upload session needs draft flow and `Mail.ReadWrite` | ✓ Good — binary MiB limits confirmed live (Phase 4) |
+| Recommend Exchange RBAC for Applications over tenant-wide Entra consent | Scopes sending to chosen mailboxes; the Entra grant must be removed or it overrides | ✓ Good — documented in `docs/entra-setup.md` |
+| Planning docs (`.planning/`) committed to the public repo | Owner's choice at initialization | ✓ Good — hygiene scans kept them free of secrets; one GPG key id was caught and removed before push |
+| Roadmap phases derived by the roadmapper rather than mirrored 1:1 from spec milestones | Owner's choice. The spec's order constraints (sample before Graph, stop after Graph/Entra) still apply | ✓ Good — four vertical slices, the hard stop held |
+| Release build scoped to published modules (`-pl morimail -am`, D-20), test-jar reactor-only | The unattached test-jar cannot resolve in a full-reactor release build | ⚠️ Revisit — works, but easy to trip over |
+| Release 0.1.0 run by the owner from `docs/release.md` | Claude never publishes or tags | ✓ Good — Central Portal validated the 30-entry bundle |
 | `LICENSE` holder Stephan Wald, `SECURITY.md` contact stephan@morisoft.de | Spec defaults; confirm at the Graph checkpoint | ✓ Confirmed by the owner (Phase 3 UAT) |
 | Keep Claude Code's `Co-Authored-By` trailer | Spec §12 default; the owner may switch it off | ✓ Confirmed by the owner (Phase 3 UAT) |
 | Graph failure messages drop Graph's free-text `error.message` | It can name the sender address (404 ErrorInvalidUser seen live) | ✓ Good — G-03-2, confirmed live (Phase 3) |
@@ -110,4 +114,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-22 after Phase 4*
+*Last updated: 2026-11-22 after v0.1.0 milestone*
