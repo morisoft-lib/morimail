@@ -224,4 +224,30 @@ class FailureHandlingTest {
                 "[3/3] clara@example.org accepted",
                 "accepted 2, skipped 1, failed 0");
     }
+
+    @Test
+    void anUnexpectedRuntimeExceptionStopsTheRunWithCountsAndExitOne() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        MailAccount recording = SampleFixtures.recordingAccount();
+        // The sleep before the second mail fails, as an interrupted wait does.
+        List<Duration> waits = new ArrayList<>() {
+            @Override
+            public boolean add(Duration wait) {
+                throw new IllegalStateException("Interrupted while waiting");
+            }
+        };
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(recording), waits,
+                args(account, campaign));
+
+        assertThat(run.exit()).isEqualTo(1);
+        assertThat(run.outLines()).containsExactly(
+                "[1/3] anna@example.org accepted",
+                "accepted 1, skipped 0, failed 0");
+        assertThat(run.errLines()).containsExactly("Stopped: unexpected IllegalStateException: "
+                + "Interrupted while waiting. The last mail may have been sent; "
+                + "a rerun sends it again.");
+        assertThat(SampleFixtures.journalLines(campaign.resolve("journal.jsonl"))).hasSize(1);
+    }
 }

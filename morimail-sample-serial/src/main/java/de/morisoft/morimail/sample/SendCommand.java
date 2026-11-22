@@ -346,6 +346,11 @@ final class SendCommand implements Callable<Integer> {
             err.println("Stopped: cannot write the journal " + journalPath + ": " + e.getMessage()
                     + ". The last mail may have been sent; a rerun sends it again.");
             exit = 1;
+        } catch (RuntimeException e) {
+            err.println("Stopped: unexpected " + e.getClass().getSimpleName()
+                    + (e.getMessage() == null ? "" : ": " + e.getMessage())
+                    + ". The last mail may have been sent; a rerun sends it again.");
+            exit = 1;
         }
         out.println(counts(accepted, skipped, failed));
         out.flush();
