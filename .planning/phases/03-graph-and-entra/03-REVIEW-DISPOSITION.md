@@ -5,7 +5,7 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "`clean()` address regex is quadratic on a long, address-free token"
   - id: IN-01
     severity: info
@@ -13,7 +13,7 @@ findings:
     title: "The \"no addresses in exception messages\" claim is still a best-effort statement for `code` and `request-id`"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "No test shows that an address-bearing `request-id` is cleaned"
   - id: WR-02
     severity: warning
@@ -39,18 +39,18 @@ findings:
     severity: info
     disposition: fixed
     title: "Test gaps and one weak assertion"
-open: 3
+open: 1
 total: 9
-recorded: 2026-11-22T12:17:50.995Z
+recorded: 2026-11-22T16:09:22.511Z
 ---
 
 # Phase 03: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
+| WR-01 | warning | fixed | 03-REVIEW-FIX.md |
 | IN-01 | info | open | - |
-| IN-02 | info | open | - |
+| IN-02 | info | fixed | 03-REVIEW-FIX.md |
 | WR-02 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 03-REVIEW-FIX.md (not in the current review) |
 | IN-03 | info | fixed | 03-REVIEW-FIX.md (not in the current review) |
