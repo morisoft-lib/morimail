@@ -89,6 +89,11 @@ public final class EntraClientCredentials implements TokenProvider {
     private volatile Token cached;
 
     private record Token(String scope, String value, Instant usableUntil) {
+        /** Leaves the token value out, so no log line or dump can show it. */
+        @Override
+        public String toString() {
+            return "Token[scope=" + scope + ", usableUntil=" + usableUntil + "]";
+        }
     }
 
     private EntraClientCredentials(String tenantId, String clientId, String secret, PrivateKey privateKey,
