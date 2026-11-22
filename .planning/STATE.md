@@ -23,7 +23,7 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-22)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 03 — Graph and Entra
+**Current focus:** Phase 4 — Docs and Release Readiness
 
 ## Current Position
 
@@ -128,8 +128,9 @@ None yet.
 ### Blockers/Concerns
 
 - [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
-- [Phase 3]: PS256 acceptance, the §6.3 error table, the request-size ceiling (about 4 MB, LOW confidence) and the `from` display name can only be proven by the owner's live test. Research flagged Phase 3 for deeper research.
-- [Checkpoint]: The owner still has to confirm the `LICENSE` holder, the `SECURITY.md` contact, the `Co-Authored-By` trailer, the `saveToSentItems` default in the sample, and the 20/min rate default.
+- [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
+- [Phase 3]: Review WR-01 (advisory): `clean()` cuts at 1000 characters before replacing addresses, so a contrived address straddling the cut leaks its start. Small fix: cut at a token boundary plus one test per class.
+- [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
 - [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached.
 - [Phase 4]: The Central `excludeArtifacts` behaviour for the test-jar classifier is unverified. Confirm it with the `-DskipUpload=true` rehearsal.
 
@@ -143,6 +144,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T12:15:59.142Z
+Last session: 2026-11-22T17:20:00Z
 Stopped at: Phase 03 complete, ready to plan Phase 4
 Resume file: None

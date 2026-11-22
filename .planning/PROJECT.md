@@ -26,12 +26,14 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 - ✓ Serial-mail CLI (picocli): account.properties, campaign dir, pre-flight check (exit 2), journal + resume, rate limit, transient retry ×3, stop on sender/auth errors (exit 3), dry-run output, counts and exit codes — Phase 2 (real sending waits for the Graph transport, Phase 3)
 - ✓ Example campaign with three placeholders, two small generated attachments (PDF, PNG), five `example.org` rows — Phase 2
 
+- ✓ Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`, accepted by Entra live), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping — Phase 3
+- ✓ Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, size limits in `validate` (binary MiB, confirmed live), error mapping (403/404 rows confirmed live), one retry after 401 with a fresh token; failure messages carry status, code and request-id only — Phase 3
+- ✓ `mvn verify` passes with no network access (CI `unshare --net` step, Temurin 17); live test tagged `live`, enabled with `-Plive`, run by the owner — Phase 3
+
 ### Active
 
-- [ ] Entra client-credentials token client on the JDK: secret and certificate (PS256 JWT assertion with `x5t#S256`), PKCS12 convenience loader, in-memory cache with 5-minute margin, single-flight, invalidation for 401 handling, error mapping
-- [ ] Graph transport: `POST /users/{from}/sendMail`, JSON body, file attachments base64, `saveToSentItems` option, 3 MB per-file and total limit in `validate`, error mapping table, one retry after 401 with a fresh token
 - [ ] Docs: `docs/entra-setup.md` (admin guide, RBAC for Applications recommended), `docs/architecture.md`, README quick start
-- [ ] `mvn verify` passes with no network access; live test tagged `live`, enabled with `-Plive`, run by the owner only
+- [ ] Address scrub in `clean()` cuts at 1000 characters before replacing addresses, so an address straddling the cut can leak its start (review WR-01, advisory)
 
 ### Out of Scope
 
@@ -75,7 +77,7 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| No MSAL4J, no Graph SDK, no JWT library | REST calls plus JDK crypto are enough; keeps the jar to Jackson only | — Pending |
+| No MSAL4J, no Graph SDK, no JWT library | REST calls plus JDK crypto are enough; keeps the jar to Jackson only | ✓ Good — PS256 assertion accepted by Entra live (Phase 3) |
 | Sample CLI built before the Graph transport | Exercises the contracts against `RecordingTransport` first, so contract mistakes surface early | ✓ Good — Phase 2 drove the whole send loop through `Mailer` and `recording` with no library change |
 | Sample delivery is at-least-once; a damaged journal line resends its row | A mail in flight at a crash has no journal line; a duplicate beats a silently skipped recipient | ✓ Documented in `send --help` (Phase 2) |
 | Hand-written comma-only CSV reader, runnable jar via manifest classpath over `target/lib` | Rule 0: no CSV library, no shade plugin | ✓ Good (Phase 2) |
@@ -84,8 +86,11 @@ A consumer can send one templated mail with attachments through Microsoft Graph 
 | Recommend Exchange RBAC for Applications over tenant-wide Entra consent | Scopes sending to chosen mailboxes; the Entra grant must be removed or it overrides | — Pending |
 | Planning docs (`.planning/`) committed to the public repo | Owner's choice at initialization | — Pending |
 | Roadmap phases derived by the roadmapper rather than mirrored 1:1 from spec milestones | Owner's choice. The spec's order constraints (sample before Graph, stop after Graph/Entra) still apply | — Pending |
-| `LICENSE` holder Stephan Wald, `SECURITY.md` contact stephan@morisoft.de | Spec defaults; confirm at the Graph checkpoint | — Pending |
-| Keep Claude Code's `Co-Authored-By` trailer | Spec §12 default; the owner may switch it off | — Pending |
+| `LICENSE` holder Stephan Wald, `SECURITY.md` contact stephan@morisoft.de | Spec defaults; confirm at the Graph checkpoint | ✓ Confirmed by the owner (Phase 3 UAT) |
+| Keep Claude Code's `Co-Authored-By` trailer | Spec §12 default; the owner may switch it off | ✓ Confirmed by the owner (Phase 3 UAT) |
+| Graph failure messages drop Graph's free-text `error.message` | It can name the sender address (404 ErrorInvalidUser seen live) | ✓ Good — G-03-2, confirmed live (Phase 3) |
+| `Retry-After` read as seconds only | Matches Graph throttling docs; reverses D-10 after review IN-05 | ✓ Accepted by the owner (Phase 3) |
+| Sample default rate 20 mails per minute | A guess pending Exchange limits | ✓ Accepted by the owner (Phase 3) |
 
 ## Evolution
 
@@ -105,4 +110,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-22 after Phase 2*
+*Last updated: 2026-11-22 after Phase 3*
