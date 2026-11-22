@@ -3,7 +3,7 @@ status: testing
 phase: 03-graph-and-entra
 source: [03-VERIFICATION.md]
 started: 2026-11-22T09:27:25Z
-updated: 2026-11-22T09:27:25Z
+updated: 2026-11-22T10:08:13Z
 ---
 
 ## Current Test
@@ -36,12 +36,16 @@ result: [pending]
 expected: Findings reported back before Phase 4 starts
 result: [pending]
 
+### 6. Confirm that Retry-After is read as seconds only (the review fix for IN-05 reversed phase decision D-10, which read seconds and HTTP dates)
+expected: Findings reported back before Phase 4 starts
+result: [pending]
+
 ## Summary
 
-total: 5
+total: 6
 passed: 0
 issues: 0
-pending: 5
+pending: 6
 skipped: 0
 blocked: 0
 
