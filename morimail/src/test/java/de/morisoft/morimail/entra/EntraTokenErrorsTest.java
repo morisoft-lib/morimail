@@ -219,6 +219,16 @@ class EntraTokenErrorsTest {
     }
 
     @Test
+    void anAddressAfterALongWhitespaceRunLeavesNoPartOfItInTheMessage(WireMockRuntimeInfo wm) {
+        stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + " ".repeat(995)
+                + "alice@example.org\"}");
+
+        assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .satisfies(e -> assertThat(e.getMessage()).endsWith("description: <address>"));
+    }
+
+    @Test
     void aConnectionResetIsTransientWithTheIoCause(WireMockRuntimeInfo wm) {
         stubFor(post(urlEqualTo(TOKEN_PATH)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
 

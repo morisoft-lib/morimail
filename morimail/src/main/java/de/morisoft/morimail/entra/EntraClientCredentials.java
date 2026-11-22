@@ -380,9 +380,10 @@ public final class EntraClientCredentials implements TokenProvider {
             char c = value.charAt(i);
             spaced.append(Character.isISOControl(c) ? ' ' : c);
         }
-        // Cut before the address pattern runs: it is quadratic on a long token without "@".
-        String text = (spaced.length() > 1000 ? spaced.substring(0, 1000) : spaced.toString())
-                .replaceAll("\\s+", " ")
+        // Collapse first, then cut, then replace addresses: the address pattern is quadratic on a long
+        // token without "@", and a cut before collapsing could split an address and leave its start.
+        String collapsed = spaced.toString().replaceAll("\\s+", " ");
+        String text = (collapsed.length() > 1000 ? collapsed.substring(0, 1000) : collapsed)
                 .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";

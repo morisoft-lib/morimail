@@ -365,6 +365,14 @@ class GraphErrorMappingTest {
     }
 
     @Test
+    void anAddressAfterALongWhitespaceRunLeavesNoPartOfItInTheMessage(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody(" ".repeat(995) + "alice@example.org", "m"));
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code <address>, request-id -");
+    }
+
+    @Test
     void aMailAddressInTheCodeIsReplaced(WireMockRuntimeInfo wm) {
         stubError(404, null, errorBody("'x@example.org' <y@example.org>", "m"));
 

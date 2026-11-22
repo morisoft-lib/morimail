@@ -313,8 +313,10 @@ final class GraphTransport implements MailTransport {
             char c = value.charAt(i);
             sb.append(Character.isISOControl(c) || Character.isWhitespace(c) ? ' ' : c);
         }
-        // Cut before the address pattern runs: it is quadratic on a long token without "@".
-        String text = (sb.length() > 1000 ? sb.substring(0, 1000) : sb.toString()).replaceAll(" {2,}", " ")
+        // Collapse first, then cut, then replace addresses: the address pattern is quadratic on a long
+        // token without "@", and a cut before collapsing could split an address and leave its start.
+        String collapsed = sb.toString().replaceAll(" {2,}", " ");
+        String text = (collapsed.length() > 1000 ? collapsed.substring(0, 1000) : collapsed)
                 .replaceAll("[^\\s'\"<>]+@[^\\s'\"<>]+", "<address>").trim();
         if (text.isEmpty()) {
             return "-";
