@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 03-graph-and-entra
 source: [03-VERIFICATION.md]
 started: 2026-11-22T09:27:25Z
@@ -62,8 +62,19 @@ blocked: 0
   reason: "User reported: pass, log the address issue. Live 404 ErrorInvalidUser: Graph's error message names the sender address, and GraphTransport.failure copies the message into the SenderRejectedException text, so the LiveGraphTest output line shows the address despite its Javadoc and consumers logging the exception write the address at ERROR."
   severity: major
   test: 2
-  artifacts: []
-  missing: []
+  root_cause: "GraphTransport.failure (GraphTransport.java:271-272) builds the exception message from status, error.code, request-id AND error.message (clean(text)). Graph's error.message is free text that can name the sender (404 ErrorInvalidUser: \"The requested user '<address>' is invalid.\"), so the address reaches every exception message, the LiveGraphTest output line, and in the sample the stderr summary (SendCommand.java:101-102, 204) and the journal errorMessage field (Journal.java:112-113)."
+  artifacts:
+    - path: "morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java"
+      issue: "failure() appends Graph's error.message verbatim to the exception text"
+    - path: "morimail/src/test/java/de/morisoft/morimail/graph/GraphErrorMappingTest.java"
+      issue: "no test asserts that an address in error.message stays out of the exception message"
+    - path: "morimail/src/test/java/de/morisoft/morimail/LiveGraphTest.java"
+      issue: "Javadoc (line 41) promises no address in output; true only once failure() is fixed"
+  missing:
+    - "Drop error.message from the exception text (keep HTTP status, error.code, request-id), the simplest fix under Rule 0"
+    - "A GraphErrorMappingTest case: a 404 body whose error.message contains an example.com address; assert the exception message does not contain it"
+    - "Note the change in docs/architecture.md next to the 6.3 error table row"
+  debug_session: ""
 
 - gap_id: G-03-4
   truth: "./mvnw verify, the release build and the network-free unshare --net step all pass on Temurin 17 in GitHub Actions"
@@ -71,5 +82,12 @@ blocked: 0
   reason: "User reported: push it and watch the CI run for me. CI run 45016998414 failed on both attempts: EntraTokenErrorsTest.nothingSecretReachesALogOrAMessage (line 451) throws ConcurrentModificationException. The test adds a Handler to the root logger at Level.ALL that appends to plain ArrayLists (seen, loggers) while JDK HttpClient and WireMock threads keep logging, and the test iterates the list concurrently. Passes locally on JDK 21; fails reliably on CI. Release build and unshare --net steps were skipped, so they remain unverified."
   severity: blocker
   test: 4
-  artifacts: []
-  missing: []
+  root_cause: "EntraTokenErrorsTest.nothingSecretReachesALogOrAMessage (EntraTokenErrorsTest.java:393-422) installs a Handler on the root logger at Level.ALL whose publish() appends to two plain ArrayLists (seen, loggers). JDK HttpClient selector threads and WireMock/Jetty threads keep publishing records while the test thread iterates seen at line 451, so ArrayList's iterator throws ConcurrentModificationException. Timing on the slower CI runner makes it fail reliably; on the local JDK 21 box it happens to pass. Test-only race, no library defect."
+  artifacts:
+    - path: "morimail/src/test/java/de/morisoft/morimail/entra/EntraTokenErrorsTest.java"
+      issue: "unsynchronized lists shared between logging threads and the asserting thread; iteration while the handler is still attached"
+  missing:
+    - "Remove the handler (and restore the level) before asserting, then assert on a snapshot, or collect into thread-safe lists (CopyOnWriteArrayList / Collections.synchronizedList with a copy before iterating)"
+    - "Check the rest of the test sources for the same root-logger Handler pattern and fix it the same way"
+    - "Push and confirm CI run green on Temurin 17, including the release build and the unshare --net step that were skipped"
+  debug_session: ""
