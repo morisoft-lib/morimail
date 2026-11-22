@@ -4,12 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import de.morisoft.morimail.graph.GraphTransportProvider;
 import de.morisoft.morimail.test.RecordingTransportProvider;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ServiceConfigurationError;
+import java.util.ServiceLoader;
 import org.junit.jupiter.api.Test;
 
 class TransportRegistryTest {
@@ -205,5 +207,33 @@ class TransportRegistryTest {
     void loadFindsRecordingThroughServiceLoader() {
         assertThat(TransportRegistry.load().find("recording"))
                 .isInstanceOf(RecordingTransportProvider.class);
+    }
+
+    @Test
+    void builtInGraphResolvesWithoutAServiceLoaderEntry() {
+        assertThat(TransportRegistry.load().find("graph")).isInstanceOf(GraphTransportProvider.class);
+        assertThat(BuiltInTransports.providers()).hasSize(1);
+        assertThatThrownBy(() -> BuiltInTransports.providers().add(new FirstProvider("x")))
+                .isInstanceOf(UnsupportedOperationException.class);
+        List<String> serviceLoaderIds = ServiceLoader.load(TransportProvider.class).stream()
+                .map(provider -> provider.get().id())
+                .toList();
+        assertThat(serviceLoaderIds).contains("recording").doesNotContain("graph");
+    }
+
+    @Test
+    void externalGraphIsRejectedAsDuplicateOfTheBuiltIn() {
+        assertThatThrownBy(() -> TransportRegistry.of(BuiltInTransports.providers(),
+                List.of(new FirstProvider("graph"))))
+                .isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(GraphTransportProvider.class.getName())
+                .hasMessageEndingWith("(built-in)");
+    }
+
+    @Test
+    void unknownIdListsTheBuiltInGraph() {
+        assertThatThrownBy(() -> TransportRegistry.load().find("nope"))
+                .isExactlyInstanceOf(IllegalArgumentException.class)
+                .hasMessageEndingWith("Available: graph, recording");
     }
 }

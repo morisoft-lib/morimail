@@ -60,10 +60,14 @@ class ImportRulesTest {
             checkMentions(file, code, GRAPH_PACKAGE, !builtIn, violations);
             checkMentions(file, code, ENTRA_PACKAGE, true, violations);
         }
-        for (Path file : javaFiles(module.resolve(CORE).resolve("graph"), Integer.MAX_VALUE)) {
+        List<Path> graphFiles = javaFiles(module.resolve(CORE).resolve("graph"), Integer.MAX_VALUE);
+        List<Path> entraFiles = javaFiles(module.resolve(CORE).resolve("entra"), Integer.MAX_VALUE);
+        assertThat(graphFiles).as("graph files").isNotEmpty();
+        assertThat(entraFiles).as("entra files").isNotEmpty();
+        for (Path file : graphFiles) {
             checkMentions(file, withoutComments(file), ENTRA_PACKAGE, true, violations);
         }
-        for (Path file : javaFiles(module.resolve(CORE).resolve("entra"), Integer.MAX_VALUE)) {
+        for (Path file : entraFiles) {
             checkMentions(file, withoutComments(file), GRAPH_PACKAGE, true, violations);
         }
 

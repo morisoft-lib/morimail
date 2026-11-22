@@ -1,5 +1,6 @@
 package de.morisoft.morimail;
 
+import de.morisoft.morimail.graph.GraphTransportProvider;
 import java.util.List;
 
 /**
@@ -15,11 +16,11 @@ final class BuiltInTransports {
     }
 
     /**
-     * Returns the built-in providers. No built-in transport exists yet.
+     * Returns the built-in providers: the Microsoft Graph transport, id {@code graph}.
      *
      * @return an unmodifiable list of providers
      */
     static List<TransportProvider> providers() {
-        return List.of();
+        return List.of(new GraphTransportProvider());
     }
 }

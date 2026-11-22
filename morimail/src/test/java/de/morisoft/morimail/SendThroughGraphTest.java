@@ -9,6 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlMatching;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -117,5 +118,31 @@ class SendThroughGraphTest {
         assertThatThrownBy(() -> transport.send(textMail("newsletter@example.com")))
                 .isExactlyInstanceOf(SenderRejectedException.class)
                 .hasMessageContaining("HTTP 403");
+    }
+
+    @Test
+    void graphAccountSendsThroughTheRegistry(WireMockRuntimeInfo wm) throws MailException {
+        stubToken();
+        stubFor(post(urlEqualTo("/v1.0/users/newsletter%40example.com/sendMail"))
+                .withHeader("Authorization", equalTo("Bearer tracer-token"))
+                .willReturn(aResponse().withStatus(202)));
+        MailAccount account = MailAccount.builder("main")
+                .transport("graph")
+                .auth(credentials(wm))
+                .option("baseUrl", wm.getHttpBaseUrl() + "/v1.0")
+                .defaultFrom("newsletter@example.com")
+                .build();
+        Mailer mailer = Mailer.of(account);
+        Mail mail = Mail.using("main").to("reader@example.org").subject("Hello").text("Plain text body").build();
+
+        mailer.validate(mail);
+        assertThat(findAll(postRequestedFor(urlMatching(".*")))).isEmpty();
+
+        mailer.send(mail);
+
+        verify(exactly(1), postRequestedFor(urlEqualTo(TOKEN_PATH)));
+        verify(exactly(1), postRequestedFor(urlEqualTo("/v1.0/users/newsletter%40example.com/sendMail")));
+        assertThat(account.transport().getClass().getName())
+                .isEqualTo("de.morisoft.morimail.graph.GraphTransport");
     }
 }
