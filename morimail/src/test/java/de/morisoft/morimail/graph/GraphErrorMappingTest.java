@@ -179,6 +179,20 @@ class GraphErrorMappingTest {
         assertThat(sends()).isEmpty();
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"secret token", "secret\r\nInjected: x", "secret\u00e4"})
+    void aTokenThatIsNoHeaderValueSendsNothingAndIsNeverQuoted(String token, WireMockRuntimeInfo wm)
+            throws Exception {
+        stubFor(post(urlEqualTo(SEND_PATH)).willReturn(aResponse().withStatus(202)));
+        TokenProvider bad = scope -> token;
+
+        assertThatThrownBy(() -> transport(wm, bad).send(mail()))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .hasMessage("the token provider returned an access token that is not a valid header value");
+
+        assertThat(sends()).isEmpty();
+    }
+
     @Test
     void aFailureMessageHasStatusCodeRequestIdAndMessageInThatOrder(WireMockRuntimeInfo wm) throws Exception {
         stubFor(post(urlEqualTo(SEND_PATH)).willReturn(aResponse().withStatus(403)

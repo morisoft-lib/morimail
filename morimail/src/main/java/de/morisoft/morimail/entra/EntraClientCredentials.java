@@ -333,6 +333,10 @@ public final class EntraClientCredentials implements TokenProvider {
                 throw new AuthRequiredException("Entra token response is not usable: HTTP " + status
                         + " without access_token and expires_in");
             }
+            if (!isHeaderSafe(token)) {
+                throw new AuthRequiredException("Entra token response is not usable: HTTP " + status
+                        + " with an access_token that is not a valid header value");
+            }
             return new Token(scope, token, clock.instant().plusSeconds(expiresIn).minus(EXPIRY_MARGIN));
         }
         if (status == 429 || status >= 500 && status <= 599) {
@@ -378,6 +382,17 @@ public final class EntraClientCredentials implements TokenProvider {
             return text.substring(0, end) + "...";
         }
         return text;
+    }
+
+    /** True when the token has only printable ASCII, so it can go into an Authorization header. */
+    private static boolean isHeaderSafe(String token) {
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
+            if (c <= ' ' || c > '~') {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static long expiresIn(JsonNode json) {

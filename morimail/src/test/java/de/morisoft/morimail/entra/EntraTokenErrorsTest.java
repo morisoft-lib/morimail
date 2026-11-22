@@ -155,6 +155,17 @@ class EntraTokenErrorsTest {
                 .hasMessageContaining("not usable");
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"secret token", "secret\\r\\nInjected: x", "secret\\u00e4"})
+    void anAccessTokenThatIsNoHeaderValueIsAuthRequiredAndNeverQuoted(String token, WireMockRuntimeInfo wm) {
+        stubStatus(200, "{\"access_token\":\"" + token + "\",\"expires_in\":3599}");
+
+        assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .hasMessageContaining("not a valid header value")
+                .satisfies(e -> assertThat(e.getMessage()).doesNotContain("secret"));
+    }
+
     @Test
     void aLongDescriptionIsCutToThreeHundredCharacters(WireMockRuntimeInfo wm) {
         stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "x".repeat(1000) + "\"}");

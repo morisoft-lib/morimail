@@ -208,6 +208,14 @@ final class GraphTransport implements MailTransport {
         if (token == null || token.isEmpty()) {
             throw new AuthRequiredException("the token provider returned no access token");
         }
+        // A control character or blank would make the JDK throw an exception that quotes the whole header.
+        for (int i = 0; i < token.length(); i++) {
+            char c = token.charAt(i);
+            if (c <= ' ' || c > '~') {
+                throw new AuthRequiredException(
+                        "the token provider returned an access token that is not a valid header value");
+            }
+        }
         return token;
     }
 
