@@ -1,5 +1,6 @@
 package de.morisoft.morimail.graph;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -28,6 +29,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -182,16 +184,37 @@ final class GraphTransport implements MailTransport {
     @Override
     public void send(MailMessage m) throws MailException {
         byte[] json = requestBody(m);
-        String token = auth.accessToken(SCOPE);
-        HttpRequest request = HttpRequest.newBuilder(sendMailUri(m.from().email()))
+        URI uri = sendMailUri(m.from().email());
+        String token = requireToken(auth.accessToken(SCOPE));
+        HttpResponse<byte[]> response = post(uri, token, json);
+        if (response.statusCode() == 401) {
+            // The one retry the library makes (spec 6.3): the token may have expired or been revoked.
+            token = requireToken(auth.freshAccessToken(SCOPE, token));
+            response = post(uri, token, json);
+        }
+        int status = response.statusCode();
+        if (status >= 200 && status <= 299) {
+            return;
+        }
+        throw failure(response);
+    }
+
+    private static String requireToken(String token) throws AuthRequiredException {
+        if (token == null || token.isEmpty()) {
+            throw new AuthRequiredException("the token provider returned no access token");
+        }
+        return token;
+    }
+
+    private HttpResponse<byte[]> post(URI uri, String token, byte[] body) throws TransientMailException {
+        HttpRequest request = HttpRequest.newBuilder(uri)
                 .header("Authorization", "Bearer " + token)
                 .header("Content-Type", "application/json")
                 .timeout(requestTimeout)
-                .POST(BodyPublishers.ofByteArray(json))
+                .POST(BodyPublishers.ofByteArray(body))
                 .build();
-        HttpResponse<byte[]> response;
         try {
-            response = http.send(request, BodyHandlers.ofByteArray());
+            return http.send(request, BodyHandlers.ofByteArray());
         } catch (IOException e) {
             throw new TransientMailException("Graph sendMail failed: no response ("
                     + e.getClass().getSimpleName() + ")", e);
@@ -199,20 +222,51 @@ final class GraphTransport implements MailTransport {
             Thread.currentThread().interrupt();
             throw new TransientMailException("Graph sendMail failed: interrupted", e);
         }
-        int status = response.statusCode();
-        if (status >= 200 && status <= 299) {
-            return;
+    }
+
+    /**
+     * True when the Graph error code names a mailbox. A second 401 with such a code means the sender has
+     * no usable mailbox, not that the credentials are wrong.
+     */
+    static boolean mailboxHint(String errorCode) {
+        return errorCode != null && errorCode.toLowerCase(Locale.ROOT).contains("mailbox");
+    }
+
+    /** Maps the answer of a failed call (a 401 reaches this only after the one retry) to its exception; the message never holds the raw body. */
+    private MailException failure(HttpResponse<byte[]> r) {
+        int status = r.statusCode();
+        String code = null;
+        String text = null;
+        try {
+            JsonNode root = MAPPER.readTree(r.body());
+            JsonNode error = root == null ? null : root.get("error");
+            if (error != null && error.isObject()) {
+                code = textOf(error.get("code"));
+                text = textOf(error.get("message"));
+            }
+        } catch (IOException | RuntimeException e) {
+            // Not JSON: the fields stay empty.
         }
-        String failure = "Graph sendMail failed: HTTP " + status;
+        String requestId = r.headers().firstValue("request-id").orElse(null);
+        String message = "Graph sendMail failed: HTTP " + status + ", code " + orDash(code)
+                + ", request-id " + orDash(requestId) + ", message: " + orDash(text);
+        if (status == 401) {
+            return mailboxHint(code) ? new SenderRejectedException(message) : new AuthRequiredException(message);
+        }
         if (status == 403 || status == 404) {
-            throw new SenderRejectedException(failure);
+            return new SenderRejectedException(message);
         }
         if (status == 429 || status >= 500 && status <= 599) {
-            throw new TransientMailException(failure);
+            return new TransientMailException(message);
         }
-        if (status == 401) {
-            throw new AuthRequiredException(failure);
-        }
-        throw new PermanentMailException(failure);
+        return new PermanentMailException(message);
+    }
+
+    private static String textOf(JsonNode node) {
+        return node != null && node.isTextual() ? node.asText() : null;
+    }
+
+    private static String orDash(String value) {
+        return value == null ? "-" : value;
     }
 }
