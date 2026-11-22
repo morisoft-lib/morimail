@@ -2,17 +2,17 @@
 gsd_state_version: "1.0"
 current_phase: 03
 current_phase_name: Graph and Entra
-status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-11-22T09:12:02.062Z"
+status: verifying
+stopped_at: Completed 03-05-PLAN.md; Phase 3 done, STOP for owner live test
+last_updated: "2026-11-22T09:18:36.663Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 03 execution started
-state_head: 0519e6ca05726bd8e3429be63a45facd7d0f17b3
+state_head: a730bf87f7f4dcc8ab260ebe9d73cfe95778428a
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 16
-  completed_plans: 15
+  completed_plans: 16
   percent: 50
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-11-22)
 
 Phase: 03 (Graph and Entra) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-22 — Phase 03 execution started
 
 Progress: [█████░░░░░] 50%
@@ -72,6 +72,7 @@ Progress: [█████░░░░░] 50%
 | Phase 03 P02 | 25min | 3 tasks | 6 files |
 | Phase 03 P03 | 20 min | 2 tasks | 5 files |
 | Phase 03 P04 | 25min | 3 tasks | 2 files |
+| Phase 03 P05 | 45min | 3 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -114,6 +115,8 @@ Recent decisions affecting current work:
 - [Phase 03]: 03-03: Request-size estimate measures the body with the same ObjectMapper send uses, so it bounds the posted bytes by construction; an emoji counts 12 bytes (JSON escape pair), not 4
 - [Phase 03]: The graph transport retries a 401 once with a fresh token and makes no other retry; a second 401 is SenderRejectedException only when error.code contains mailbox
 - [Phase 03]: Graph failure messages carry only HTTP status, cleaned error.code, request-id and cleaned error.message; the raw body, request body and tokens never enter a message
+- [Phase 03]: 03-05: No new account.properties key and no defaultFrom on the sample account; key-store path and load failures are fixed texts naming keys only
+- [Phase 03]: 03-05: CI network-free step uses unshare --net with setpriv back to the runner user; not rehearsable in this workspace
 
 ### Pending Todos
 
@@ -137,6 +140,6 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T09:12:01.954Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-11-22T09:18:36.491Z
+Stopped at: Completed 03-05-PLAN.md; Phase 3 done, STOP for owner live test
 Resume file: None

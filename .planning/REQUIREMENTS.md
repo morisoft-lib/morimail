@@ -16,7 +16,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [x] **REPO-05**: The library jar manifest has `Automatic-Module-Name: de.morisoft.morimail`. There is no `module-info.java`.
 - [x] **REPO-06**: The repository holds `LICENSE` (MIT), a `README.md` stub (pre-1.0 status, coordinates), `SECURITY.md` (private reporting channel), `CLAUDE.md` with the §11 rules, and `docs/spec.md`, moved from the root (§4, §13.1).
 - [x] **REPO-07**: The GitHub Actions CI runs `mvn verify` and `mvn -Prelease verify -Dgpg.skip -pl morimail -am` (release build scoped to the published modules, D-20 in `phases/01-library-core/01-CONTEXT.md`) on push and pull request, on Java 17. It uses no secrets and `permissions: contents: read` (§13.1).
-- [ ] **REPO-08**: `mvn verify` passes with no network access. A JUnit test tagged `live` is excluded by default and enabled with `-Plive`; the owner runs it, configured through environment variables (§10.1).
+- [x] **REPO-08**: `mvn verify` passes with no network access. A JUnit test tagged `live` is excluded by default and enabled with `-Plive`; the owner runs it, configured through environment variables (§10.1).
 - [x] **REPO-09**: `release` profile with the source, Javadoc (doclint, fail on warnings), GPG and `central-publishing-maven-plugin` plugins (`autoPublish=false`). The test-jar is built for reactor use only, with `attach=false` under `release` **[decided]**. The sample sets `skipPublishing`, `maven.deploy.skip` and the source/javadoc/gpg skips, so only `morimail-parent` and `morimail` are staged (§13.3).
 - [x] **REPO-10**: Public types have Javadoc that states thread safety and builds cleanly under doclint from the first phase (§11, §13.3).
 - [x] **REPO-11**: Public-repo hygiene. No secrets, tenant IDs, real addresses or hosts appear in any file or commit; examples use `example.com`/`example.org` and zero GUIDs. Every commit has author and committer Stephan Wald <stephan@morisoft.de>, overriding the workspace's `GIT_*` environment variables (§11, §13.4).
@@ -99,7 +99,7 @@ Binding detail lives in `spec.md` (later `docs/spec.md`). Section references are
 - [x] **CLI-11**: `--dry-run` writes `out/<n>-<email>.html`, `.txt` and `.subject.txt` with sanitised file names and lists the attachments. It touches neither the network nor the journal and works without the secret or certificate env vars (§8.3, G7).
 - [x] **CLI-12**: The command logic takes a `Mailer`, so tests run it against `recording` (journal, resume, skip on rerun, stop on auth error, pre-flight report, dry-run) (§10.1).
 - [x] **CLI-13**: The example campaign in `morimail-sample-serial/example-campaign/` has three placeholders, a generated PDF and PNG (each under 100 KB, neutral metadata) and five `example.org` rows (§8.1).
-- [ ] **CLI-14**: The sample runs end to end against WireMock for both the token endpoint and Graph, through the registry-built Graph account (§10.2 milestone 4).
+- [x] **CLI-14**: The sample runs end to end against WireMock for both the token endpoint and Graph, through the registry-built Graph account (§10.2 milestone 4).
 
 ### Test Assets (TEST)
 
@@ -175,7 +175,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REPO-05 | Phase 1 | Complete |
 | REPO-06 | Phase 1 | Complete |
 | REPO-07 | Phase 1 | Complete |
-| REPO-08 | Phase 3 | Pending |
+| REPO-08 | Phase 3 | Complete |
 | REPO-09 | Phase 1 | Complete |
 | REPO-10 | Phase 1 | Complete |
 | REPO-11 | Phase 1 | Complete |
@@ -229,7 +229,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-11 | Phase 2 | Complete |
 | CLI-12 | Phase 2 | Complete |
 | CLI-13 | Phase 2 | Complete |
-| CLI-14 | Phase 3 | Pending |
+| CLI-14 | Phase 3 | Complete |
 | TEST-01 | Phase 3 | Complete |
 | TEST-02 | Phase 3 | Complete |
 | TEST-03 | Phase 3 | Complete |
