@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Library Core** - Templated mail built, validated and sent through a `Mailer` account to the `recording` transport, on a CI-checked, release-shaped build (completed 2026-11-21)
 - [x] **Phase 2: Serial-Mail Sample** - The `serial-mail` CLI dry-runs and sends a CSV campaign against `recording`, with pre-flight, journal, resume, rate limit and exit codes (completed 2026-11-22)
-- [ ] **Phase 3: Graph and Entra** - Entra client-credentials tokens and the built-in Graph transport, wired through the registry and run end to end against WireMock; ends at the owner's live-test STOP
+- [x] **Phase 3: Graph and Entra** - Entra client-credentials tokens and the built-in Graph transport, wired through the registry and run end to end against WireMock; ends at the owner's live-test STOP (completed 2026-11-22)
 - [ ] **Phase 4: Docs and Release Readiness** - Live-test findings applied, then the setup guide, architecture page, README quick start and a release rehearsal the owner can publish from
 
 > **HARD STOP between Phase 3 and Phase 4 (spec §10.2, milestone 4).** When Phase 3 is verified and committed, report to the owner and stop. The owner runs the `live` test and feeds sanitised real responses back. Phase 4 does not start before that report. See the checkpoint block under Phase 3.
@@ -108,7 +108,7 @@ Scope notes:
   3. A `graph` account built through the registry, with no `ServiceLoader` entry, sends the expected `POST /users/{from}/sendMail` to WireMock. The request has a percent-encoded from, a bearer token, recipients, an HTML-or-text body and base64 file attachments, and carries `saveToSentItems` only when it is false. A 202 returns normally. Attachments at or above 3 MB (per file or in total) and unknown options are rejected.
   4. Every row of the error table maps to its documented exception. The message carries Graph's `error.code` and `request-id`, never Graph's free-text message (it can name the sender, G-03-2), tokens or bodies. A 401 triggers exactly one retry, carrying a fresh token, before it is mapped.
   5. `serial-mail send` runs the example campaign end to end against WireMock for both the token endpoint and Graph, and `./mvnw verify` passes offline. A `live`-tagged test is skipped by default and is ready for the owner to run with `-Plive` and environment variables.
-**Plans:** 6/6 plans executed (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05; wave 5: 03-06 gap closure)
+**Plans:** 6/6 plans complete (wave 1: 03-01; wave 2: 03-02, 03-03; wave 3: 03-04; wave 4: 03-05; wave 5: 03-06 gap closure)
 
 Plans:
 **Wave 1**
@@ -181,5 +181,5 @@ Phases execute in numeric order: 1 → 2 → 3 → STOP (owner live test) → 4
 |-------|----------------|--------|-----------|
 | 1. Library Core | 7/7 | Complete    | 2026-11-21 |
 | 2. Serial-Mail Sample | 4/4 | Complete    | 2026-11-22 |
-| 3. Graph and Entra | 6/6 | In Progress | - |
+| 3. Graph and Entra | 6/6 | Complete    | 2026-11-22 |
 | 4. Docs and Release Readiness | 0/0 | Not started | - |
