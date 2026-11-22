@@ -6,7 +6,7 @@ Setup is in [docs/entra-setup.md](docs/entra-setup.md). The contracts and the de
 
 ## Status
 
-morimail is pre-1.0. The API may change between minor versions. It is not yet released to Maven Central.
+morimail is pre-1.0. The API may change between minor versions.
 
 ## Coordinates
 
@@ -18,7 +18,7 @@ morimail is pre-1.0. The API may change between minor versions. It is not yet re
 </dependency>
 ```
 
-0.1.0 is the first planned release and is not published yet.
+0.1.0 is the first release, published on Maven Central.
 
 ## Quick start
 
