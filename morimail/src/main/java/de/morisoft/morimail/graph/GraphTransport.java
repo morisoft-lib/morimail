@@ -84,6 +84,12 @@ final class GraphTransport implements MailTransport {
         return (size + 2) / 3 * 4;
     }
 
+    /**
+     * Checks the attachment and request size limits. The request size is an estimate: it counts the
+     * attachments as base64, the body and a fixed allowance, but not the subject, the recipients or
+     * the attachment names, so a mail near the limit can still be refused by the service. The 3 MiB
+     * and 4 MiB limits are readings of the Graph documentation, not confirmed by a live probe.
+     */
     @Override
     public void validate(MailMessage m) throws InvalidMailException {
         long total = 0;
