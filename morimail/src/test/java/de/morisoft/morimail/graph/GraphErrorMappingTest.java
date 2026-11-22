@@ -358,11 +358,19 @@ class GraphErrorMappingTest {
     // A single word longer than the cut has no word boundary, so none of it is kept.
     @Test
     @Timeout(10)
-    void aVeryLongCodeIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
+    void aSingleWordOverTheCutIsDroppedQuickly(WireMockRuntimeInfo wm) {
         stubError(400, null, errorBody("a".repeat(100_000), "m"));
 
         assertThat(messageOfFailedSend(wm))
                 .isEqualTo("Graph sendMail failed: HTTP 400, code -, request-id -");
+    }
+
+    @Test
+    void aLongTextWithSpacesIsCutAtAWordBoundaryAndThenAtThreeHundredCharacters(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody("word ".repeat(300), "m"));
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code " + "word ".repeat(60) + "..., request-id -");
     }
 
     @Test

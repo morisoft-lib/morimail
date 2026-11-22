@@ -211,12 +211,21 @@ class EntraTokenErrorsTest {
     // A single word longer than the cut has no word boundary, so none of it is kept.
     @Test
     @Timeout(10)
-    void aVeryLongDescriptionIsCutAndCleanedQuickly(WireMockRuntimeInfo wm) {
+    void aSingleWordOverTheCutIsDroppedQuickly(WireMockRuntimeInfo wm) {
         stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "x".repeat(100_000) + "\"}");
 
         assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
                 .isExactlyInstanceOf(AuthRequiredException.class)
                 .satisfies(e -> assertThat(e.getMessage()).endsWith("description: -"));
+    }
+
+    @Test
+    void aLongTextWithSpacesIsCutAtAWordBoundaryAndThenAtThreeHundredCharacters(WireMockRuntimeInfo wm) {
+        stubStatus(400, "{\"error\":\"invalid_request\",\"error_description\":\"" + "word ".repeat(300) + "\"}");
+
+        assertThatThrownBy(() -> secret(wm).accessToken(SCOPE))
+                .isExactlyInstanceOf(AuthRequiredException.class)
+                .satisfies(e -> assertThat(e.getMessage()).endsWith("description: " + "word ".repeat(60) + "..."));
     }
 
     @Test
