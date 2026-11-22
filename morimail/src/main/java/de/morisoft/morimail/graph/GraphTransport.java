@@ -27,10 +27,6 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.Duration;
-import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -287,19 +283,10 @@ final class GraphTransport implements MailTransport {
         return new PermanentMailException(message);
     }
 
-    /** The {@code Retry-After} header as a delay (seconds or an HTTP date), or null when absent or unreadable. */
+    /** The {@code Retry-After} header as a delay in seconds, or null when absent or not a number of seconds. */
     private static Duration retryAfter(HttpHeaders headers) {
         String value = headers.firstValue("Retry-After").map(String::trim).orElse("");
-        if (value.matches("[0-9]{1,9}")) {
-            return Duration.ofSeconds(Long.parseLong(value));
-        }
-        try {
-            Duration wait = Duration.between(Instant.now(),
-                    ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant());
-            return wait.isNegative() ? Duration.ZERO : wait;
-        } catch (DateTimeParseException e) {
-            return null;
-        }
+        return value.matches("[0-9]{1,9}") ? Duration.ofSeconds(Long.parseLong(value)) : null;
     }
 
     private static String textOf(JsonNode node) {

@@ -175,17 +175,6 @@ class EntraTokenCacheTest {
     }
 
     @Test
-    void expiresInAsStringIsCached(WireMockRuntimeInfo wm) throws MailException {
-        stubToken("string-ttl", "\"3599\"");
-        EntraClientCredentials credentials = secret(wm, new MutableClock());
-
-        credentials.accessToken(SCOPE);
-        credentials.accessToken(SCOPE);
-
-        assertThat(requests()).isEqualTo(1);
-    }
-
-    @Test
     void eightThreadsOnAnEmptyCacheMakeOneRequest(WireMockRuntimeInfo wm) throws Exception {
         stubFor(post(urlEqualTo(TOKEN_PATH)).willReturn(okJson(body("shared", "3599")).withFixedDelay(300)));
         EntraClientCredentials credentials = secret(wm, new MutableClock());

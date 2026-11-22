@@ -32,9 +32,6 @@ import java.security.spec.PSSParameterSpec;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -369,18 +366,9 @@ public final class EntraClientCredentials implements TokenProvider {
                 + clean(text(json, "error")) + ", description: " + clean(text(json, "error_description")));
     }
 
-    private Duration retryAfter(HttpHeaders headers) {
+    private static Duration retryAfter(HttpHeaders headers) {
         String value = headers.firstValue("Retry-After").map(String::trim).orElse("");
-        if (value.matches("\\d{1,9}")) {
-            return Duration.ofSeconds(Long.parseLong(value));
-        }
-        try {
-            Instant at = ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();
-            Duration wait = Duration.between(clock.instant(), at);
-            return wait.isNegative() ? Duration.ZERO : wait;
-        } catch (DateTimeParseException e) {
-            return null;
-        }
+        return value.matches("\\d{1,9}") ? Duration.ofSeconds(Long.parseLong(value)) : null;
     }
 
     private static String clean(String value) {
@@ -420,7 +408,7 @@ public final class EntraClientCredentials implements TokenProvider {
 
     private static long expiresIn(JsonNode json) {
         JsonNode node = json == null ? null : json.get("expires_in");
-        if (node != null && (node.isNumber() || node.isTextual() && node.asText().matches("\\d{1,9}"))) {
+        if (node != null && node.isNumber()) {
             return Math.max(-1, Math.min(node.asLong(), MAX_EXPIRES_IN_SECONDS));
         }
         return 0;

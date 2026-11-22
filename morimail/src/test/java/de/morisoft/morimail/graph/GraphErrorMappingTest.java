@@ -243,7 +243,7 @@ class GraphErrorMappingTest {
 
     @ParameterizedTest
     @MethodSource("retryAfterValues")
-    void retryAfterIsReadAsSecondsOrAsADate(int status, String header, String expected,
+    void retryAfterIsReadAsSecondsOnly(int status, String header, String expected,
             WireMockRuntimeInfo wm) throws Exception {
         ResponseDefinitionBuilder response = aResponse().withStatus(status);
         if (header != null) {
@@ -257,7 +257,6 @@ class GraphErrorMappingTest {
         Optional<Duration> delay = ((TransientMailException) thrown).retryAfter();
         switch (expected) {
             case "none" -> assertThat(delay).isEmpty();
-            case "positive" -> assertThat(delay).hasValueSatisfying(d -> assertThat(d).isPositive());
             default -> assertThat(delay).contains(Duration.parse(expected));
         }
     }
@@ -265,8 +264,7 @@ class GraphErrorMappingTest {
     static Stream<Arguments> retryAfterValues() {
         return Stream.of(
                 Arguments.of(429, "7", "PT7S"),
-                Arguments.of(429, "Thu, 01 Jan 2099 00:00:00 GMT", "positive"),
-                Arguments.of(429, "Wed, 21 Oct 2015 07:28:00 GMT", "PT0S"),
+                Arguments.of(429, "Thu, 01 Jan 2099 00:00:00 GMT", "none"),
                 Arguments.of(429, "soon", "none"),
                 Arguments.of(503, "30", "PT30S"),
                 Arguments.of(504, null, "none"));

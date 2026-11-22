@@ -109,8 +109,7 @@ class EntraTokenErrorsTest {
     @ParameterizedTest
     @CsvSource(delimiter = '|', nullValues = "-", value = {
         "429|7|PT7S",
-        "429|Thu, 01 Jan 2026 00:02:00 GMT|PT2M",
-        "429|Wed, 31 Dec 2025 23:59:00 GMT|PT0S",
+        "429|Thu, 01 Jan 2026 00:02:00 GMT|-",
         "429|soon|-",
         "503|30|PT30S",
         "500|-|-"})
@@ -146,7 +145,8 @@ class EntraTokenErrorsTest {
         "not json",
         "{\"token_type\":\"Bearer\",\"expires_in\":3599}",
         "{\"access_token\":\"x\",\"token_type\":\"Bearer\"}",
-        "{\"access_token\":\"x\",\"expires_in\":0}"})
+        "{\"access_token\":\"x\",\"expires_in\":0}",
+        "{\"access_token\":\"x\",\"expires_in\":\"3599\"}"})
     void anUnusableSuccessIsAuthRequired(String body, WireMockRuntimeInfo wm) {
         stubStatus(200, body);
 
