@@ -242,19 +242,24 @@ final class GraphTransport implements MailTransport {
         int status = r.statusCode();
         String code = null;
         String text = null;
+        String requestId = r.headers().firstValue("request-id").orElse(null);
         try {
-            JsonNode root = MAPPER.readTree(r.body());
-            JsonNode error = root == null ? null : root.get("error");
+            JsonNode error = MAPPER.readTree(r.body()).get("error");
             if (error != null && error.isObject()) {
                 code = textOf(error.get("code"));
                 text = textOf(error.get("message"));
+                if (requestId == null) {
+                    requestId = textOf(innerRequestId(error.get("innerError")));
+                }
+                if (requestId == null) {
+                    requestId = textOf(innerRequestId(error.get("innererror")));
+                }
             }
         } catch (IOException | RuntimeException e) {
-            // Not JSON: the fields stay empty.
+            // Not JSON, or not the expected shape: the fields stay empty.
         }
-        String requestId = r.headers().firstValue("request-id").orElse(null);
-        String message = "Graph sendMail failed: HTTP " + status + ", code " + orDash(code)
-                + ", request-id " + orDash(requestId) + ", message: " + orDash(text);
+        String message = "Graph sendMail failed: HTTP " + status + ", code " + clean(code)
+                + ", request-id " + clean(requestId) + ", message: " + clean(text);
         if (status == 401) {
             return mailboxHint(code) ? new SenderRejectedException(message) : new AuthRequiredException(message);
         }
@@ -287,7 +292,31 @@ final class GraphTransport implements MailTransport {
         return node != null && node.isTextual() ? node.asText() : null;
     }
 
-    private static String orDash(String value) {
-        return value == null ? "-" : value;
+    private static JsonNode innerRequestId(JsonNode inner) {
+        return inner == null ? null : inner.get("request-id");
+    }
+
+    /**
+     * Makes a text from the server safe for a message: control characters become spaces, whitespace runs
+     * collapse, the result is cut at 300 characters (never inside a surrogate pair), and nothing becomes "-".
+     */
+    static String clean(String value) {
+        if (value == null) {
+            return "-";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            sb.append(Character.isISOControl(c) || Character.isWhitespace(c) ? ' ' : c);
+        }
+        String text = sb.toString().replaceAll(" {2,}", " ").trim();
+        if (text.isEmpty()) {
+            return "-";
+        }
+        if (text.length() <= 300) {
+            return text;
+        }
+        int end = Character.isHighSurrogate(text.charAt(299)) ? 299 : 300;
+        return text.substring(0, end) + "...";
     }
 }

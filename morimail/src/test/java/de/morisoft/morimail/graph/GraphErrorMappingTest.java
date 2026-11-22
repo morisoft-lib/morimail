@@ -1,6 +1,7 @@
 package de.morisoft.morimail.graph;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
@@ -12,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
@@ -25,11 +27,24 @@ import de.morisoft.morimail.PermanentMailException;
 import de.morisoft.morimail.SenderRejectedException;
 import de.morisoft.morimail.TokenProvider;
 import de.morisoft.morimail.TransientMailException;
+import java.io.IOException;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
+import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -266,5 +281,226 @@ class GraphErrorMappingTest {
         assertThatThrownBy(() -> transport.send(mail())).isInstanceOf(TransientMailException.class);
 
         assertThat(sends()).hasSize(2);
+    }
+
+    // Task 3: clean and private messages, network errors, timeouts, parallel sends.
+
+    private static void stubError(int status, String requestIdHeader, String body) {
+        ResponseDefinitionBuilder response = aResponse().withStatus(status).withBody(body);
+        if (requestIdHeader != null) {
+            response.withHeader("request-id", requestIdHeader);
+        }
+        stubFor(post(urlEqualTo(SEND_PATH)).willReturn(response));
+    }
+
+    private String messageOfFailedSend(WireMockRuntimeInfo wm) {
+        Throwable thrown = catchThrowable(() -> transport(wm).send(mail()));
+        assertThat(thrown).isInstanceOf(MailException.class);
+        return thrown.getMessage();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"innerError", "innererror"})
+    void theRequestIdComesFromTheInnerErrorWhenTheHeaderIsMissing(String field, WireMockRuntimeInfo wm) {
+        stubError(500, null, "{\"error\":{\"code\":\"C\",\"message\":\"m\",\"" + field
+                + "\":{\"request-id\":\"rid-inner\"}}}");
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 500, code C, request-id rid-inner, message: m");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "<html>Sentinel-body-7f3a</html>", "{}", "{\"error\":{}}", "{\"error\":\"text\"}"})
+    void aBodyWithoutErrorFieldsGivesDashesAndNeverShowsTheBody(String body, WireMockRuntimeInfo wm) {
+        stubError(500, null, body);
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 500, code -, request-id -, message: -");
+    }
+
+    @Test
+    void controlCharactersBecomeSingleSpaces(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody("C", "line one\\r\\nline\\ttwo\\u0007"));
+
+        assertThat(messageOfFailedSend(wm))
+                .isEqualTo("Graph sendMail failed: HTTP 400, code C, request-id -, message: line one line two");
+    }
+
+    @Test
+    void aLongMessageIsCutAt300CharactersPlusDots(WireMockRuntimeInfo wm) {
+        stubError(400, null, errorBody("C", "a".repeat(1000)));
+
+        assertThat(messageOfFailedSend(wm)).endsWith("message: " + "a".repeat(300) + "...");
+    }
+
+    @Test
+    void aCutNeverSplitsASurrogatePair(WireMockRuntimeInfo wm) {
+        // Characters 300 and 301 (1-based) are the two halves of one emoji.
+        stubError(400, null, errorBody("C", "a".repeat(299) + "\\ud83d\\ude00" + "b".repeat(100)));
+
+        assertThat(messageOfFailedSend(wm)).endsWith("message: " + "a".repeat(299) + "...");
+    }
+
+    @Test
+    void noTokenSubjectBodyOrBearerReachesAMessageOrALogRecord(WireMockRuntimeInfo wm) throws Exception {
+        StubTokenProvider secret = new StubTokenProvider("Sentinel-token-7f3a", "Sentinel-token-7f3a-fresh");
+        MailMessage message = Mail.using("main").from("newsletter@example.com").to("reader@example.org")
+                .subject("Sentinel-subject-7f3a").text("Plain").build().message();
+        List<LogRecord> records = new ArrayList<>();
+        Logger logger = Logger.getLogger("de.morisoft.morimail.graph.GraphTransport");
+        Level before = logger.getLevel();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add(record);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() {
+            }
+        };
+        handler.setLevel(Level.ALL);
+        logger.setLevel(Level.ALL);
+        logger.addHandler(handler);
+        List<String> messages = new ArrayList<>();
+        try {
+            for (int status : new int[] {401, 403, 429, 500, 400}) {
+                for (String body : new String[] {"<html>Sentinel-body-7f3a</html>", errorBody("ErrorX", "gone")}) {
+                    stubError(status, ZERO_ID, body);
+                    messages.add(catchThrowable(() -> transport(wm, secret).send(message)).getMessage());
+                }
+            }
+        } finally {
+            logger.removeHandler(handler);
+            logger.setLevel(before);
+        }
+
+        assertThat(messages).hasSize(10).allSatisfy(m -> assertThat(m)
+                .doesNotContain("Sentinel-body-7f3a", "Sentinel-token-7f3a", "Sentinel-subject-7f3a", "Bearer"));
+        assertThat(records).allSatisfy(r -> assertThat(r.getMessage())
+                .doesNotContain("Sentinel", "Bearer", "example.org", "example.com"));
+    }
+
+    @Test
+    void aResetConnectionIsTransientWithTheCause(WireMockRuntimeInfo wm) {
+        stubFor(post(urlEqualTo(SEND_PATH)).willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER)));
+
+        Throwable thrown = catchThrowable(() -> transport(wm).send(mail()));
+
+        assertThat(thrown).isInstanceOf(TransientMailException.class).hasCauseInstanceOf(IOException.class);
+        assertThat(thrown.getMessage()).isEqualTo("Graph sendMail failed: no response ("
+                + thrown.getCause().getClass().getSimpleName() + ")");
+    }
+
+    @Test
+    void aSlowAnswerIsATransientTimeout(WireMockRuntimeInfo wm) {
+        stubFor(post(urlEqualTo(SEND_PATH)).willReturn(aResponse().withStatus(202).withFixedDelay(2000)));
+        GraphTransport quick = new GraphTransport(wm.getHttpBaseUrl() + "/v1.0", true, stub,
+                Duration.ofMillis(500));
+
+        assertThatThrownBy(() -> quick.send(mail()))
+                .isInstanceOf(TransientMailException.class)
+                .hasCauseInstanceOf(HttpTimeoutException.class);
+    }
+
+    @Test
+    void theRequestAfterA401HasTheSameTimeout(WireMockRuntimeInfo wm) {
+        stubBearer("t1", 401, errorBody("InvalidAuthenticationToken", "Expired"));
+        stubFor(post(urlEqualTo(SEND_PATH)).withHeader("Authorization", equalTo("Bearer t2"))
+                .willReturn(aResponse().withStatus(202).withFixedDelay(2000)));
+        GraphTransport quick = new GraphTransport(wm.getHttpBaseUrl() + "/v1.0", true, stub,
+                Duration.ofMillis(500));
+
+        assertThatThrownBy(() -> quick.send(mail()))
+                .isInstanceOf(TransientMailException.class)
+                .hasCauseInstanceOf(HttpTimeoutException.class);
+        assertThat(sends()).hasSize(2);
+    }
+
+    private static MailMessage mailTo(String recipient) throws InvalidMailException {
+        return Mail.using("main").from("newsletter@example.com").to(recipient)
+                .subject("Hello").text("Plain").build().message();
+    }
+
+    /** Runs the calls on separate threads that start together; a hang fails the test after 20 seconds. */
+    private static List<Throwable> inParallel(ThrowingCallable... calls) throws Exception {
+        ExecutorService pool = Executors.newFixedThreadPool(calls.length);
+        CountDownLatch start = new CountDownLatch(1);
+        try {
+            List<Future<Throwable>> futures = new ArrayList<>();
+            for (ThrowingCallable call : calls) {
+                futures.add(pool.submit(() -> {
+                    start.await();
+                    return catchThrowable(call);
+                }));
+            }
+            start.countDown();
+            List<Throwable> results = new ArrayList<>();
+            for (Future<Throwable> future : futures) {
+                results.add(future.get(20, TimeUnit.SECONDS));
+            }
+            return results;
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    @Test
+    void parallelSendsGetTheirOwnMapping(WireMockRuntimeInfo wm) throws Exception {
+        stubFor(post(urlEqualTo(SEND_PATH)).withRequestBody(containing("rejected@example.org"))
+                .willReturn(aResponse().withStatus(403)));
+        stubFor(post(urlEqualTo(SEND_PATH)).withRequestBody(containing("fine@example.org"))
+                .willReturn(aResponse().withStatus(202)));
+        MailTransport transport = transport(wm);
+
+        List<Throwable> results = inParallel(
+                () -> transport.send(mailTo("rejected@example.org")),
+                () -> transport.send(mailTo("fine@example.org")));
+
+        assertThat(results.get(0)).isInstanceOf(SenderRejectedException.class);
+        assertThat(results.get(1)).isNull();
+    }
+
+    @Test
+    void parallelFailuresCarryTheirOwnCodeAndRequestId(WireMockRuntimeInfo wm) throws Exception {
+        stubFor(post(urlEqualTo(SEND_PATH)).withRequestBody(containing("a@example.org"))
+                .willReturn(aResponse().withStatus(400).withHeader("request-id", "rid-a")
+                        .withBody(errorBody("CodeA", "first"))));
+        stubFor(post(urlEqualTo(SEND_PATH)).withRequestBody(containing("b@example.org"))
+                .willReturn(aResponse().withStatus(400).withHeader("request-id", "rid-b")
+                        .withBody(errorBody("CodeB", "second"))));
+        MailTransport transport = transport(wm);
+
+        List<Throwable> results = inParallel(
+                () -> transport.send(mailTo("a@example.org")),
+                () -> transport.send(mailTo("b@example.org")));
+
+        assertThat(results.get(0)).hasMessage(
+                "Graph sendMail failed: HTTP 400, code CodeA, request-id rid-a, message: first");
+        assertThat(results.get(1)).hasMessage(
+                "Graph sendMail failed: HTTP 400, code CodeB, request-id rid-b, message: second");
+    }
+
+    @Test
+    void twoThreadsRejectedWithTheSameTokenEachRetryOnce(WireMockRuntimeInfo wm) throws Exception {
+        stubBearer("t1", 401, errorBody("InvalidAuthenticationToken", "Expired"));
+        stubBearer("t2", 202, "");
+        MailTransport transport = transport(wm);
+
+        List<Throwable> results = inParallel(
+                () -> transport.send(mailTo("a@example.org")),
+                () -> transport.send(mailTo("b@example.org")));
+
+        assertThat(results).containsOnlyNulls();
+        assertThat(sends()).hasSize(4);
+        assertThat(sends().stream().filter(r -> "Bearer t1".equals(r.getHeader("Authorization"))).count())
+                .isEqualTo(2);
+        assertThat(sends().stream().filter(r -> "Bearer t2".equals(r.getHeader("Authorization"))).count())
+                .isEqualTo(2);
+        assertThat(stub.freshCalls()).isEqualTo(2);
     }
 }
