@@ -52,16 +52,16 @@ notes: "2026-11-22: live main test with a mailbox-less sender printed 'Graph sen
 
 ### 8. Optional: re-run secure-phase 03
 expected: T-03-19 in 03-SECURITY.md assumed address-free messages; 03-06 makes that true for Graph, so the threat can be re-confirmed
-result: skipped
-reason: "Optional; owner skipped. /gsd-secure-phase 03 already re-ran after 03-06 (commit 3138ea3, threats_open 0, T-03-19 closed)."
+result: pass
+notes: "Owner accepts the secure-phase re-run after 03-06 (commit 3138ea3, threats_open 0, T-03-19 closed)."
 
 ## Summary
 
 total: 8
-passed: 5
+passed: 6
 issues: 2
 pending: 0
-skipped: 1
+skipped: 0
 blocked: 0
 
 ## Gaps
