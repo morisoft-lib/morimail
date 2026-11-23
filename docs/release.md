@@ -64,7 +64,7 @@ Steps 1 to 3 are one-time. If you already released any version, check that the n
    NEXT=0.4.0-SNAPSHOT
    ```
 
-   Steps 5 to 8 use `VERSION`, and step 8 also uses `NEXT`. Set them again in every new shell.
+   Steps 7 and 8 use `VERSION`, and step 8 also uses `NEXT`. Step 5 needs neither; it names `${VERSION}` only in the bundle listing. Set them again in every new shell.
 
 2. Change the four POM versions from `${VERSION}-SNAPSHOT` to `${VERSION}`. On macOS use `sed -i ''`.
 
@@ -159,12 +159,12 @@ git push origin "v${VERSION}"
 
 ## 8. Bump to the next SNAPSHOT
 
-1. Set the four versions to the next SNAPSHOT:
+1. Set the four versions to the next SNAPSHOT. On macOS use `sed -i ''`.
 
    ```
    sed -i "s#<version>${VERSION}</version>#<version>${NEXT}</version>#" pom.xml morimail/pom.xml morimail-html/pom.xml morimail-sample-serial/pom.xml
    ```
 
 2. `git diff` must show exactly four changed lines.
-3. In `README.md`, change the sentence under Coordinates that names the current release on Maven Central so that it names `${VERSION}`. Check that both dependency blocks show `${VERSION}`, and change them if they do not.
+3. In `README.md`, rewrite the text under Coordinates that names the current release on Maven Central. Name `${VERSION}` and say what that release adds; the old text describes the previous release. Check that both dependency blocks show `${VERSION}`, and change them if they do not.
 4. Run `./mvnw -B -ntp verify`, commit, and push.
