@@ -80,7 +80,8 @@ import java.util.regex.Pattern;
  * <p>An {@code <img>} element inside an HTML comment (for example an Outlook conditional
  * comment) is rewritten like any other, and a source that fails there fails the call. The check
  * that a file is an image uses the file name and the platform's type detection, not the file
- * content.
+ * content. An {@code <img>} tag whose attributes have no whitespace between them, such as
+ * {@code <img alt="x"src="logo.png">}, is not recognized and stays unchanged.
  *
  * <p>This class is stateless and thread-safe, so it is safe for concurrent use.
  */
