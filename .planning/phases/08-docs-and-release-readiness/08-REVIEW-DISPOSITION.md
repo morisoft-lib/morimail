@@ -5,8 +5,12 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: fixed
-    title: "release.md presents one-time first-release setup as part of every release"
+    disposition: open
+    title: "SNAPSHOT guard fails open when grep errors"
+  - id: WR-02
+    severity: warning
+    disposition: open
+    title: "Procedure defaults and wording still target the already-released 0.2.0"
   - id: IN-01
     severity: info
     disposition: fixed
@@ -27,21 +31,22 @@ findings:
     severity: info
     disposition: fixed
     title: "Dry-run rewrite writes the file name into an HTML attribute without escaping quotes"
-open: 0
-total: 6
-recorded: 2026-11-23T20:46:28.620Z
+open: 2
+total: 7
+recorded: 2026-11-23T21:29:09.415Z
 ---
 
 # Phase 08: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 08-REVIEW-FIX.md |
-| IN-01 | info | fixed | 08-REVIEW-FIX.md |
-| IN-02 | info | fixed | 08-REVIEW-FIX.md |
-| IN-03 | info | fixed | 08-REVIEW-FIX.md |
-| IN-04 | info | fixed | 08-REVIEW-FIX.md |
-| IN-05 | info | fixed | 08-REVIEW-FIX.md |
+| WR-01 | warning | open | - |
+| WR-02 | warning | open | - |
+| IN-01 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
+| IN-02 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
+| IN-03 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
+| IN-04 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
+| IN-05 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
