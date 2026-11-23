@@ -1,7 +1,7 @@
 ---
 phase: 08-docs-and-release-readiness
-verified: 2026-11-23T22:30:00Z
-status: human_needed
+verified: 2026-11-23T23:55:00Z
+status: passed
 score: 5/5 roadmap success criteria verified
 covered_files:
   - ".planning/phases/08-docs-and-release-readiness/08-01-PLAN.md"
@@ -16,50 +16,43 @@ covered_files:
   - "docs/spec.md"
   - "morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/SendCommand.java"
   - "morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/SendCommandHelpTest.java"
-covered_digest: "v4:sha256:7ac55f5ff71c368e4038e6759866b2c275f063c919787fa687ef9f67dfa209b2"
+covered_digest: "v4:sha256:b73f69174d8c1713006c616a0972e40381bc742baf86bb40359a38faa3f29980"
 behavior_unverified: 0
 overrides_applied: 0
 re_verification:
   previous_status: human_needed
   previous_score: 5/5
   gaps_closed:
-    - "G-08-2 (UAT test 2): release.md step 5 deployed at a SNAPSHOT version and uploaded to Central's snapshots repository (401). Closed by 08-03 (2ad672c): both deploy commands are chained behind a SNAPSHOT guard and the SNAPSHOT bullet states the plugin behaviour."
+    - "Previous advisory WR-01 (release.md SNAPSHOT guard failed open on a grep error): fixed in da6bc67; guard is now `grep -- -SNAPSHOT ...; [ $? -eq 1 ] &&`"
+    - "Previous advisory WR-02 (release.md defaults still named the released 0.2.0): fixed in 088d37d; defaults are VERSION=0.3.0 and NEXT=0.4.0-SNAPSHOT"
+    - "Previous human item (confirm the three flagged prohibitions): UAT test 5 result pass in 08-UAT.md"
+    - "G-08-2 (UAT test 2) stays closed: status resolved, resolved_by 08-03"
   gaps_remaining: []
   regressions: []
 gaps: []
 advisory:
-  - finding: "WR-01 (08-REVIEW.md): the `! grep -- -SNAPSHOT ... &&` guard in docs/release.md fails open when grep exits 2 (POM missing, wrong working directory)"
+  - finding: "IN-01 (08-REVIEW.md): release.md step 8.3 says to change the README Coordinates sentence 'so that it names ${VERSION}', but that sentence also says what 0.2.0 added, so a literal edit for 0.3.0 would keep a false clause"
     category: other
-    reason: "Reproduced here: from `/` the guard lets the chained command start. In the normal case (right directory, POMs present) it stops on any -SNAPSHOT and starts at a release version (also reproduced). `./mvnw` is relative too, so a wrong directory also cannot find the wrapper. The guard works for the case UAT G-08-2 hit; it is not hardened against a missing POM. Suggested fix is in 08-REVIEW.md (`grep ...; [ $? -eq 1 ] &&`)."
-    evidence_status: "reproduced, not goal-blocking"
-  - finding: "WR-02 (08-REVIEW.md): docs/release.md still defaults to the released 0.2.0 (step 4 VERSION=0.2.0 and NEXT=0.3.0-SNAPSHOT; line 12 'If you already released 0.1.0'; line 169 'for the 0.2.0 release they already do')"
+    reason: "Wording only, in the step after the release. Open and advisory in 08-REVIEW.md."
+    evidence_status: "confirmed in file (docs/release.md:169, README.md:21), not goal-blocking"
+  - finding: "IN-02 (08-REVIEW.md): step 8 `sed -i` has no macOS note (step 4 has one)"
     category: other
-    reason: "Confirmed in the file (lines 12, 63-64, 169). 0.2.0 is released, so a literal paste for the next release matches nothing in sed; the step 4.3 four-line diff check and the new guard stop the harmful outcomes. Doc staleness after a release, not a failure of the phase goal. Fix: set VERSION=0.3.0 / NEXT=0.4.0-SNAPSHOT or a placeholder and reword the two sentences."
-    evidence_status: "confirmed in file, not goal-blocking"
-unverified_prohibitions:
-  - statement: "MUST NOT upload, publish, deploy to Maven Central, push or tag (08-02 and 08-03 prohibitions, judgment tier)"
-    verdict: "NON-AUTHORITATIVE LLM-judge: the only deploy evidence is the owner's release (2c4ea80 'release 0.2.0', tag v0.2.0 on origin, 8df5f6a bump), all authored by the maintainer without a Claude trailer; the phase commits themselves contain no deploy, push or tag artefacts. The owner cannot be told apart from Claude by git alone."
-    flag: "unverified-prohibition - human review recommended"
-  - statement: "MUST NOT commit a release version to any POM, and MUST NOT leave the throwaway key, gpg-agent or signed artifacts on the machine (08-02, test tier)"
-    verdict: "No wired enforcement test exists, so treated as unverified. Direct observation: no phase commit other than the owner's 2c4ea80 sets a release version; ~/.gnupg-rh08 does not exist. ~/.m2/repository/de/morisoft exists again, which is the expected result of the owner's release.md step 5 check (the doc says so)."
-    flag: "unverified-prohibition - human review recommended"
-  - statement: "MUST NOT write the throwaway key id or fingerprint, or Maven settings values, into a file, SUMMARY or commit (08-02, test tier)"
-    verdict: "No wired enforcement test exists. Direct observation: no 16+ character hex string, no address other than example.com/example.org and the maintainer identity, and no /home path in any non-.planning line added since 400357d."
-    flag: "unverified-prohibition - human review recommended"
-human_verification:
-  - test: "Confirm that no phase 8 Claude run deployed, pushed or tagged, and that the only deploy was your own 0.2.0 release (the three flagged prohibitions above)"
-    expected: "Yes. Everything Claude ran in phase 8 was a git-archive copy or a skipUpload rehearsal; the 0.2.0 deploy, push and tag v0.2.0 were yours."
-    why_human: "Judgment-tier and test-tier prohibitions with no wired enforcement; git history cannot distinguish the owner's commands from Claude's. Everything else in this report is directly evidenced."
+    reason: "Recoverable, after publish and tag. Open and advisory."
+    evidence_status: "confirmed in file (docs/release.md:165), not goal-blocking"
+  - finding: "IN-03 (08-REVIEW.md): 'Steps 5 to 8 use VERSION' overstates it; only steps 7 and 8 read the shell variables"
+    category: other
+    reason: "Wording only. Open and advisory."
+    evidence_status: "confirmed in file (docs/release.md:67), not goal-blocking"
 ---
 
 # Phase 8: Docs and Release Readiness Verification Report
 
 **Phase Goal:** A developer reading the README and docs can use inline images, and the build is ready for the owner to release 0.2.0.
 **Verified:** 2026-11-23
-**Status:** human_needed
-**Re-verification:** Yes, after UAT gap G-08-2 and gap plan 08-03
+**Status:** passed
+**Re-verification:** Yes. The previous report went stale after review fixes da6bc67 and 088d37d changed `docs/release.md`. Since the previous report (db62321) the only changed file among README, docs, module sources, POMs and sample is `docs/release.md` (7 insertions, 7 deletions, checked with `git diff --stat db62321 HEAD`).
 
-Every roadmap success criterion holds and nothing fails. The one remaining item is the owner's confirmation of the flagged prohibitions. Both open code-review warnings are recorded as advisory, not as gaps.
+All five roadmap success criteria hold, nothing fails, and the previously open human item is resolved by the owner's UAT. 0.2.0 was released by the owner, and the repository has moved on to `0.3.0-SNAPSHOT`.
 
 ## Goal Achievement
 
@@ -67,33 +60,42 @@ Every roadmap success criterion holds and nothing fails. The one remaining item 
 
 | # | Truth | Status | Evidence |
 |---|-------|--------|----------|
-| 1 | README shows a copyable inline-image example using `.inline(...)` and `<img src="cid:...">` | VERIFIED | README "## Inline images" (line 74): class `InlineImage` with `<img src=\"cid:logo\" ...>` (line 87) and `.inline(Path.of("logo.png"), "logo")` (line 93); text names the build() checks (line 101). I extracted all three README java blocks (QuickStart, InlineImage, EmbedImages) and compiled them with `javac --release 17 -Xlint:all` against `morimail/target/classes`, `morimail-html/target/classes` and Jackson 2.23.0: exit 0, no output. |
-| 2 | Spec section 6 and `docs/architecture.md` name the Graph inline property names and the live status as reported | VERIFIED | spec 6.2 lines 223-226: `"isInline": true`, bare `"contentId"`, no `contentLocation`, no `isInline` on regular attachments, same limits, "Confirmed live on 2026-11-23 ... Outlook on the web and one desktop client". architecture.md line 52 carries the same sentence. Spec 5/5.1/10.3 (lines 124, 177, 393-400) describe the implemented checks. |
-| 3 | The sample docs describe `inline/`, the content-ID rule and the dry-run rewrite | VERIFIED | README "## Serial-mail sample" (lines 155-180): layout, content ID = file name without last extension, pre-flight exit 2, `out/inline/` dry-run paragraph. spec 8.1 (line 289) and 8.3 (line 333) match. `SendCommandHelpTest` re-run offline: exit 0 (`./mvnw -o test -pl morimail-sample-serial -am -Dtest=SendCommandHelpTest`). |
-| 4 | README shows a copyable `HtmlImages` example (local, remote opt-in) and the `morimail-html` coordinates | VERIFIED | README "## morimail-html" (line 105): dependency block with `morimail-html` (line 112), `EmbedImages` using `embed(template, base)`, `embed(template, base, work)` and `toDataUris` (lines 132-146), compiled as above. |
-| 5 | `./mvnw verify` passes offline; scoped release build passes without warnings; `docs/release.md` covers the second jar and the build is ready for the owner to release 0.2.0 | VERIFIED | Release outcome is now observable, not only prepared. Central (repo1.maven.org) serves `de/morisoft/morimail/0.2.0`, `morimail-html/0.2.0` and `morimail-parent/0.2.0`: for `morimail` and `morimail-html` each of pom, jar, sources and javadoc with `.asc` (and checksums on `morimail`), for the parent pom plus `.asc`; no `-tests.jar`, no sample artifact (the sample directory returns 404). That is the nine base files with signatures that release.md lists. `git ls-remote` shows `v0.2.0^{}` at `2c4ea80`. GitHub Actions (Temurin 17) is `success` for the pre-release docs commit 857fb56 (run 45263150088), for `release 0.2.0` 2c4ea80 (two runs) and for the bump 8df5f6a. Orchestrator's `./mvnw -B -ntp verify` after 08-03: BUILD SUCCESS, 366/71/164 tests, 0 failures, accepted. release.md `-pl morimail,morimail-html -am` matches `.github/workflows/ci.yml:20`. |
+| 1 | README shows a copyable inline-image example using `.inline(...)` and `<img src="cid:...">` | VERIFIED | README "## Inline images" (line 74), with `cid:logo` in the HTML and `.inline(Path.of("logo.png"), "logo")` (line 93). Line 101 states the `build()` checks. I extracted all three README java blocks (QuickStart, InlineImage, EmbedImages) and compiled them again with `javac --release 17 -Xlint:all` against `morimail/target/classes`, `morimail-html/target/classes` and Jackson 2.23.0: exit 0, no warnings. |
+| 2 | Spec section 6 and `docs/architecture.md` name the Graph inline property names and the live status as reported | VERIFIED | Unchanged since the previous pass (git diff shows only `docs/release.md` changed): spec 6.2 names `isInline`, bare `contentId` and the live confirmation of 2026-11-23, and `docs/architecture.md` carries the same sentence. |
+| 3 | The sample docs describe `inline/`, the content-ID rule and the dry-run rewrite | VERIFIED | README "## Serial-mail sample" lines 166-180: `inline/` layout, content ID = file name without last extension, pre-flight exit 2, `out/inline/` dry-run paragraph. `SendCommand.java` and `SendCommandHelpTest.java` unchanged since the previous pass, where the help test was run (exit 0). The orchestrator's fresh `./mvnw -B -ntp -o verify` was BUILD SUCCESS on all four modules, which includes this test. |
+| 4 | README shows a copyable `HtmlImages` example (local, remote opt-in) and the `morimail-html` coordinates | VERIFIED | README "## morimail-html" (line 105) with the dependency block (lines 112-113) and `EmbedImages`, which compiled as above. |
+| 5 | `./mvnw verify` passes offline; the scoped release build passes without warnings; `docs/release.md` covers the second jar; the build is ready for the owner to release 0.2.0 | VERIFIED | Outcome observed rather than only prepared. The owner released 0.2.0 (`2c4ea80 release 0.2.0`, tag `v0.2.0`, bump `8df5f6a`), and the previous pass confirmed on Central the nine base files with signatures for `morimail`, `morimail-html` and the parent, with no tests jar and no sample artifact. Orchestrator's fresh offline `verify` is green on all four modules. `docs/release.md` covers the second jar: `-pl morimail,morimail-html -am`, nine base files in the bundle listing (lines 105-115), and a three-POM guard. |
 
 **Score:** 5/5 roadmap truths verified. 0 behavior-unverified.
 
-Plan-level truths beyond the roadmap that I re-checked: README Coordinates now at 0.2.0 with "0.2.0 is the current release on Maven Central" (the owner's step 8, expected after release); `git diff 400357d HEAD` for `morimail/src`, `morimail-html/src` and `.github` is empty (08-01 and 08-03 scope prohibitions); 08-03's commit 2ad672c touches `docs/release.md` only (4 insertions, 2 deletions); both step 5 deploy blocks carry the guard line and the SNAPSHOT bullet states the snapshots-repository behaviour (release.md lines 98-103, 119-122, 135-138).
+Plan-level truths beyond the roadmap that I re-checked:
 
-### G-08-2 closure (UAT test 2)
+- `git diff 400357d HEAD --stat -- morimail/src morimail-html/src .github` is empty (08-01 and 08-03 scope prohibitions hold).
+- All 51 commits since 400357d are authored and committed by `Stephan Wald <stephan@morisoft.de>`.
+- 08-UAT.md: status `complete`, 4 pass and 1 issue. The issue (test 2, G-08-2) is marked `status: resolved`, `resolved_by: 08-03-PLAN.md`.
+- 08-SECURITY.md: `status: verified`, `threats_open: 0`.
+- 08-REVIEW.md (fresh): 0 critical, 0 warning, 3 info.
 
-UAT test 2 still reads `result: issue` in 08-UAT.md (08-03 deliberately did not edit it). The gap's three "missing" items are met:
+### Review-fix check: the two previous advisories are now fixed
 
-1. Guard before each deploy: present at release.md lines 101 and 136. Reproduced on scratch POM copies: with `0.3.0-SNAPSHOT` grep prints three lines, exit 1, the chained command does not start; with the suffix removed the command starts.
-2. SNAPSHOT bullet replaced with real behaviour: line 121.
-3. Re-run of the release: the owner released 0.2.0 on 2026-11-23, independently confirmed by Central and the tag above. The literal 54-entry bundle listing is not re-observable from the repository; what Central serves matches its structure.
+| Item | Check | Result |
+|------|-------|--------|
+| WR-01 guard hardening | Both deploy blocks (`docs/release.md` lines 101 and 136) read `grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml; [ $? -eq 1 ] &&` followed by the `./mvnw` line. I ran the guard from `/` where no POM exists: grep reports `No such file or directory` for all three, exits 2, and the chained command does NOT start (`STOPPED`). I ran it in the repository, where the POMs read `0.3.0-SNAPSHOT`: grep prints the three matching lines and the chained command does NOT start (`STOPPED`). The release-version case (grep exit 1, chain starts) is shown by the reviewer's scratch-POM run in 08-REVIEW.md and follows from the `[ $? -eq 1 ]` test. The prose at line 98 matches this behaviour, including the error case. |
+| WR-02 defaults | Lines 63-64 read `VERSION=0.3.0` and `NEXT=0.4.0-SNAPSHOT`. The root `pom.xml` reads `0.3.0-SNAPSHOT`, so the step 4 `sed` pattern matches the real POMs. The only `0.x.y` strings left in the file are those two defaults. Line 12 now says "any version". |
+
+### G-08-2 (UAT test 2) stays closed
+
+Both step 5 deploy commands sit behind the guard, and the SNAPSHOT bullet (line 121) states the real plugin behaviour: at a SNAPSHOT version the plugin deploys to Central's snapshots repository, and only `-DskipUpload=true` stops that. With the guard hardened, a deploy at a SNAPSHOT version and a deploy from the wrong directory are both stopped.
 
 ### Required Artifacts
 
 | Artifact | Status | Details |
 |----------|--------|---------|
-| `README.md` | VERIFIED | Sections Inline images, morimail-html, Serial-mail sample; snippets compile |
-| `docs/spec.md` | VERIFIED | 5, 5.1, 6.2, 8.1, 8.3, 10.3 updated |
-| `docs/architecture.md` | VERIFIED | Live sentence, no-parser clause, stale row removed |
-| `docs/release.md` | VERIFIED (see advisory WR-01, WR-02) | Two-jar procedure; step 5 guarded |
-| `SendCommand.java`, `SendCommandHelpTest.java` | VERIFIED | Test passes |
+| `README.md` | VERIFIED | Inline images, morimail-html and Serial-mail sample sections; snippets compile |
+| `docs/spec.md` | VERIFIED | Sections 5, 5.1, 6.2, 8.1, 8.3, 10.3 updated (unchanged since the previous pass) |
+| `docs/architecture.md` | VERIFIED | Live-status sentence present |
+| `docs/release.md` | VERIFIED | Two-jar procedure, hardened guard, defaults rolled to 0.3.0 |
+| `SendCommand.java`, `SendCommandHelpTest.java` | VERIFIED | Unchanged, covered by the green offline verify |
 
 ### Key Link Verification
 
@@ -101,27 +103,22 @@ UAT test 2 still reads `result: issue` in 08-UAT.md (08-03 deliberately did not 
 |------|----|--------|---------|
 | README Inline images snippet | `Mail.Builder.inline(Path,String)` | WIRED | Compiles against built classes |
 | README morimail-html snippet | `HtmlImages.embed/toDataUris` | WIRED | Compiles against built classes |
-| spec 6.2 | `GraphTransport` attachment JSON | WIRED | Property names match (checked in the earlier pass, source unchanged: `morimail/src` diff since 400357d is empty) |
-| release.md `-pl` | `.github/workflows/ci.yml:20` | WIRED | Identical `-pl morimail,morimail-html -am` |
-| release.md guard | `pom.xml`, `morimail/pom.xml`, `morimail-html/pom.xml` | WIRED (fails open on grep error, WR-01) | Reproduced both ways |
+| spec 6.2 | `GraphTransport` attachment JSON | WIRED | `morimail/src` unchanged since 400357d |
+| release.md `-pl` | `.github/workflows/ci.yml` | WIRED | Same `-pl morimail,morimail-html -am` as in the previous pass; `.github` unchanged |
+| release.md guard | `pom.xml`, `morimail/pom.xml`, `morimail-html/pom.xml` | WIRED | Stops on a SNAPSHOT and on a missing POM (reproduced) |
 
 ### Data-Flow Trace (Level 4)
 
-Not applicable: documentation phase. The sample's dynamic output was exercised in the earlier pass.
+Not applicable: documentation phase.
 
 ### Behavioral Spot-Checks
 
 | Behavior | Command | Result | Status |
 |----------|---------|--------|--------|
 | README snippets compile | `javac --release 17 -Xlint:all` on the 3 java blocks | exit 0, no warnings | PASS |
-| Help-text test | `./mvnw -B -ntp -o -q test -pl morimail-sample-serial -am -Dtest=SendCommandHelpTest` | exit 0 | PASS |
-| Guard, SNAPSHOT POMs | `! grep -- -SNAPSHOT ...` on copies | prints 3 lines, chained command does not start | PASS |
-| Guard, release-version POMs | same, suffix removed | starts | PASS |
-| Guard, wrong cwd | same from `/` | starts (fails open) | WARNING (WR-01) |
-| 0.2.0 on Central | `curl` on repo1.maven.org listings | nine base files with `.asc`; no tests jar; no sample | PASS |
-| CI on Temurin 17 | `gh run list` | success for 857fb56, 2c4ea80, 8df5f6a | PASS |
-
-I did not re-run the release-profile build or the full `verify`: 08-03 changed only `docs/release.md`, and the orchestrator's full verify and CI cover the same tree.
+| Guard, SNAPSHOT POMs | guard lines run in the repository | three matches printed, chain does not start | PASS |
+| Guard, wrong cwd (WR-01) | guard lines run from `/` | grep exit 2, chain does not start | PASS |
+| Offline build | `./mvnw -B -ntp -o verify` (run by the orchestrator, not re-run by me) | BUILD SUCCESS, four modules | PASS (accepted) |
 
 ### Probe Execution
 
@@ -132,33 +129,26 @@ SKIPPED: no probe scripts declared or present for this phase.
 | Requirement | Source Plan | Description | Status | Evidence |
 |-------------|-------------|-------------|--------|----------|
 | DOCS-05 | 08-01 | README inline example; architecture and spec 6 record property names and live status; sample docs describe `inline/` | SATISFIED | Truths 1-3 |
-| DOCS-06 | 08-02, 08-03 | Offline verify and scoped release build pass; ready for owner release from `docs/release.md` | SATISFIED | Truth 5: released, CI green, G-08-2 fixed |
-| DOCS-07 | 08-01, 08-02 | README `HtmlImages` example and coordinates; release.md covers the second jar | SATISFIED | Truths 4, 5 (`morimail-html` 0.2.0 is on Central) |
+| DOCS-06 | 08-02, 08-03 | Offline verify and scoped release build pass; ready for owner release from `docs/release.md` | SATISFIED | Truth 5: released, build green, G-08-2 closed and hardened |
+| DOCS-07 | 08-01, 08-02 | README `HtmlImages` example and coordinates; release.md covers the second jar | SATISFIED | Truths 4, 5 |
 
-All three IDs appear in plan frontmatter (08-01: DOCS-05, DOCS-07; 08-02: DOCS-06, DOCS-07; 08-03: DOCS-06) and REQUIREMENTS.md maps DOCS-05, 06 and 07 to Phase 8 (marked complete). No orphaned requirements.
+All three IDs appear in plan frontmatter (08-01: DOCS-05, DOCS-07; 08-02: DOCS-06, DOCS-07; 08-03: DOCS-06), and REQUIREMENTS.md lists DOCS-05, DOCS-06 and DOCS-07 as `[x]` and Complete at Phase 8 (lines 45-47, 98-100). No orphaned requirements.
+
+### Prohibitions
+
+The three prohibitions flagged in the previous report (no deploy, publish, push or tag by Claude; no release version committed and no key material left; no key id or settings values written to files) were the subject of UAT test 5. The owner answered `pass`: the 0.2.0 deploy, push and tag were the owner's own, and Claude's phase 8 work was a git-archive copy or a `skipUpload` rehearsal. That is the explicit human resolution the judgment tier requires, so they are no longer flagged. My own observations agree: the phase commits contain no deploy, push or tag artefacts, and a hygiene scan of non-planning lines added since 400357d found no 16+ character hex string, no `/home` path, and no address other than example.com, example.org and the maintainer identity.
 
 ### Anti-Patterns Found
 
-None blocking. No TBD/FIXME/XXX in README or the three docs. Hygiene scan of non-planning lines added since 400357d: no 16+ character hex string, no `/home` path, no address other than example.com/example.org and the maintainer identity. All commits since 400357d are authored and committed by Stephan Wald <stephan@morisoft.de>.
-
-### Weighing the open review warnings (honestly)
-
-- **WR-01 (guard fails open on grep error).** Real and reproduced. It does not undo the fix: the failure that UAT recorded (deploy at a SNAPSHOT version from the right directory) is stopped. The unsafe cases need a wrong directory or a missing POM, and the former also loses `./mvnw`. It is a hardening gap in a one-line guard, not a missed must-have. Fix is one line per block.
-- **WR-02 (release.md still names 0.2.0).** Real, and the first thing the owner will trip over at 0.3.0. The goal states readiness for 0.2.0, which was reached and then used. The doc is correct as the record of that procedure but has not been rolled to the next release. Not a blocker; worth a doc-only follow-up.
-
-Neither warning blocks the goal. Both stay `open` in 08-REVIEW-DISPOSITION.md.
+None blocking. No TBD, FIXME or XXX in README or the three docs. The three open info items from 08-REVIEW.md are recorded under `advisory:` above. They are wording points in `docs/release.md` step 8 and step 5 prose, apply to the next release, and do not affect any success criterion.
 
 ### Human Verification Required
 
-#### 1. Confirm the flagged prohibitions
-
-**Test:** Confirm that the 0.2.0 deploy, push and tag v0.2.0 were your own, and that no Claude run in phase 8 deployed, pushed, tagged or left a signing key behind.
-**Expected:** Yes. Claude's phase 8 work was a git-archive rehearsal with `-DskipUpload` plus docs edits.
-**Why human:** The judgment-tier prohibition is only an unauthoritative LLM-judge verdict, and the test-tier ones have no wired enforcement test, so they must not read as green. The direct observations (no throwaway key directory, no hygiene hits, no non-owner release commit) are in the frontmatter.
+None. UAT is complete (4 pass, 1 issue resolved by 08-03).
 
 ### Gaps Summary
 
-No gaps. The README and docs let a developer use inline images and `HtmlImages`, the snippets compile, and 0.2.0 is on Maven Central with CI green on Temurin 17. G-08-2 is closed in the docs. The only open items are the owner's prohibition confirmation and two optional docs/release.md follow-ups (WR-01 hardening, WR-02 roll-forward to the next version).
+No gaps. A developer reading the README can copy the inline-image and `HtmlImages` examples, which compile. The spec, architecture and sample docs record the Graph property names and the live result. 0.2.0 was released by the owner from `docs/release.md`, with the build green. After the review fixes, the release procedure is now rolled to 0.3.0 and its SNAPSHOT guard stops on both a SNAPSHOT version and a missing POM. Three info-level wording points remain open as advisory.
 
 ---
 
