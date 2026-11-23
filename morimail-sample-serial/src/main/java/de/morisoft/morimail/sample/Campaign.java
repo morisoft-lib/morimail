@@ -184,7 +184,8 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments,
      * The pre-flight inline scan: one problem per defect. Each file gets two probe mails through
      * the core, so the type and the content-ID rule are build()'s own; then the files are
      * compared with each other and with the {@code cid:} references of the HTML body. The probes
-     * are only built, never sent.
+     * are only built, never sent. The HTML is scanned as written, so a {@code cid:} reference
+     * cannot be built from a placeholder.
      */
     private static void checkInline(List<Path> images, String html, List<String> problems) {
         Map<String, String> firstById = new LinkedHashMap<>();
