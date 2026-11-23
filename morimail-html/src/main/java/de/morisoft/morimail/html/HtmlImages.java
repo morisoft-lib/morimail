@@ -541,7 +541,18 @@ public final class HtmlImages {
             if (left <= 0) {
                 throw transientFailure(raw, "download timed out", null);
             }
-            CompletableFuture<byte[]> read = CompletableFuture.supplyAsync(() -> readAtMost(body));
+            // A thread of its own, not the common pool, so a blocked read never waits behind or starves
+            // other work of the host application (WR-01).
+            CompletableFuture<byte[]> read = new CompletableFuture<>();
+            Thread reader = new Thread(() -> {
+                try {
+                    read.complete(readAtMost(body));
+                } catch (Throwable t) {
+                    read.completeExceptionally(t);
+                }
+            }, "morimail-html-download");
+            reader.setDaemon(true);
+            reader.start();
             byte[] bytes;
             try {
                 bytes = read.get(left, TimeUnit.NANOSECONDS);
