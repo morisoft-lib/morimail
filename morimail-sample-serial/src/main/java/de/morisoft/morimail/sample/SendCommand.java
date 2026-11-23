@@ -40,7 +40,14 @@ import picocli.CommandLine.Spec;
  */
 @Command(name = "send",
         description = "Sends one mail per row of recipients.csv, or renders them with --dry-run.",
-        footer = {"A mail that is in flight when the run is stopped has no journal line, "
+        footer = {"The campaign directory holds subject.txt, body.html, an optional body.txt, "
+                + "recipients.csv (a header row with an email column), an optional "
+                + "attachments/ directory whose files go with every mail, and an optional "
+                + "inline/ directory.",
+                "Every file in inline/ is an inline image of every mail. "
+                + "Its content ID is the file name without the last extension, "
+                + "and body.html refers to it as cid:NAME, so logo.png is cid:logo.",
+                "A mail that is in flight when the run is stopped has no journal line, "
                 + "so the next run sends it again.",
                 "Exit codes: 0 nothing failed, 1 a mail failed or the journal could not be "
                 + "written, 2 a pre-flight or argument problem, 3 the run was stopped by a "
@@ -63,7 +70,11 @@ final class SendCommand implements Callable<Integer> {
     String campaignId;
 
     @Option(names = "--dry-run",
-            description = "Write the rendered mails to --out and send nothing.")
+            description = "Write the rendered mails to --out and send nothing. "
+                    + "It copies each inline image once into inline/ under --out "
+                    + "and rewrites cid:NAME to the relative path inline/NAME "
+                    + "plus the file's extension, such as inline/logo.png, "
+                    + "in the dry-run output only; sent mails keep cid:.")
     boolean dryRun;
 
     @Option(names = "--out", defaultValue = "out", paramLabel = "DIR",

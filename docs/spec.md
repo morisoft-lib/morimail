@@ -286,6 +286,7 @@ campaign/
   body.txt             optional
   recipients.csv       header row; column "email" required; all columns are placeholder fields
   attachments/         every file here is attached to every mail (sample logic, not a library feature)
+  inline/              optional; every file here is an inline image of every mail, its content ID is the file name without the last extension (section 10.3)
 
 account.properties
   account.id=entra-main
@@ -328,6 +329,8 @@ serial-mail send
 10. At the end, print counts: accepted, skipped, failed. Exit code 0 only if nothing failed.
 
 Dry-run writes `out/<n>-<email>.html`, `.txt` and `.subject.txt` per recipient, lists the attachments, and touches neither the network nor the journal.
+
+With an `inline/` directory, dry-run copies each image once to `out/inline/` and rewrites the `cid:` references of the written HTML to `inline/<file name>`; the mails of a real run keep `cid:`. Pre-flight (step 2) also reports every inline problem: a `cid:` with no image, an image that no `cid:` refers to, two files with the same base name, and a file that is not an image.
 
 The default of 20 mails per minute stays below the Exchange Online limit of 30 messages per minute per mailbox for SMTP client submission; Microsoft does not say whether Graph `sendMail` counts against it. A mailbox can also send to at most 10,000 recipients per day (Microsoft n.d.-g). The owner confirmed the default after milestone 4.
 
@@ -394,7 +397,7 @@ Stop after milestone 4 and report, so the owner can run the live test and feed r
 - A transport that cannot send inline images rejects them in `validate`.
 - Graph transport: send inline images as file attachments marked inline with their content ID. Read the current `fileAttachment` resource documentation for the property names first; they were not verified for this spec.
 - Inline images count toward the same size limits as other attachments.
-- Sample: an optional `inline/` directory in the campaign; the file name without extension is the content ID. Dry-run writes the images next to the rendered HTML and rewrites `cid:` references to relative paths in the dry-run output only.
+- Sample: an optional `inline/` directory in the campaign; the file name without extension is the content ID. Dry-run copies each inline image once into `inline/` under `--out` and rewrites `cid:` references to relative paths in the dry-run output only.
 - The core library does not rewrite HTML and does not generate content IDs. That is the job of the helper in section 10.4.
 
 ### 10.4 Milestone 6, continued: HTML image helper (`morimail-html`), implemented in 0.2.0

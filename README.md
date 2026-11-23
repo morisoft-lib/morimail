@@ -152,6 +152,33 @@ public class EmbedImages {
 
 `toDataUris` gives the storable form, HTML whose images are `data:` URIs so the template alone carries them, and `embed` with a work directory turns it back into inline images.
 
+## Serial-mail sample
+
+The sample `serial-mail` reads a campaign directory and sends one mail per row of `recipients.csv`.
+
+```text
+campaign/
+  subject.txt      subject template
+  body.html        HTML template
+  body.txt         text template (optional)
+  recipients.csv   header row with an email column; every column is a placeholder
+  attachments/     optional; every file is attached to every mail
+  inline/          optional; every file is an inline image of every mail
+```
+
+The content ID of a file in `inline/` is its name without the last extension, so `body.html` refers to `logo.png` as `cid:logo`, and the match is exact. Pre-flight checks the campaign before the first mail and stops with exit code 2, sending nothing, when a `cid:` has no image in `inline/`, an image is not referenced, two files share a base name or a file is not an image. Dot-files such as `.DS_Store` are skipped. Run `send --help` for every option.
+
+You can try the sample without any account. It renders the example campaign to files and sends nothing:
+
+```bash
+./mvnw -B -ntp -DskipTests package -pl morimail-sample-serial -am
+java -jar morimail-sample-serial/target/morimail-sample-serial-*.jar send --account morimail-sample-serial/example-campaign/account.properties --campaign morimail-sample-serial/example-campaign --dry-run --out out
+```
+
+This writes the rendered mails to `out/` and needs no secrets. For a real send, follow [docs/entra-setup.md](docs/entra-setup.md). The sample sends no `saveToSentItems`, so Graph's default applies and every campaign mail also lands in the sender's Sent Items.
+
+The example campaign has `inline/logo.png`. The dry run copies it once to `out/inline/` and the written HTML points at it by relative path, so a browser shows the logo, while a real send keeps the `cid:` reference.
+
 ## What morimail is not
 
 - Not a bulk mailer or campaign tool. It sends one mail per call, with no batching, queues, scheduling or retries; those belong to the consumer.
