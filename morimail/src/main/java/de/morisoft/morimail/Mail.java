@@ -44,6 +44,7 @@ public record Mail(String accountId, MailMessage message) {
     public static final class Builder {
 
         // A cid: reference in any case, not preceded by a letter or digit; its id ends at a quote, whitespace, ) or > (D-04 as amended 2026-11-22, D-05, D-06).
+        // The serial mail sample copies this pattern (Campaign.CID_REFERENCE); keep both equal.
         private static final Pattern CID_REFERENCE =
                 Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)>]*)");
 
