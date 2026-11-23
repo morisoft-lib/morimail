@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -17,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -122,6 +124,11 @@ class DryRunTest {
 
     @Test
     void inlineSrcIsPercentEncodedAndHtmlSafe() throws IOException {
+        // The file name u-umlaut needs a file-name encoding that can hold it (not the C locale).
+        Assumptions.assumeTrue(
+                Charset.forName(System.getProperty("sun.jnu.encoding", "US-ASCII"))
+                        .newEncoder().canEncode('\u00fc'),
+                "file names cannot hold non-ASCII characters on this host");
         Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
         Files.writeString(campaign.resolve("body.html"),
                 "<p><img src=\"cid:a&b\"><img src=\"cid:ü\"><img src=\"cid:50%\"><img src=\"cid:x#1\">"
