@@ -5,11 +5,11 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "SNAPSHOT guard fails open when grep errors"
   - id: WR-02
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "Procedure defaults and wording still target the already-released 0.2.0"
   - id: IN-01
     severity: info
@@ -31,17 +31,17 @@ findings:
     severity: info
     disposition: fixed
     title: "Dry-run rewrite writes the file name into an HTML attribute without escaping quotes"
-open: 2
+open: 0
 total: 7
-recorded: 2026-11-23T21:29:09.415Z
+recorded: 2026-11-23T21:41:30.571Z
 ---
 
 # Phase 08: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
-| WR-02 | warning | open | - |
+| WR-01 | warning | fixed | 08-REVIEW-FIX.md |
+| WR-02 | warning | fixed | 08-REVIEW-FIX.md |
 | IN-01 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | IN-02 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | IN-03 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
