@@ -5,16 +5,16 @@ milestone_name: Inline Images
 current_phase: 08
 current_phase_name: Docs and Release Readiness
 status: executing
-stopped_at: Phase 8 context gathered
-last_updated: "2026-11-23T20:26:37.481Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-11-23T20:31:59.623Z"
 last_activity: 2026-11-23
-last_activity_desc: Phase 07 complete, transitioned to Phase 8
-state_head: f282afdcfe9c86ae95448717579e555809415f7a
+last_activity_desc: Phase 08 execution started
+state_head: 849ea9eefa903c577fd20ecd9d5ed510c674a75b
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 75
 ---
 
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-23 after Phase 7)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 8 — Docs and Release Readiness
+**Current focus:** Phase 08 — Docs and Release Readiness
 
 ## Current Position
 
-Phase: 08 (Docs and Release Readiness) — READY TO EXECUTE
-Plan: Not started
+Phase: 08 (Docs and Release Readiness) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-11-23 — Phase 07 complete, transitioned to Phase 8
+Last activity: 2026-11-23 — Phase 08 execution started
 
 Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
 
@@ -94,6 +94,7 @@ Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
 | Phase 07 P02 | 8 min | 2 tasks | 2 files |
 | Phase 07 P03 | 5 min | 2 tasks | 3 files |
 | Phase 07 P04 | 10 min | 2 tasks | 4 files |
+| Phase 08 P01 | 3 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -130,6 +131,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 07]: 07-03 A4/A6/P10: toDataUris never writes the work directory; no cleanup after a failed decode; decoded images are named ID.SUBTYPE
 - [Phase 07]: 07-04 (G-07-2): morimail-html declares morimail in compile scope (owner decision in UAT, D-02 and D-03 amended 2026-11-23); runtime classpath morimail plus Jackson through morimail; morimail jar unchanged
 - [Phase 07]: UAT 2026-11-23: Temurin 17 CI green on 44206a9 (run 45229673247); owner accepted A1-A7, P1-P10 and review IN-01/IN-02 as-is (deferred in 07-REVIEW-DISPOSITION.md); SECURITY threats_open 0
+- [Phase 08]: 08-01: README inline, morimail-html and Serial-mail sample sections with compiled snippets; spec 5/5.1/6.2/8.1/8.3/10.3/10.4/12 and docs/architecture.md describe 0.2.0 with the live result of 2026-11-23; send usage names inline/ and cid:NAME, pinned by SendCommandHelpTest; no new option
 
 ### Pending Todos
 
@@ -156,9 +158,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T17:50:01.241Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-docs-and-release-readiness/08-CONTEXT.md
+Last session: 2026-11-23T20:31:59.354Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 

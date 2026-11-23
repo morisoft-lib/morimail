@@ -42,7 +42,7 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 
 ### Docs and release readiness
 
-- [ ] **DOCS-05**: README shows an inline-image example with `.inline(...)` and `cid:`; `docs/architecture.md` and spec §6 record the Graph inline property names and the live-test status; the sample docs describe `inline/`.
+- [x] **DOCS-05**: README shows an inline-image example with `.inline(...)` and `cid:`; `docs/architecture.md` and spec §6 record the Graph inline property names and the live-test status; the sample docs describe `inline/`.
 - [ ] **DOCS-06**: `./mvnw verify` passes offline and `./mvnw -Prelease verify -Dgpg.skip -pl morimail,morimail-html -am` passes without warnings at `0.2.0-SNAPSHOT`, ready for the owner to release 0.2.0 from `docs/release.md`.
 - [ ] **DOCS-07**: README shows an `HtmlImages` example (local images, remote opt-in) and the `morimail-html` coordinates; `docs/release.md` covers the second published jar.
 
@@ -95,7 +95,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HTML-05 | Phase 7 | Complete |
 | HTML-06 | Phase 7 | Complete |
 | HTML-07 | Phase 7 | Complete |
-| DOCS-05 | Phase 8 | Pending |
+| DOCS-05 | Phase 8 | Complete |
 | DOCS-06 | Phase 8 | Pending |
 | DOCS-07 | Phase 8 | Pending |
 
