@@ -3,12 +3,20 @@ package de.morisoft.morimail.html;
 import de.morisoft.morimail.Attachment;
 import de.morisoft.morimail.InvalidMailException;
 import de.morisoft.morimail.MailTemplate;
+import de.morisoft.morimail.TransientMailException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +25,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -28,8 +40,9 @@ import java.util.regex.Pattern;
  * rendered, so recipient data never reaches it. The subject and the text part are never touched.
  *
  * <p>Which {@code src} values change: a value that contains {@code $$} (a placeholder), a value
- * with the scheme {@code cid:}, {@code data:}, {@code http:} or {@code https:}, and a value with
- * any other scheme stay exactly as written. A value without a scheme, and a {@code file:} URI, is
+ * with the scheme {@code cid:} or {@code data:}, a value with the scheme {@code http:} or
+ * {@code https:} unless a work directory is given (see below), and a value with any other scheme
+ * stay exactly as written. A value without a scheme, and a {@code file:} URI, is
  * a local image: the file must lie inside the base directory, must be readable and must be an
  * image, otherwise the call fails with an {@link InvalidMailException} that names the {@code src}
  * as written. The only character reference that is decoded is {@code &amp;}. A percent-encoded
@@ -41,6 +54,15 @@ import java.util.regex.Pattern;
  * {@code -3} and so on, and an ID that the template already uses as a {@code cid:} reference
  * counts as taken. The same file, however it is written, gives one image and one ID: the first
  * name in document order wins. The file name shown to the recipient is that same name.
+ *
+ * <p>Remote images are opt-in: only {@link #embed(MailTemplate, Path, Path)} makes network
+ * requests, and only for {@code http:} and {@code https:} sources without {@code $$}. Each image is
+ * downloaded into the work directory under a new unique name and becomes an inline image. A
+ * download has a connect timeout, one time budget for the response and its body, a size limit below
+ * 3 MiB and an {@code image/} content type. A network error, a timeout, an HTTP 5xx status or 429
+ * fails with a {@link TransientMailException}, because a retry can help; every other failure is an
+ * {@link InvalidMailException}, because the template is wrong. The author of a template is
+ * trusted: a template URL, also after a redirect, can reach any host this machine can reach.
  *
  * <p>How to use the result: pass {@link Result#template()} to
  * {@code Mail.Builder.template(MailTemplate, Map)} and each image of {@link Result#images()} to
@@ -55,6 +77,23 @@ import java.util.regex.Pattern;
  * <p>This class is stateless and thread-safe, so it is safe for concurrent use.
  */
 public final class HtmlImages {
+
+    /** How long a connection may take to open; the same value as in the Graph transport. */
+    static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
+
+    /** The budget of one download: the response headers and the body together. */
+    static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
+
+    /** An image of this many bytes or more is refused, as the Graph transport refuses it. */
+    static final long MAX_IMAGE_BYTES = 3L * 1024 * 1024;
+
+    // NORMAL follows redirects except from https to http (D-14); the client is thread-safe and shared (P6).
+    private static final HttpClient HTTP = HttpClient.newBuilder()
+            .connectTimeout(CONNECT_TIMEOUT)
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
+
+    private static final System.Logger LOG = System.getLogger(HtmlImages.class.getName());
 
     // Copy of Mail.Builder.CID_REFERENCE (Phase 5 D-04 to D-06); keep both equal.
     static final Pattern CID_REFERENCE =
@@ -132,10 +171,68 @@ public final class HtmlImages {
     public static Result embed(MailTemplate template, Path baseDir) throws InvalidMailException {
         Objects.requireNonNull(template, "template");
         Objects.requireNonNull(baseDir, "baseDir");
-        return rewrite(template, baseDir);
+        try {
+            return rewrite(template, baseDir, null, REQUEST_TIMEOUT);
+        } catch (TransientMailException e) {
+            throw new AssertionError("no download without a work directory", e);
+        }
     }
 
-    private static Result rewrite(MailTemplate template, Path baseDir) throws InvalidMailException {
+    /**
+     * Rewrites the local and the remote image sources of a template to {@code cid:} references.
+     *
+     * <p>Like {@link #embed(MailTemplate, Path)}, and in addition the {@code http:} and
+     * {@code https:} sources (without {@code $$}) are downloaded into {@code workDir}, each under a
+     * new unique name, and become inline images. The caller owns {@code workDir} and cleans it up,
+     * also after a failure: files written before a later source failed stay there, and no file the
+     * call did not create is deleted, overwritten or renamed.
+     *
+     * <p>A download waits at most 10 seconds for the connection. The response headers and the body
+     * together get one budget of 30 seconds, counted from the request; a redirect is followed (but
+     * never from {@code https:} to {@code http:}), and each followed redirect may again wait up to
+     * 30 seconds for its own headers. An image must be below 3 MiB, as the Graph transport requires,
+     * and the {@code Content-Type} header must name an {@code image/} type; the file name extension
+     * of the URL is not used. The image ID and the file name shown to the recipient come from the
+     * last segment of the URL path.
+     *
+     * <p>Exception messages name the {@code src} as written, a query included, and for an HTTP
+     * failure the status only, never a response body. The one DEBUG log record per download
+     * ({@code java.util.logging} level FINE) shows only scheme, host, port and path.
+     *
+     * <p>The author of a template is trusted: a URL in the template, also after a redirect, can reach
+     * any host this machine can reach. Recipient data never reaches this method, because a
+     * {@code src} with {@code $$} is never fetched.
+     *
+     * @param template the template to convert
+     * @param baseDir the directory that local sources resolve against; it is checked only when a
+     *     local source is resolved
+     * @param workDir the existing directory that receives the downloaded images
+     * @return the converted template and the inline images
+     * @throws InvalidMailException if a local source is outside the base directory, missing,
+     *     unreadable, not an image or not a valid path, if a remote source is not a valid URL, the
+     *     server answers with an HTTP 4xx status (other than 429) or another unsuccessful status, the
+     *     response is not an image or is 3 MiB or larger, or if the work directory is not usable
+     * @throws TransientMailException if a download fails with a network error, times out, is
+     *     interrupted, or the server answers with an HTTP 5xx status or 429; a retry can help
+     * @throws NullPointerException if an argument is {@code null}
+     */
+    public static Result embed(MailTemplate template, Path baseDir, Path workDir)
+            throws InvalidMailException, TransientMailException {
+        Objects.requireNonNull(template, "template");
+        Objects.requireNonNull(baseDir, "baseDir");
+        Objects.requireNonNull(workDir, "workDir");
+        return embed(template, baseDir, workDir, REQUEST_TIMEOUT);
+    }
+
+    // Test seam: the timeout tests use seconds instead of REQUEST_TIMEOUT (P9).
+    static Result embed(MailTemplate template, Path baseDir, Path workDir, Duration requestTimeout)
+            throws InvalidMailException, TransientMailException {
+        return rewrite(template, baseDir, workDir, requestTimeout);
+    }
+
+    // A null workDir means "no downloads".
+    private static Result rewrite(MailTemplate template, Path baseDir, Path workDir, Duration requestTimeout)
+            throws InvalidMailException, TransientMailException {
         String html = template.html();
         if (html == null) {
             return new Result(template, List.of());
@@ -162,23 +259,41 @@ public final class HtmlImages {
             }
             Matcher s = SCHEME.matcher(value);
             String scheme = s.find() ? s.group(1).toLowerCase(Locale.ROOT) : null;
-            // Plans 07-02 and 07-03 add http(s) and data: when a work directory is given.
-            if (scheme != null && !scheme.equals("file")) {
+            // http(s) is remote only with a work directory (spec 10.4 opt-in); Plan 07-03 adds data:.
+            boolean remote = workDir != null && ("http".equals(scheme) || "https".equals(scheme));
+            if (scheme != null && !scheme.equals("file") && !remote) {
                 continue;
             }
-            LocalFile local = resolveLocal(raw, value, scheme != null, baseDir);
-            Path file = local.file();
-            String key = file.toString();
-            if (!cidByKey.containsKey(key)) {
-                String name = local.name();
-                String type = contentTypeOf(file, name);
-                if (type == null || !IMAGE_TYPE.matcher(type).matches()) {
-                    throw invalid(raw, "is not an image file (content type "
-                            + (type == null ? "unknown" : type) + ")");
+            String key;
+            if (remote) {
+                // The source after &amp; decoding is the key: one source, one download (D-19).
+                key = value;
+                if (!cidByKey.containsKey(key)) {
+                    URI uri = parseUrl(raw, value);
+                    Fetched fetched = download(raw, uri, requestTimeout);
+                    String path = uri.getPath();
+                    String segment = path == null ? "" : path.substring(path.lastIndexOf('/') + 1);
+                    String id = newId(segment, taken);
+                    String type = fetched.contentType();
+                    Path file = writeToWorkDir(raw, workDir, fetched.bytes());
+                    images.add(new Attachment(fileName(segment, id, type), type, file, id));
+                    cidByKey.put(key, "cid:" + id);
                 }
-                String id = newId(name, taken);
-                images.add(new Attachment(fileName(name, id, type), type, file, id));
-                cidByKey.put(key, "cid:" + id);
+            } else {
+                LocalFile local = resolveLocal(raw, value, scheme != null, baseDir);
+                Path file = local.file();
+                key = file.toString();
+                if (!cidByKey.containsKey(key)) {
+                    String name = local.name();
+                    String type = contentTypeOf(file, name);
+                    if (type == null || !IMAGE_TYPE.matcher(type).matches()) {
+                        throw invalid(raw, "is not an image file (content type "
+                                + (type == null ? "unknown" : type) + ")");
+                    }
+                    String id = newId(name, taken);
+                    images.add(new Attachment(fileName(name, id, type), type, file, id));
+                    cidByKey.put(key, "cid:" + id);
+                }
             }
             out.append(html, last, m.start(g)).append(cidByKey.get(key));
             last = m.end(g);
@@ -195,8 +310,119 @@ public final class HtmlImages {
     private record LocalFile(Path file, String name) {
     }
 
+    // A downloaded (or, in Plan 07-03, decoded) image.
+    private record Fetched(byte[] bytes, String contentType) {
+    }
+
     private static InvalidMailException invalid(String raw, String reason) {
         return new InvalidMailException("img src \"" + raw + "\": " + reason);
+    }
+
+    private static TransientMailException transientFailure(String raw, String reason, Throwable cause) {
+        return new TransientMailException("img src \"" + raw + "\": " + reason, cause);
+    }
+
+    private static URI parseUrl(String raw, String value) throws InvalidMailException {
+        URI uri;
+        try {
+            uri = new URI(value);
+        } catch (URISyntaxException e) {
+            throw invalid(raw, "is not a valid URL");
+        }
+        if (uri.getHost() == null) {
+            throw invalid(raw, "is not a valid URL");
+        }
+        return uri;
+    }
+
+    private static Fetched download(String raw, URI uri, Duration timeout)
+            throws InvalidMailException, TransientMailException {
+        HttpRequest request;
+        try {
+            request = HttpRequest.newBuilder(uri).timeout(timeout).GET().build();
+        } catch (IllegalArgumentException e) {
+            throw invalid(raw, "is not a valid URL");
+        }
+        // Log scheme, host, port and path only: userinfo, query and fragment can hold credentials
+        // (signed or token URLs), which must never reach a log (P7).
+        String shown = uri.getScheme() + "://" + uri.getHost()
+                + (uri.getPort() < 0 ? "" : ":" + uri.getPort()) + uri.getRawPath();
+        LOG.log(System.Logger.Level.DEBUG, "Downloading image {0}", shown);
+        // One budget for the whole download (D-14, P9): the headers wait at most the request
+        // timeout, the body only for what is left of it.
+        long deadline = System.nanoTime() + timeout.toNanos();
+        HttpResponse<InputStream> response;
+        try {
+            response = HTTP.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        } catch (HttpTimeoutException e) {
+            throw transientFailure(raw, "download timed out", e);
+        } catch (IOException e) {
+            throw transientFailure(raw, "download failed", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw transientFailure(raw, "download was interrupted", e);
+        }
+        try (InputStream body = response.body()) {
+            int status = response.statusCode();
+            if (status >= 500 || status == 429) {
+                throw new TransientMailException(
+                        "img src \"" + raw + "\": download failed with HTTP " + status);
+            }
+            if (status < 200 || status > 299 || status == 204) {
+                throw invalid(raw, "download failed with HTTP " + status);
+            }
+            String type = response.headers().firstValue("Content-Type").orElse("");
+            int semicolon = type.indexOf(';');
+            type = (semicolon >= 0 ? type.substring(0, semicolon) : type).trim();
+            if (!IMAGE_TYPE.matcher(type).matches()) {
+                throw invalid(raw, "response has no image content type");
+            }
+            // HttpRequest.timeout bounds only the wait for the response headers (research Pattern 3),
+            // so the body is read within what is left of the same budget. Every exit from this try
+            // block closes the stream, and close() ends a blocked read (research Stall3).
+            long left = deadline - System.nanoTime();
+            if (left <= 0) {
+                throw transientFailure(raw, "download timed out", null);
+            }
+            CompletableFuture<byte[]> read = CompletableFuture.supplyAsync(() -> readAtMost(body));
+            byte[] bytes;
+            try {
+                bytes = read.get(left, TimeUnit.NANOSECONDS);
+            } catch (TimeoutException e) {
+                throw transientFailure(raw, "download timed out", e);
+            } catch (ExecutionException e) {
+                throw transientFailure(raw, "download failed", e.getCause());
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw transientFailure(raw, "download was interrupted", e);
+            }
+            // The comparison GraphTransport.validate uses: Graph takes files below 3 MiB (A2).
+            if (bytes.length >= MAX_IMAGE_BYTES) {
+                throw invalid(raw, "image is 3 MiB or larger");
+            }
+            return new Fetched(bytes, type);
+        } catch (IOException e) {
+            throw transientFailure(raw, "download failed", e);
+        }
+    }
+
+    // Reading the full cap is enough: a result of MAX_IMAGE_BYTES bytes already means 3 MiB or more (A2).
+    private static byte[] readAtMost(InputStream body) {
+        try {
+            return body.readNBytes((int) MAX_IMAGE_BYTES);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static Path writeToWorkDir(String raw, Path workDir, byte[] bytes) throws InvalidMailException {
+        try {
+            Path file = Files.createTempFile(workDir, "morimail-", null);
+            Files.write(file, bytes);
+            return file;
+        } catch (IOException e) {
+            throw new InvalidMailException("img src \"" + raw + "\": work directory is not usable", e);
+        }
     }
 
     private static LocalFile resolveLocal(String raw, String value, boolean fileScheme, Path baseDir)
