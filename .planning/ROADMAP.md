@@ -139,7 +139,7 @@ Plans:
   3. The sample's documentation (`send --help` and the README's sample section) describes the `inline/` directory, the content-ID rule and the dry-run rewrite.
   4. The README shows a copyable `HtmlImages` example (local images, and the opt-in for remote ones) and the `morimail-html` coordinates.
   5. `./mvnw verify` passes offline, and the scoped release build (`./mvnw -Prelease verify -Dgpg.skip -pl morimail,morimail-html -am`) passes without warnings at `0.2.0-SNAPSHOT`. `docs/release.md` covers the second published jar, so the owner can release 0.2.0 by following it.
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -149,7 +149,7 @@ Plans:
 - [x] 08-02-PLAN.md — Tracer: version-neutral `docs/release.md` for `morimail-parent`, `morimail` and `morimail-html`, rehearsed as written with a throwaway key (54-entry bundle, upload skipped, cleanup), then the release gate: offline verify, scoped release build with zero warnings, scope and hygiene (DOCS-06, DOCS-07)
 
 **Wave 3** *(gap closure, blocked on Wave 2 completion)*
-- [ ] 08-03-PLAN.md — Gap G-08-2: `docs/release.md` step 5 chains both deploy commands behind a guard that stops them while a published POM holds `-SNAPSHOT`, and states that a SNAPSHOT deploy goes to Central's snapshots repository unless `-DskipUpload` is set (docs only, on top of the 0.3.0-SNAPSHOT bump 8df5f6a; 0.2.0 was already released by the owner, so the guard applies from the next release) (DOCS-06)
+- [x] 08-03-PLAN.md — Gap G-08-2: `docs/release.md` step 5 chains both deploy commands behind a guard that stops them while a published POM holds `-SNAPSHOT`, and states that a SNAPSHOT deploy goes to Central's snapshots repository unless `-DskipUpload` is set (docs only, on top of the 0.3.0-SNAPSHOT bump 8df5f6a; 0.2.0 was already released by the owner, so the guard applies from the next release) (DOCS-06)
 
 **UI hint**: no
 
@@ -180,4 +180,4 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 5. Inline Images in Core and Graph | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
 | 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
 | 7. HTML Image Helper Module | v0.2.0 | 4/4 | Complete    | 2026-11-23 |
-| 8. Docs and Release Readiness | v0.2.0 | 2/3 | In Progress | - |
+| 8. Docs and Release Readiness | v0.2.0 | 3/3 | In Progress | - |

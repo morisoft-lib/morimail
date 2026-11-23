@@ -5,16 +5,16 @@ milestone_name: Inline Images
 current_phase: 08
 current_phase_name: Docs and Release Readiness
 status: verifying
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-11-23T20:35:50.492Z"
+stopped_at: Completed 08-03-PLAN.md
+last_updated: "2026-11-23T21:25:45.459Z"
 last_activity: 2026-11-23
 last_activity_desc: Phase 08 execution started
-state_head: c3db39db7a8a36cb7e9466b6214b3e9de54d6aaf
+state_head: 1c21c294971427995a351fe442999f168c223d9b
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 11
+  completed_plans: 11
   percent: 75
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 7)
 ## Current Position
 
 Phase: 08 (Docs and Release Readiness) — EXECUTING
-Plan: 2 of 2
+Plan: 3 of 3
 Status: Phase complete — ready for verification
 Last activity: 2026-11-23 — Phase 08 execution started
 
@@ -96,6 +96,7 @@ Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
 | Phase 07 P04 | 10 min | 2 tasks | 4 files |
 | Phase 08 P01 | 3 min | 3 tasks | 5 files |
 | Phase 08 P02 | 15 min | 2 tasks | 1 files |
+| Phase 08 P03 | 12 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -134,6 +135,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 07]: UAT 2026-11-23: Temurin 17 CI green on 44206a9 (run 45229673247); owner accepted A1-A7, P1-P10 and review IN-01/IN-02 as-is (deferred in 07-REVIEW-DISPOSITION.md); SECURITY threats_open 0
 - [Phase 08]: 08-01: README inline, morimail-html and Serial-mail sample sections with compiled snippets; spec 5/5.1/6.2/8.1/8.3/10.3/10.4/12 and docs/architecture.md describe 0.2.0 with the live result of 2026-11-23; send usage names inline/ and cid:NAME, pinned by SendCommandHelpTest; no new option
 - [Phase 08]: 08-02: docs/release.md version-neutral (VERSION/NEXT, four POMs, -pl morimail,morimail-html -am as in CI, 54-entry bundle listed with the VERSION variable); rehearsed 2026-11-23 with a throwaway key, upload skipped, cleanup of the key and of the local de/morisoft artifacts; offline verify and scoped release build green with zero warning lines
+- [Phase 08]: 08-03 (G-08-2): release.md step 5 chains both deploy commands behind `! grep -- -SNAPSHOT` over the three published POMs; a SNAPSHOT deploy goes to Central's snapshots repository unless -DskipUpload; docs only; the owner reported the 0.2.0 release as working on 2026-11-23 (tag v0.2.0 on 2c4ea80), the guard applies from the next release
 
 ### Pending Todos
 
@@ -160,8 +162,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T20:35:50.208Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-11-23T21:25:45.127Z
+Stopped at: Completed 08-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
