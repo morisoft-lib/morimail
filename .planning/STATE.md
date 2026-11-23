@@ -5,11 +5,11 @@ milestone_name: Inline Images
 current_phase: 8
 current_phase_name: Docs and Release Readiness
 status: planning
-stopped_at: Phase 07 complete, ready to plan Phase 8
-last_updated: "2026-11-23T17:42:31.798Z"
+stopped_at: Phase 8 context gathered
+last_updated: "2026-11-23T17:50:01.389Z"
 last_activity: 2026-11-23
 last_activity_desc: Phase 07 complete, transitioned to Phase 8
-state_head: bb91d4182f712aa29df4398211dd2d3729d696a6
+state_head: d8d77f544d06229f4c91d4cb5564261c7a71a0b3
 progress:
   total_phases: 4
   completed_phases: 3
@@ -156,9 +156,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T16:53:47.542Z
-Stopped at: Phase 07 complete, ready to plan Phase 8
-Resume file: None
+Last session: 2026-11-23T17:50:01.241Z
+Stopped at: Phase 8 context gathered
+Resume file: .planning/phases/08-docs-and-release-readiness/08-CONTEXT.md
 
 ## Operator Next Steps
 
