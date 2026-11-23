@@ -10,12 +10,12 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 
 ### Inline images in the core
 
-- [ ] **INLN-01**: Consumer can add an inline image with `Mail.using(..)...inline(Path image, String contentId)` and refer to it from the HTML as `<img src="cid:<contentId>">`; a blank content ID or one with a line break is rejected.
-- [ ] **INLN-02**: `build()` fails with `InvalidMailException` when the rendered HTML has a `cid:` reference with no matching inline image.
-- [ ] **INLN-03**: `build()` fails with `InvalidMailException` when an inline image is not referenced by any `cid:` in the rendered HTML, including a mail with inline images and no HTML body.
-- [ ] **INLN-04**: `build()` fails with `InvalidMailException` when two inline images in one mail share a content ID.
-- [ ] **INLN-05**: `build()` fails with `InvalidMailException` when an inline image's resolved content type is not an image type; inline images get the same file checks (exists, readable) and content-type resolution as regular attachments.
-- [ ] **INLN-06**: `RecordingTransport` records inline images with their content ID, so consumers and the sample can assert on them in tests.
+- [x] **INLN-01**: Consumer can add an inline image with `Mail.using(..)...inline(Path image, String contentId)` and refer to it from the HTML as `<img src="cid:<contentId>">`; a blank content ID or one with a line break is rejected.
+- [x] **INLN-02**: `build()` fails with `InvalidMailException` when the rendered HTML has a `cid:` reference with no matching inline image.
+- [x] **INLN-03**: `build()` fails with `InvalidMailException` when an inline image is not referenced by any `cid:` in the rendered HTML, including a mail with inline images and no HTML body.
+- [x] **INLN-04**: `build()` fails with `InvalidMailException` when two inline images in one mail share a content ID.
+- [x] **INLN-05**: `build()` fails with `InvalidMailException` when an inline image's resolved content type is not an image type; inline images get the same file checks (exists, readable) and content-type resolution as regular attachments.
+- [x] **INLN-06**: `RecordingTransport` records inline images with their content ID, so consumers and the sample can assert on them in tests.
 
 ### Graph transport
 
@@ -74,12 +74,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INLN-01 | Phase 5 | Pending |
-| INLN-02 | Phase 5 | Pending |
-| INLN-03 | Phase 5 | Pending |
-| INLN-04 | Phase 5 | Pending |
-| INLN-05 | Phase 5 | Pending |
-| INLN-06 | Phase 5 | Pending |
+| INLN-01 | Phase 5 | Complete |
+| INLN-02 | Phase 5 | Complete |
+| INLN-03 | Phase 5 | Complete |
+| INLN-04 | Phase 5 | Complete |
+| INLN-05 | Phase 5 | Complete |
+| INLN-06 | Phase 5 | Complete |
 | GRAPH-10 | Phase 5 | Pending |
 | GRAPH-11 | Phase 5 | Pending |
 | GRAPH-12 | Phase 5 | Pending |

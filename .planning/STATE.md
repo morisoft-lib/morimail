@@ -5,15 +5,16 @@ milestone_name: Inline Images
 current_phase: 05
 current_phase_name: Inline Images in Core and Graph
 status: executing
-stopped_at: Phase 5 context gathered
-last_updated: "2026-11-22T22:46:09.311Z"
-last_activity: "2026-11-22: Roadmap for v0.2.0 created (Phases 5-7, 15/15 requirements mapped)"
-state_head: 709f95042154cfdf52745c087463e87657560ec7
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-11-23T06:15:54.215Z"
+last_activity: 2026-11-22
+last_activity_desc: Phase 05 execution started
+state_head: ea77e48d924e906c1f180e72c0af9d52d7d491db
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 2
-  completed_plans: 0
+  completed_plans: 1
   percent: 0
 ---
 
@@ -24,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-22 after starting milestone v0.2.0)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 5: Inline Images in Core and Graph
+**Current focus:** Phase 05 — Inline Images in Core and Graph
 
 ## Current Position
 
-Phase: 05 (Inline Images in Core and Graph) — READY TO EXECUTE
-Plan: Not started
+Phase: 05 (Inline Images in Core and Graph) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-11-22: Roadmap for v0.2.0 created (Phases 5-7, 15/15 requirements mapped)
+Last activity: 2026-11-22 — Phase 05 execution started
 
 Progress (v0.2.0): [░░░░░░░░░░] 0%
 
@@ -82,6 +83,7 @@ Progress (v0.2.0): [░░░░░░░░░░] 0%
 | Phase 04 P03 | 6 min | 1 tasks | 1 files |
 | Phase 04 P04 | 12 min | 2 tasks | 1 files |
 | Phase 04 P05 | 5min | 1 tasks | 1 files |
+| Phase 05 P01 | 6 min | 3 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -99,6 +101,8 @@ v0.2.0 roadmap (2026-11-22):
 - Three phases: core and Graph together (Phase 5), then the sample (Phase 6), then docs and release readiness (Phase 7). Core checks come before Graph and the sample, and docs come last.
 - Owner checkpoint after Phase 5 for the live inline test. It does not block Phase 6, which runs against `recording`. Phase 7 records the owner's result, or asks the owner whether to record "not yet confirmed live".
 - Spec §10.3 says "a transport that cannot send inline images rejects them in `validate`". This needs no code: both in-repo transports handle inline images (Rule 0).
+- [Phase 05]: Reference pattern implements D-04 as amended 2026-11-22 (owner-approved): cid: in any case, not after a letter or digit, empty ID skipped; ID read from HTML cut at 64 code points in the message
+- [Phase 05]: Graph gets a bare contentId (no angle brackets, no contentLocation, no isInline false on regular attachments); unconfirmed until the owner live run in 05-02
 
 ### Pending Todos
 
@@ -127,9 +131,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-22T21:56:41.893Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-inline-images-in-core-and-graph/05-CONTEXT.md
+Last session: 2026-11-23T06:15:54.174Z
+Stopped at: Completed 05-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
