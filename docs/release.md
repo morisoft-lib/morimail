@@ -164,5 +164,5 @@ git push origin "v${VERSION}"
    ```
 
 2. `git diff` must show exactly four changed lines.
-3. In `README.md`, set the dependency blocks to `${VERSION}` where they show another version, and change the sentence under Coordinates so it names `${VERSION}` as the current release on Maven Central.
+3. In `README.md`, replace the "not on Maven Central yet" sentence under Coordinates with one that names `${VERSION}` as the current release on Maven Central. Check that both dependency blocks show `${VERSION}`; for the 0.2.0 release they already do, and for a later release change them.
 4. Run `./mvnw -B -ntp verify`, commit, and push.
