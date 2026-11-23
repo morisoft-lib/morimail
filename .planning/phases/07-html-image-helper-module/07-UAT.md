@@ -3,7 +3,7 @@ status: diagnosed
 phase: 07-html-image-helper-module
 source: [07-VERIFICATION.md]
 started: 2026-11-23T15:02:23Z
-updated: 2026-11-23T17:01:04Z
+updated: 2026-11-23T17:45:00Z
 ---
 
 ## Current Test
@@ -30,12 +30,20 @@ result: [pending]
 expected: G-07-2 is marked closed; the remaining owner-review items (A1-A7, P1-P10 in the 07-01 to 07-03 SUMMARYs) are accepted or corrected, apart from the D-02 scope point the owner has already decided.
 result: [pending]
 
+### 5. Push the unpushed commits (HEAD is 21 ahead of origin/main at 1e5e891) and let GitHub Actions run on Temurin 17
+expected: All three CI steps are green on Temurin 17: `./mvnw -B -ntp verify`, `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail,morimail-html -am`, and the offline `unshare --net` build. The commits to cover include the compile-scope change b333689 and the code-review fixes 4e49cd3, 66b5264, 457d469, 2a14312.
+result: [pending]
+
+### 6. Rerun /gsd-verify-work 7 so the UAT file reconciles G-07-2 (07-UAT.md still shows status diagnosed, gap failed, tests 3 and 4 pending)
+expected: G-07-2 is marked closed; the remaining owner-review items (A1-A7, P1-P10 in the 07-01 to 07-03 SUMMARYs) are accepted or corrected, apart from the D-02 scope point the owner has already decided. Also decide the two open review findings (07-REVIEW-DISPOSITION.md): the undocumented `strip()` trimming (IN-01) and the untested Error-rethrow branch (IN-02).
+result: [pending]
+
 ## Summary
 
-total: 4
+total: 6
 passed: 1
 issues: 1
-pending: 2
+pending: 4
 skipped: 0
 blocked: 0
 
