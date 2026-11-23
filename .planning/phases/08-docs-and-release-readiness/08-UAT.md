@@ -1,18 +1,14 @@
 ---
-status: testing
+status: complete
 phase: 08-docs-and-release-readiness
 source: [08-VERIFICATION.md]
 started: 2026-11-23T20:42:44Z
-updated: 2026-11-23T20:55:44Z
+updated: 2026-11-23T20:58:45.028Z
 ---
 
 ## Current Test
 
-number: 3
-name: Read docs/release.md as the owner would for a second release (WR-01)
-expected: |
-  Steps 1 to 3 (namespace, GPG key, Portal token) are understood as one-time, and the existing 0.1.0 signing key is reused rather than a new one generated.
-awaiting: user response
+[testing complete]
 
 ## Tests
 
@@ -28,18 +24,18 @@ severity: blocker
 
 ### 3. Read docs/release.md as the owner would for a second release (WR-01)
 expected: Steps 1 to 3 (namespace, GPG key, Portal token) are understood as one-time, and the existing 0.1.0 signing key is reused rather than a new one generated.
-result: [pending]
+result: pass
 
 ### 4. Enable GitHub private vulnerability reporting if still off
 expected: Setting enabled (SECURITY.md routes reports there).
-result: [pending]
+result: pass
 
 ## Summary
 
 total: 4
-passed: 1
+passed: 3
 issues: 1
-pending: 2
+pending: 0
 skipped: 0
 blocked: 0
 
