@@ -33,16 +33,16 @@ findings:
     title: "Dry-run rewrite writes the file name into an HTML attribute without escaping quotes"
 open: 0
 total: 7
-recorded: 2026-11-23T21:46:17.079Z
+recorded: 2026-11-23T21:58:25.025Z
 ---
 
 # Phase 08: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| IN-01 | info | fixed | quick 261123-ubm (9f15ca1) |
-| IN-02 | info | fixed | quick 261123-ubm (9f15ca1) |
-| IN-03 | info | fixed | quick 261123-ubm (9f15ca1) |
+| IN-01 | info | fixed | quick 261123-ubm (9f15ca1) (not in the current review) |
+| IN-02 | info | fixed | quick 261123-ubm (9f15ca1) (not in the current review) |
+| IN-03 | info | fixed | quick 261123-ubm (9f15ca1) (not in the current review) |
 | WR-01 | warning | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | WR-02 | warning | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | IN-04 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
