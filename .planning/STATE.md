@@ -4,17 +4,17 @@ milestone: v0.2.0
 milestone_name: Inline Images
 current_phase: 08
 current_phase_name: Docs and Release Readiness
-status: executing
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-11-23T20:31:59.623Z"
+status: verifying
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-11-23T20:35:50.492Z"
 last_activity: 2026-11-23
 last_activity_desc: Phase 08 execution started
-state_head: 849ea9eefa903c577fd20ecd9d5ed510c674a75b
+state_head: c3db39db7a8a36cb7e9466b6214b3e9de54d6aaf
 progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 75
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 7)
 
 Phase: 08 (Docs and Release Readiness) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-23 — Phase 08 execution started
 
 Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
@@ -95,6 +95,7 @@ Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
 | Phase 07 P03 | 5 min | 2 tasks | 3 files |
 | Phase 07 P04 | 10 min | 2 tasks | 4 files |
 | Phase 08 P01 | 3 min | 3 tasks | 5 files |
+| Phase 08 P02 | 15 min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -132,6 +133,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 07]: 07-04 (G-07-2): morimail-html declares morimail in compile scope (owner decision in UAT, D-02 and D-03 amended 2026-11-23); runtime classpath morimail plus Jackson through morimail; morimail jar unchanged
 - [Phase 07]: UAT 2026-11-23: Temurin 17 CI green on 44206a9 (run 45229673247); owner accepted A1-A7, P1-P10 and review IN-01/IN-02 as-is (deferred in 07-REVIEW-DISPOSITION.md); SECURITY threats_open 0
 - [Phase 08]: 08-01: README inline, morimail-html and Serial-mail sample sections with compiled snippets; spec 5/5.1/6.2/8.1/8.3/10.3/10.4/12 and docs/architecture.md describe 0.2.0 with the live result of 2026-11-23; send usage names inline/ and cid:NAME, pinned by SendCommandHelpTest; no new option
+- [Phase 08]: 08-02: docs/release.md version-neutral (VERSION/NEXT, four POMs, -pl morimail,morimail-html -am as in CI, 54-entry bundle listed with the VERSION variable); rehearsed 2026-11-23 with a throwaway key, upload skipped, cleanup of the key and of the local de/morisoft artifacts; offline verify and scoped release build green with zero warning lines
 
 ### Pending Todos
 
@@ -158,8 +160,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T20:31:59.354Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-11-23T20:35:50.208Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
