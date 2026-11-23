@@ -3,6 +3,18 @@ phase: 07
 review: 07-REVIEW.md
 titles: json
 findings:
+  - id: IN-01
+    severity: info
+    disposition: open
+    title: "Javadoc for the `data:` file name is stale after the `+suffix` fix"
+  - id: IN-02
+    severity: info
+    disposition: open
+    title: "A `src` value with leading or trailing whitespace is treated as a file name"
+  - id: IN-03
+    severity: info
+    disposition: open
+    title: "The reader thread catches `Throwable` and reports it as a retryable failure"
   - id: WR-01
     severity: warning
     disposition: fixed
@@ -15,18 +27,6 @@ findings:
     severity: warning
     disposition: fixed
     title: "Wall-clock assertions in the download tests are likely to flake on slow CI runners"
-  - id: IN-01
-    severity: info
-    disposition: fixed
-    title: "A source of `image/svg+xml` produces the unusable attachment name `image-3.svg-xml`"
-  - id: IN-02
-    severity: info
-    disposition: fixed
-    title: "The attachment file name is taken from a remote URL segment without length or content checks"
-  - id: IN-03
-    severity: info
-    disposition: fixed
-    title: "`<img alt=\"x\"src=\"y\">` (no whitespace between attributes) is silently not rewritten"
   - id: IN-04
     severity: info
     disposition: fixed
@@ -35,23 +35,23 @@ findings:
     severity: info
     disposition: fixed
     title: "The helper's behaviour decisions are not recorded in `docs/architecture.md`"
-open: 0
+open: 3
 total: 8
-recorded: 2026-11-23T15:15:05.910Z
+recorded: 2026-11-23T16:58:05.673Z
 ---
 
 # Phase 07: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 07-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 07-REVIEW-FIX.md |
-| WR-03 | warning | fixed | 07-REVIEW-FIX.md |
-| IN-01 | info | fixed | 07-REVIEW-FIX.md |
-| IN-02 | info | fixed | 07-REVIEW-FIX.md |
-| IN-03 | info | fixed | 07-REVIEW-FIX.md |
-| IN-04 | info | fixed | 07-REVIEW-FIX.md |
-| IN-05 | info | fixed | 07-REVIEW-FIX.md |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
+| IN-03 | info | open | - |
+| WR-01 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
+| WR-02 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
+| WR-03 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
+| IN-04 | info | fixed | 07-REVIEW-FIX.md (not in the current review) |
+| IN-05 | info | fixed | 07-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
