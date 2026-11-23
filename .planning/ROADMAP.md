@@ -149,7 +149,7 @@ Plans:
 - [x] 08-02-PLAN.md — Tracer: version-neutral `docs/release.md` for `morimail-parent`, `morimail` and `morimail-html`, rehearsed as written with a throwaway key (54-entry bundle, upload skipped, cleanup), then the release gate: offline verify, scoped release build with zero warnings, scope and hygiene (DOCS-06, DOCS-07)
 
 **Wave 3** *(gap closure, blocked on Wave 2 completion)*
-- [ ] 08-03-PLAN.md — Gap G-08-2: `docs/release.md` step 5 chains both deploy commands behind a guard that stops them while a published POM holds `-SNAPSHOT`, and states that a SNAPSHOT deploy goes to Central's snapshots repository unless `-DskipUpload` is set (docs only; build inputs equal the release commit 2c4ea80) (DOCS-06)
+- [ ] 08-03-PLAN.md — Gap G-08-2: `docs/release.md` step 5 chains both deploy commands behind a guard that stops them while a published POM holds `-SNAPSHOT`, and states that a SNAPSHOT deploy goes to Central's snapshots repository unless `-DskipUpload` is set (docs only, on top of the 0.3.0-SNAPSHOT bump 8df5f6a; 0.2.0 was already released by the owner, so the guard applies from the next release) (DOCS-06)
 
 **UI hint**: no
 
