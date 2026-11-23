@@ -38,6 +38,7 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 - [ ] **HTML-04**: Generated content IDs come from the file name without extension, pass the Phase 5 content-ID rules, get a numeric suffix on collision; the same source used twice yields one image.
 - [ ] **HTML-05**: `http(s)` sources are downloaded only when the caller passes a download directory (opt-in), with a timeout, a size cap and an image content-type check; tested offline against WireMock.
 - [ ] **HTML-06**: A converted template, rendered for several data records and sent to `recording`, passes `build()` and carries the inline images in every mail.
+- [ ] **HTML-07**: A storable form: `HtmlImages.toDataUris` turns local (and, with a work directory, remote) image sources into `data:image/...;base64,` URIs so the HTML alone carries its images; `embed` with a work directory turns `data:` image sources back into `cid:` references plus inline `Attachment`s (decoded into the work directory), with the same image-type check and 3 MiB cap (spec §10.4 "Storable form", owner request 2026-11-23).
 
 ### Docs and release readiness
 
@@ -93,13 +94,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HTML-04 | Phase 7 | Pending |
 | HTML-05 | Phase 7 | Pending |
 | HTML-06 | Phase 7 | Pending |
+| HTML-07 | Phase 7 | Pending |
 | DOCS-05 | Phase 8 | Pending |
 | DOCS-06 | Phase 8 | Pending |
 | DOCS-07 | Phase 8 | Pending |
 
 **Coverage:**
-- v0.2.0 requirements: 22 total
-- Mapped to phases: 22 (Phase 5: 9, Phase 6: 4, Phase 7: 6, Phase 8: 3)
+- v0.2.0 requirements: 23 total
+- Mapped to phases: 23 (Phase 5: 9, Phase 6: 4, Phase 7: 7, Phase 8: 3)
 - Unmapped: 0 ✓
 
 ---

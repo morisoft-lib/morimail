@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 5: Inline Images in Core and Graph** - `.inline(path, contentId)` with two-way `cid:` checks in `build()`, recorded by `recording`, and sent by Graph as inline file attachments within the 3 MiB / 4 MiB limits. Ends with the owner's live-test checkpoint. (completed 2026-11-23)
 - [x] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo (completed 2026-11-23)
-- [ ] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images
+- [ ] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images; plus a storable `data:` URI form that `embed` turns back into inline images
 - [ ] **Phase 8: Docs and Release Readiness** - README inline and helper examples, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green for `morimail` and `morimail-html` at `0.2.0-SNAPSHOT`
 
 > **Owner checkpoint after Phase 5 (live inline test).** Once Phase 5 is verified and committed, report to the owner. Claude does not run the live test and sends no real mail. The owner runs the `live` test with `-Plive` and checks that the image shows inline in a mail client and not as a separate attachment. Phases 6 and 7 do not wait for this. Phase 8 needs the result. If the owner has not run the test by then, Phase 8 asks the owner whether to record it as "not yet confirmed live". A Graph correction found by the live run becomes an inserted Phase 5.1.
@@ -103,7 +103,7 @@ Plans:
 ### Phase 7: HTML Image Helper Module
 **Goal**: A template author can write ordinary image URLs in an HTML template, and one call to `HtmlImages` turns them into `cid:` references plus inline images that pass the Phase 5 checks.
 **Depends on**: Phase 5 (not the owner's live inline test, not Phase 6)
-**Requirements**: HTML-01, HTML-02, HTML-03, HTML-04, HTML-05, HTML-06
+**Requirements**: HTML-01, HTML-02, HTML-03, HTML-04, HTML-05, HTML-06, HTML-07
 **Success Criteria** (what must be TRUE):
   1. The reactor has a new module `morimail-html` (artifact `de.morisoft:morimail-html`, package `de.morisoft.morimail.html`). It depends on `morimail`, uses no other runtime dependency unless the owner approved one, and is part of the release profile. The `morimail` jar is unchanged.
   2. `HtmlImages` takes a `MailTemplate` and a base directory. It returns a template whose `<img src>` values for local files are `cid:` references, plus one `Attachment` with `contentId` per distinct image. `cid:`, `data:`, unknown schemes and any `src` with a `$$` placeholder stay unchanged. Subject and text are untouched.
@@ -111,6 +111,7 @@ Plans:
   4. Generated content IDs follow the file name without extension, pass the Phase 5 content-ID rules, get a numeric suffix on collision, and the same source used twice yields one image.
   5. `http(s)` sources stay unchanged by default. When the caller passes a download directory, they are downloaded there (tested against WireMock, offline) with a timeout, a size cap and an image content-type check, and a failure maps to the category decided in this phase's discussion.
   6. End to end: a template converted once, rendered for two data records and sent through `Mailer` to `recording`, gives two mails that each carry the inline images and pass `build()`.
+  7. Storable form: `toDataUris` gives HTML whose images are `data:` URIs and that needs no image files; `embed` with a work directory turns it back into `cid:` references plus inline images that pass `build()`. The `morimail` POM and jar have no reference to `morimail-html`.
 **Plans**: TBD
 **UI hint**: no
 
