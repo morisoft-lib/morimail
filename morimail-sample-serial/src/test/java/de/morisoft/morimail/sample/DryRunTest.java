@@ -6,12 +6,15 @@ import static de.morisoft.morimail.sample.SampleFixtures.THREE_ROWS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -25,13 +28,15 @@ class DryRunTest {
     private final AtomicInteger factoryCalls = new AtomicInteger();
     private final List<Duration> waits = new ArrayList<>();
 
-    private SampleFixtures.Run dryRun(Path campaign, Path out) throws IOException {
+    private SampleFixtures.Run dryRun(Path campaign, Path out, String... more) throws IOException {
         Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        List<String> args = new ArrayList<>(List.of("send", "--dry-run", "--account", account.toString(),
+                "--campaign", campaign.toString(), "--out", out.toString()));
+        args.addAll(List.of(more));
         return SampleFixtures.run(a -> {
             factoryCalls.incrementAndGet();
             throw new AssertionError("a dry run must not build a Mailer");
-        }, waits, "send", "--dry-run", "--account", account.toString(),
-                "--campaign", campaign.toString(), "--out", out.toString());
+        }, waits, args.toArray(new String[0]));
     }
 
     private static String name(String prefix, String email, String suffix) {
@@ -113,6 +118,128 @@ class DryRunTest {
         }
         assertThat(factoryCalls).hasValue(0);
         assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
+    }
+
+    @Test
+    void inlineSrcIsPercentEncodedAndHtmlSafe() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"),
+                "<p><img src=\"cid:a&b\"><img src=\"cid:ü\"><img src=\"cid:50%\"><img src=\"cid:x#1\">"
+                        + " Hi $$firstName$$ from $$city$$</p>");
+        SampleFixtures.writeInline(campaign, "a&b.png", "ü.png", "50%.png", "x#1.png");
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run run = dryRun(campaign, out);
+
+        assertThat(run.exit()).isZero();
+        assertThat(run.outLines().get(1)).isEqualTo("inline: 50%.png (image/png, 3 bytes, cid:50%), "
+                + "a&b.png (image/png, 3 bytes, cid:a&b), x#1.png (image/png, 3 bytes, cid:x#1), "
+                + "ü.png (image/png, 3 bytes, cid:ü)");
+        String html = Files.readString(out.resolve(name("01", "anna@example.org", ".html")));
+        assertThat(html).isEqualTo("<p><img src=\"inline/a&amp;b.png\"><img src=\"inline/%C3%BC.png\">"
+                + "<img src=\"inline/50%25.png\"><img src=\"inline/x%231.png\"> Hi Anna from Berlin</p>");
+        Matcher srcs = Pattern.compile("src=\"([^\"]*)\"").matcher(html);
+        int found = 0;
+        while (srcs.find()) {
+            found++;
+            Path copy = out.resolve(URI.create(srcs.group(1).replace("&amp;", "&")).getPath());
+            assertThat(Files.readString(copy)).isEqualTo("png");
+        }
+        assertThat(found).isEqualTo(4);
+    }
+
+    @Test
+    void bareCidStaysAndAnyCasePrefixIsRewritten() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"),
+                "<p><img src='CID:logo'><a href=\"cid:\">x</a> Hi $$firstName$$ from $$city$$</p>");
+        SampleFixtures.writeInline(campaign, "logo.png");
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run run = dryRun(campaign, out);
+
+        assertThat(run.exit()).isZero();
+        assertThat(Files.readString(out.resolve(name("01", "anna@example.org", ".html"))))
+                .isEqualTo("<p><img src='inline/logo.png'><a href=\"cid:\">x</a> Hi Anna from Berlin</p>");
+    }
+
+    @Test
+    void limitStillCopiesTheImagesOnce() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"), INLINE_HTML);
+        SampleFixtures.writeInline(campaign, "logo.png");
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run run = dryRun(campaign, out, "--limit", "1");
+
+        assertThat(run.exit()).isZero();
+        assertThat(fileNames(out)).containsExactly(
+                name("01", "anna@example.org", ".html"),
+                name("01", "anna@example.org", ".subject.txt"),
+                name("01", "anna@example.org", ".txt"),
+                "inline");
+        assertThat(out.resolve("inline").resolve("logo.png")).exists();
+        assertThat(run.outLines().get(run.outLines().size() - 1))
+                .isEqualTo("dry run: 1 mails written to " + out);
+    }
+
+    @Test
+    void rerunOverwritesTheCopiedImagesAndKeepsOtherFiles() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"), INLINE_HTML);
+        SampleFixtures.writeInline(campaign, "logo.png");
+        Path out = root.resolve("out");
+        Path inline = Files.createDirectories(out.resolve("inline"));
+        Files.writeString(inline.resolve("logo.png"), "old");
+        Files.writeString(inline.resolve("keep.me"), "keep");
+
+        SampleFixtures.Run run = dryRun(campaign, out);
+
+        assertThat(run.exit()).isZero();
+        assertThat(Files.readString(inline.resolve("logo.png"))).isEqualTo("png");
+        assertThat(Files.readString(inline.resolve("keep.me"))).isEqualTo("keep");
+    }
+
+    @Test
+    void inlineDirectoryWithOnlyHiddenFilesChangesNothing() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Path inline = SampleFixtures.writeInline(campaign, ".DS_Store");
+        Files.createDirectories(inline.resolve("sub"));
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run run = dryRun(campaign, out);
+
+        assertThat(run.exit()).isZero();
+        assertThat(run.outLines()).containsExactly(
+                "attachments: info.txt (text/plain, 18 bytes)",
+                "[1/3] anna@example.org rendered",
+                "[2/3] ben@example.org rendered",
+                "[3/3] clara@example.org rendered",
+                "dry run: 3 mails written to " + out);
+        assertThat(fileNames(out)).hasSize(9).doesNotContain("inline");
+        assertThat(out.resolve("inline")).doesNotExist();
+    }
+
+    @Test
+    void inlineLineListsEveryImageInFileNameOrder() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.delete(campaign.resolve("attachments").resolve("info.txt"));
+        Files.delete(campaign.resolve("attachments"));
+        Files.writeString(campaign.resolve("body.html"),
+                "<p><img src=\"cid:a\"><img src=\"cid:B\"> Hi $$firstName$$ from $$city$$</p>");
+        Path inline = SampleFixtures.writeInline(campaign, "B.png", "a.gif");
+        Files.createDirectories(inline.resolve("sub"));
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run run = dryRun(campaign, out);
+
+        assertThat(run.exit()).isZero();
+        assertThat(run.outLines().get(0)).isEqualTo("attachments: none");
+        assertThat(run.outLines().get(1))
+                .isEqualTo("inline: B.png (image/png, 3 bytes, cid:B), a.gif (image/gif, 3 bytes, cid:a)");
+        assertThat(fileNames(out.resolve("inline"))).containsExactly("B.png", "a.gif");
+        assertThat(Files.readString(out.resolve(name("01", "anna@example.org", ".html"))))
+                .isEqualTo("<p><img src=\"inline/a.gif\"><img src=\"inline/B.png\"> Hi Anna from Berlin</p>");
     }
 
     @Test

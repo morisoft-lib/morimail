@@ -6,6 +6,7 @@ import static de.morisoft.morimail.sample.SampleFixtures.THREE_ROWS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import de.morisoft.morimail.Attachment;
 import de.morisoft.morimail.MailAccount;
 import de.morisoft.morimail.MailMessage;
 import de.morisoft.morimail.Mailer;
@@ -94,6 +95,28 @@ class SendRunTest {
         assertThat(SampleFixtures.journalLines(campaign.resolve("journal.jsonl")))
                 .hasSize(3)
                 .allSatisfy(line -> assertThat(line.get("outcome").asText()).isEqualTo("accepted"));
+    }
+
+    @Test
+    void inlineImagesFollowTheAttachmentsInFileNameOrder() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"),
+                "<p><img src=\"cid:a\"><img src=\"cid:B\"> Hi $$firstName$$ from $$city$$</p>");
+        Path inline = SampleFixtures.writeInline(campaign, "B.png", "a.gif", ".DS_Store");
+        Files.createDirectories(inline.resolve("sub"));
+        MailAccount recording = SampleFixtures.recordingAccount();
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(recording), new ArrayList<>(),
+                "send", "--account", account.toString(), "--campaign", campaign.toString());
+
+        assertThat(run.exit()).isZero();
+        MailMessage first = ((RecordingTransport) recording.transport()).sent().get(0);
+        assertThat(first.attachments()).extracting(Attachment::filename)
+                .containsExactly("info.txt", "B.png", "a.gif");
+        assertThat(first.attachments()).extracting(Attachment::contentId)
+                .containsExactly(null, "B", "a");
+        assertThat(first.html()).contains("cid:a").contains("cid:B");
     }
 
     @Test
