@@ -170,7 +170,8 @@ final class SendCommand implements Callable<Integer> {
                     for (Path attachment : campaign.attachments()) {
                         builder.attach(attachment);
                     }
-                    // Regular attachments first, inline images after them, so v0.1.0 mails keep their attachment order.
+                    // Regular attachments first, inline images after them, so v0.1.0 mails keep
+                    // their attachment order.
                     for (Path image : campaign.inlineImages()) {
                         builder.inline(image, Campaign.contentId(image));
                     }
@@ -252,7 +253,10 @@ final class SendCommand implements Callable<Integer> {
         return name.toString();
     }
 
-    /** The stdout entries of attachments, joined by a comma; an inline image also shows its content ID. */
+    /**
+     * The stdout entries of attachments, joined by a comma; an inline image also shows its
+     * content ID.
+     */
     private static String describeAll(List<Attachment> attachments, boolean withContentId)
             throws IOException {
         List<String> entries = new ArrayList<>();

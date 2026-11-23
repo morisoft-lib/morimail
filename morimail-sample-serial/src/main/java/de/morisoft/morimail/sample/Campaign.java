@@ -35,7 +35,8 @@ import java.util.stream.Stream;
  * @param inlineImages the regular files of {@code inline/}, sorted by file name; each one is an
  *     inline image whose content ID is {@link #contentId(Path)}
  */
-record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, List<Path> inlineImages) {
+record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments,
+        List<Path> inlineImages) {
 
     /** The placeholder pattern of the core's template renderer, copied so both agree on every name. */
     static final Pattern PLACEHOLDER = Pattern.compile("\\$\\$(!?)([A-Za-z0-9_.-]+)\\$\\$");
@@ -46,6 +47,8 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, L
      */
     static final Pattern CID_REFERENCE =
             Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)>]*)");
+
+    private static final String IMAGE_PREFIX = "image/";
 
     /**
      * One recipient row.
@@ -212,8 +215,9 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, L
                     problems.add(prefix + withoutField(e));
                     fine = false;
                 }
-                // The image rule of build() (D-10) on the type build() resolved, in the core's wording.
-                if (!type.regionMatches(true, 0, "image/", 0, 6)) {
+                // The image rule of build() (D-10) on the type build() resolved, in the core's
+                // wording.
+                if (!type.regionMatches(true, 0, IMAGE_PREFIX, 0, IMAGE_PREFIX.length())) {
                     problems.add(prefix + "inline image " + id + " has content type " + type
                             + ", which is not an image type");
                     fine = false;
