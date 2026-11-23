@@ -345,7 +345,8 @@ public final class HtmlImages {
         while (m.find()) {
             int g = m.start(1) >= 0 ? 1 : m.start(2) >= 0 ? 2 : 3;
             String raw = m.group(g);
-            String value = raw.replace("&amp;", "&");
+            // Browsers and mail clients strip surrounding whitespace from a src; raw stays as written for messages and the span.
+            String value = raw.replace("&amp;", "&").strip();
             if (value.contains("$$")) {
                 continue;
             }

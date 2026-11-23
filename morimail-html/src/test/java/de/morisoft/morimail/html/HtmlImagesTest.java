@@ -321,6 +321,14 @@ class HtmlImagesTest {
     }
 
     @Test
+    void surroundingWhitespaceOfASourceIsIgnored() throws Exception {
+        HtmlImages.Result result = embed(img(" logo.png\n") + img("\t cid:other "));
+
+        assertThat(ids(result)).containsExactly("logo");
+        assertThat(result.template().html()).isEqualTo(img("cid:logo") + img("\t cid:other "));
+    }
+
+    @Test
     void collisionsGetANumericSuffixInDocumentOrder() throws Exception {
         image("a/logo.png", 2);
         image("b/logo.png", 3);
