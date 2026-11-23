@@ -2,10 +2,14 @@
 
 The owner runs every step on their own machine. Claude prepares the build and rehearses the bundle, and never runs these steps. Use `./mvnw`, which pins Maven 3.10.1. Never use Maven 4, which the Central publishing plugin documents as not working. A release publishes the parent POM `de.morisoft:morimail-parent`, the library `de.morisoft:morimail` and the helper `de.morisoft:morimail-html`, all with the same version; the sample and the test-jar are never published.
 
-## Before the first release
+## Before every release
 
 - Enable GitHub private vulnerability reporting (Settings, Code security), because `SECURITY.md` routes reports there.
 - CI must be green on Temurin 17 for the commit you release. That includes the release build with `-Prelease verify -Dgpg.skip -pl morimail,morimail-html -am`. Step 4 pushes that commit and waits for CI before the deploy.
+
+## One-time setup (steps 1 to 3)
+
+Steps 1 to 3 are one-time. If you already released 0.1.0, check that the namespace shows as verified, that `gpg --list-secret-keys` shows the key that signed 0.1.0, and that the token in settings.xml is still valid, then continue at step 4. Do not create a second signing key, because consumers who verify signatures expect the same key.
 
 ## 1. Verify the namespace
 
