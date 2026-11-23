@@ -304,7 +304,7 @@ final class SendCommand implements Callable<Integer> {
                             StandardCopyOption.REPLACE_EXISTING);
                     srcById.put(image.contentId(),
                             new URI(null, null, "inline/" + image.filename(), null)
-                                    .toASCIIString().replace("&", "&amp;"));
+                                    .toASCIIString().replace("&", "&amp;").replace("'", "&#39;"));
                 }
             }
             for (int i = 0; i < total; i++) {
