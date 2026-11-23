@@ -102,6 +102,56 @@ public class InlineImage {
 
 Inline images count toward the Graph transport's attachment limits: under 3 MiB (3 x 1024 x 1024 bytes) per file and for all attachments together, and at most 4 MiB for the estimated request. Details are in [docs/architecture.md](docs/architecture.md).
 
+## morimail-html
+
+The helper module turns ordinary image sources in an HTML template, such as `<img src="images/logo.png">`, into `cid:` references plus inline images. Convert the template once, before rendering, and use the result for every mail. The helper brings `morimail` with it and adds no other dependency.
+
+```xml
+<dependency>
+  <groupId>de.morisoft</groupId>
+  <artifactId>morimail-html</artifactId>
+  <version>0.2.0</version>
+</dependency>
+```
+
+Local sources resolve against a base directory and must lie inside it.
+
+```java
+import de.morisoft.morimail.*;
+import de.morisoft.morimail.html.HtmlImages;
+import java.nio.file.Path;
+import java.util.Map;
+
+public class EmbedImages {
+    public static void send(Mailer mailer) throws MailException {
+        MailTemplate template = new MailTemplate(
+            "Hello $$firstName$$",
+            "<p><img src=\"images/logo.png\" alt=\"Logo\"></p><p>Hello $$firstName$$,</p>",
+            "Hello $$firstName$$,");
+
+        HtmlImages.Result result = HtmlImages.embed(template, Path.of("campaign"));
+        Mail.Builder builder = Mail.using("entra-main")
+            .to("anna@example.org")
+            .template(result.template(), Map.of("firstName", "Anna"));
+        for (Attachment image : result.images()) {
+            builder.attach(image);
+        }
+        Mail mail = builder.build();
+        mailer.send(mail);
+
+        // With a work directory, http(s) and data: sources are converted too.
+        HtmlImages.Result withRemote = HtmlImages.embed(template, Path.of("campaign"), Path.of("work"));
+
+        // The storable form: HTML whose images are data: URIs.
+        MailTemplate storable = HtmlImages.toDataUris(template, Path.of("campaign"));
+    }
+}
+```
+
+`http(s)` and `data:` sources stay unchanged unless a work directory is passed, an existing directory that the caller owns and cleans up. With it the helper downloads remote images into it, with a timeout, a 3 MiB cap and an image type check, and decodes `data:` images there. A template URL can reach any host this machine can reach, so pass a work directory only for templates you trust. Recipient data never reaches the helper, because a `src` with a `$$` placeholder stays unchanged.
+
+`toDataUris` gives the storable form, HTML whose images are `data:` URIs so the template alone carries them, and `embed` with a work directory turns it back into inline images.
+
 ## What morimail is not
 
 - Not a bulk mailer or campaign tool. It sends one mail per call, with no batching, queues, scheduling or retries; those belong to the consumer.

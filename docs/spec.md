@@ -397,7 +397,7 @@ Stop after milestone 4 and report, so the owner can run the live test and feed r
 - Sample: an optional `inline/` directory in the campaign; the file name without extension is the content ID. Dry-run writes the images next to the rendered HTML and rewrites `cid:` references to relative paths in the dry-run output only.
 - The core library does not rewrite HTML and does not generate content IDs. That is the job of the helper in section 10.4.
 
-### 10.4 Milestone 6, continued: HTML image helper (`morimail-html`)
+### 10.4 Milestone 6, continued: HTML image helper (`morimail-html`), implemented in 0.2.0
 
 Added by the owner on 2026-11-22. A convenience for template authors who write ordinary image URLs (`<img src="logo.png">`, `file:`, `https://`) instead of `cid:` references.
 
@@ -450,8 +450,8 @@ Each has a default so work is not blocked. Raise them at the milestone-4 report.
 | `Co-Authored-By` trailer that Claude Code adds to commit messages | Leave Claude Code's default. The owner decides whether a public history should carry it and can switch it off in the Claude Code settings. |
 | HTML plus text both supplied on Graph | Send HTML only in the MVP; MIME format later |
 | Attachment limit | Under 3 MB per file and in total; upload session later |
-| HTML parser for `morimail-html` (10.4) | None: a JDK regular expression over `<img src>`. A parser such as jsoup needs the owner's explicit approval |
-| Failed download in `morimail-html` (10.4) | Decided in the phase that builds it, together with the size cap, the timeouts and the redirect rule |
+| HTML parser for `morimail-html` (10.4) | Decided in 0.2.0: none, a JDK regular expression over `<img src>`. A parser such as jsoup needs the owner's explicit approval. See docs/architecture.md |
+| Failed download in `morimail-html` (10.4) | Decided in 0.2.0: transient for a network error, a timeout, HTTP 5xx and 429, invalid for every other failure. An image of 3 MiB or more is refused; a download has a 10 s connect timeout and one 30 s budget, and a redirect from https to http is not followed. See docs/architecture.md |
 
 ## 13. Open source and Maven Central
 
