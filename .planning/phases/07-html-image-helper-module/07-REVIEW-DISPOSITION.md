@@ -5,12 +5,12 @@ titles: json
 findings:
   - id: IN-01
     severity: info
-    disposition: fixed
-    title: "Javadoc for the `data:` file name is stale after the `+suffix` fix"
+    disposition: open
+    title: "`strip()` trimming is undocumented and not the HTML rule"
   - id: IN-02
     severity: info
-    disposition: fixed
-    title: "A `src` value with leading or trailing whitespace is treated as a file name"
+    disposition: open
+    title: "The Error-rethrow path has no test"
   - id: IN-03
     severity: info
     disposition: fixed
@@ -35,18 +35,18 @@ findings:
     severity: info
     disposition: fixed
     title: "The helper's behaviour decisions are not recorded in `docs/architecture.md`"
-open: 0
+open: 2
 total: 8
-recorded: 2026-11-23T17:05:51.542Z
+recorded: 2026-11-23T17:25:03.319Z
 ---
 
 # Phase 07: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| IN-01 | info | fixed | 07-REVIEW-FIX.md |
-| IN-02 | info | fixed | 07-REVIEW-FIX.md |
-| IN-03 | info | fixed | 07-REVIEW-FIX.md |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
+| IN-03 | info | fixed | 07-REVIEW-FIX.md (not in the current review) |
 | WR-01 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
 | WR-02 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
 | WR-03 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
