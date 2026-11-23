@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -62,8 +63,13 @@ class ExampleCampaignTest {
             expected.add(name(i + 1, NAMES.get(i), ".subject.txt"));
             expected.add(name(i + 1, NAMES.get(i), ".txt"));
         }
+        expected.add("inline");
         assertThat(fileNames(out)).containsExactlyInAnyOrderElementsOf(expected);
-        assertThat(fileNames(out)).hasSize(15);
+        assertThat(fileNames(out)).hasSize(16);
+        Path logo = CAMPAIGN.resolve("inline").resolve("logo.png");
+        assertThat(fileNames(out.resolve("inline"))).containsExactly("logo.png");
+        assertThat(Files.readAllBytes(out.resolve("inline").resolve("logo.png")))
+                .isEqualTo(Files.readAllBytes(logo));
 
         String clara = Files.readString(out.resolve(name(3, "clara", ".html")));
         assertThat(clara).contains("Tips, tricks &amp; shortcuts").contains("Köln");
@@ -74,7 +80,23 @@ class ExampleCampaignTest {
         // pdf and png come from the core's built-in extension table, so this holds on every host
         assertThat(run.outLines().get(0))
                 .startsWith("attachments: info.pdf (application/pdf, ")
-                .contains("logo.png (image/png, ");
+                .contains("sample.png (image/png, ")
+                .doesNotContain("logo.png");
+        assertThat(run.outLines().get(1))
+                .isEqualTo("inline: logo.png (image/png, " + Files.size(logo) + " bytes, cid:logo)");
+
+        Pattern src = Pattern.compile("<img src=\"([^\"]*)\"");
+        for (int i = 0; i < NAMES.size(); i++) {
+            String html = Files.readString(out.resolve(name(i + 1, NAMES.get(i), ".html")));
+            assertThat(html)
+                    .contains("<p><img src=\"inline/logo.png\" alt=\"morimail logo\" width=\"96\" height=\"48\"></p>")
+                    .doesNotContain("cid:");
+            Matcher matcher = src.matcher(html);
+            assertThat(matcher.find()).isTrue();
+            BufferedImage shown = ImageIO.read(out.resolve(URI.create(matcher.group(1)).getPath()).toFile());
+            assertThat(shown.getWidth()).isEqualTo(96);
+            assertThat(shown.getHeight()).isEqualTo(48);
+        }
     }
 
     @Test
@@ -92,6 +114,8 @@ class ExampleCampaignTest {
         Campaign campaign = Campaign.read(CAMPAIGN, problems);
 
         assertThat(problems).isEmpty();
+        assertThat(campaign.inlineImages()).extracting(file -> file.getFileName().toString())
+                .containsExactly("logo.png");
         assertThat(campaign.rows()).extracting(Campaign.Row::email).containsExactly(
                 "anna@example.org", "ben@example.org", "clara@example.org",
                 "david@example.org", "emma@example.org");
@@ -120,7 +144,8 @@ class ExampleCampaignTest {
     @Test
     void attachmentsAreSmallAndCarryNoMetadata() throws IOException {
         Path pdfFile = CAMPAIGN.resolve("attachments").resolve("info.pdf");
-        Path pngFile = CAMPAIGN.resolve("attachments").resolve("logo.png");
+        Path pngFile = CAMPAIGN.resolve("attachments").resolve("sample.png");
+        assertThat(CAMPAIGN.resolve("attachments").resolve("logo.png")).doesNotExist();
         assertThat(Files.size(pdfFile)).isLessThan(102400);
         assertThat(Files.size(pngFile)).isLessThan(102400);
 
@@ -148,6 +173,19 @@ class ExampleCampaignTest {
             assertThat(pdf.startsWith(count + " 0 obj", offset)).as("object " + count).isTrue();
         }
         assertThat(count).isEqualTo(5);
+    }
+
+    @Test
+    void inlineLogoIsTinyAndMatchesTheImgSize() throws IOException {
+        Path logo = CAMPAIGN.resolve("inline").resolve("logo.png");
+
+        assertThat(Files.size(logo)).isLessThan(1024);
+        BufferedImage image = ImageIO.read(logo.toFile());
+        assertThat(image.getWidth()).isEqualTo(96);
+        assertThat(image.getHeight()).isEqualTo(48);
+        assertThat(pngChunkTypes(Files.readAllBytes(logo))).containsExactly("IHDR", "IDAT", "IEND");
+        assertThat(Files.readString(CAMPAIGN.resolve("body.html")))
+                .contains("<img src=\"cid:logo\" alt=\"morimail logo\" width=\"96\" height=\"48\">");
     }
 
     private static List<String> pngChunkTypes(byte[] png) {

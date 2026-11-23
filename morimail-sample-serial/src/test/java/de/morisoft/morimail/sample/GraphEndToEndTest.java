@@ -165,10 +165,21 @@ class GraphEndToEndTest {
             for (JsonNode attachment : message.get("attachments")) {
                 names.add(attachment.get("name").asText());
             }
-            assertThat(names).containsExactly("info.pdf", "logo.png");
+            assertThat(names).containsExactly("info.pdf", "sample.png", "logo.png");
+            JsonNode logoNode = message.get("attachments").get(2);
+            assertThat(logoNode.get("isInline").asBoolean()).isTrue();
+            assertThat(logoNode.get("contentId").asText()).isEqualTo("logo");
+            for (int i = 0; i < 2; i++) {
+                assertThat(message.get("attachments").get(i).has("isInline")).isFalse();
+                assertThat(message.get("attachments").get(i).has("contentId")).isFalse();
+            }
+            assertThat(message.get("body").get("content").asText())
+                    .contains("src=\"cid:logo\"").doesNotContain("inline/logo.png");
             if (address.equals("anna@example.org")) {
                 assertThat(message.get("attachments").get(0).get("contentBytes").asText())
                         .isEqualTo(Base64.getEncoder().encodeToString(info));
+                assertThat(logoNode.get("contentBytes").asText()).isEqualTo(Base64.getEncoder()
+                        .encodeToString(Files.readAllBytes(campaign.resolve("inline").resolve("logo.png"))));
             }
         }
         assertThat(SampleFixtures.journalLines(journal)).hasSize(5)
