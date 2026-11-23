@@ -64,7 +64,7 @@ Steps 1 to 3 are one-time. If you already released 0.1.0, check that the namespa
    NEXT=0.3.0-SNAPSHOT
    ```
 
-   Steps 5 to 8 use both variables, so set them again in every new shell.
+   Steps 5 to 8 use `VERSION`, and step 8 also uses `NEXT`. Set them again in every new shell.
 
 2. Change the four POM versions from `${VERSION}-SNAPSHOT` to `${VERSION}`. On macOS use `sed -i ''`.
 
@@ -120,7 +120,7 @@ Two notes on that check:
 - At a SNAPSHOT version no zip is made, so run it after step 4.
 - With `-o` (offline) the publish goal is skipped, so never add `-o`.
 
-The check installs the `$VERSION` artifacts under `~/.m2/repository/de/morisoft`. Remove that directory afterwards if you do not want them there.
+The check installs the `${VERSION}` artifacts under `~/.m2/repository/de/morisoft`. Remove that directory afterwards if you do not want them there.
 
 Then the real deploy. Warm up the agent again:
 
