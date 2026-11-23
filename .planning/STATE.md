@@ -5,16 +5,16 @@ milestone_name: Inline Images
 current_phase: 07
 current_phase_name: HTML Image Helper Module
 status: executing
-stopped_at: Completed 07-01-PLAN.md
-last_updated: "2026-11-23T14:35:13.921Z"
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-11-23T14:45:54.942Z"
 last_activity: 2026-11-23
-last_activity_desc: Plan 07-01 complete, Temurin 17 CI green on cce3625
-state_head: 9352f48ea750a431891f6dbb2118b600c6e076f5
+last_activity_desc: Plan 07-02 complete, remote image downloads pinned offline
+state_head: d30e55fc46434a64ad6c2e0b615283244bdcc612
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 7
-  completed_plans: 5
+  completed_plans: 6
   percent: 50
 ---
 
@@ -30,9 +30,9 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 6)
 ## Current Position
 
 Phase: 07 (HTML Image Helper Module) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
-Last activity: 2026-11-23 — Plan 07-01 complete, Temurin 17 CI green on cce3625
+Last activity: 2026-11-23 — Plan 07-02 complete, remote image downloads pinned offline
 
 Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
 
@@ -90,6 +90,7 @@ Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
 | Phase 06 P01 | 22 min | 3 tasks | 5 files |
 | Phase 06 P02 | 6 min | 2 tasks | 8 files |
 | Phase 07 P01 | 12 min | 3 tasks | 7 files |
+| Phase 07 P02 | 8 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -120,6 +121,8 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 06]: UAT 2026-11-23: Temurin 17 CI green on 4ea76d8 (run 45149609185); dry-run logo shown in all five rendered mails; re-review 0 critical / 0 warning / 3 info (open in 06-REVIEW-DISPOSITION.md); SECURITY threats_open 0
 - [Phase 07]: 07-01: morimail-html module with morimail provided-only; HtmlImages.embed local images; A1 (C:\ is an unknown scheme, unchanged), A5 (empty src fails as not a readable file), A7 (only the scoped release line -pl morimail,morimail-html -am), P1-P4 applied; Task 2 needed no source fix
 - [Phase 07]: 07-01: Temurin 17 CI green on cce3625 (run 45194793703: verify, scoped release build, offline build)
+- [Phase 07]: 07-02: HtmlImages.embed(template, baseDir, workDir) downloads http(s) images into the work directory; A2 (3,145,728 bytes or more refused, as Graph refuses them), A3 (unnamed statuses are Invalid with the status only, 408 Invalid), A6 (no cleanup), P5-P9 applied; Task 2 needed no source fix
+- [Phase 07]: 07-02: one Duration is the whole budget of a download, close() of the response stream ends the reader (no extra thread or interrupt); JDK re-arms HttpRequest.timeout per redirect hop (owner review, not built)
 
 ### Pending Todos
 
@@ -146,8 +149,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T14:35:13.786Z
-Stopped at: Completed 07-01-PLAN.md
+Last session: 2026-11-23T14:45:54.809Z
+Stopped at: Completed 07-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

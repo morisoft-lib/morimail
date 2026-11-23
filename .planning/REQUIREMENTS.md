@@ -35,8 +35,8 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 - [ ] **HTML-01**: A new module `morimail-html` (artifact `de.morisoft:morimail-html`, package `de.morisoft.morimail.html`) depends on `morimail`, has no other runtime dependency unless the owner approves one, and is in the release profile; the `morimail` jar is unchanged.
 - [x] **HTML-02**: `HtmlImages` converts a `MailTemplate` (before rendering) into a template whose `<img src>` values are `cid:` references plus the matching inline `Attachment`s; `cid:`, `data:`, unknown schemes, `src` values with a `$$` placeholder, the subject and the text stay unchanged.
 - [x] **HTML-03**: Local sources (relative path or `file:`) resolve only inside a caller-given base directory; a path outside it, a missing or unreadable file, or a non-image file fails with `InvalidMailException` naming the `src` as written.
-- [ ] **HTML-04**: Generated content IDs come from the file name without extension, pass the Phase 5 content-ID rules, get a numeric suffix on collision; the same source used twice yields one image.
-- [ ] **HTML-05**: `http(s)` sources are downloaded only when the caller passes a download directory (opt-in), with a timeout, a size cap and an image content-type check; tested offline against WireMock.
+- [x] **HTML-04**: Generated content IDs come from the file name without extension, pass the Phase 5 content-ID rules, get a numeric suffix on collision; the same source used twice yields one image.
+- [x] **HTML-05**: `http(s)` sources are downloaded only when the caller passes a download directory (opt-in), with a timeout, a size cap and an image content-type check; tested offline against WireMock.
 - [ ] **HTML-06**: A converted template, rendered for several data records and sent to `recording`, passes `build()` and carries the inline images in every mail.
 - [ ] **HTML-07**: A storable form: `HtmlImages.toDataUris` turns local (and, with a work directory, remote) image sources into `data:image/...;base64,` URIs so the HTML alone carries its images; `embed` with a work directory turns `data:` image sources back into `cid:` references plus inline `Attachment`s (decoded into the work directory), with the same image-type check and 3 MiB cap (spec §10.4 "Storable form", owner request 2026-11-23).
 
@@ -91,8 +91,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HTML-01 | Phase 7 | Pending |
 | HTML-02 | Phase 7 | Complete |
 | HTML-03 | Phase 7 | Complete |
-| HTML-04 | Phase 7 | Pending |
-| HTML-05 | Phase 7 | Pending |
+| HTML-04 | Phase 7 | Complete |
+| HTML-05 | Phase 7 | Complete |
 | HTML-06 | Phase 7 | Pending |
 | HTML-07 | Phase 7 | Pending |
 | DOCS-05 | Phase 8 | Pending |
