@@ -74,6 +74,14 @@ class GraphValidateTest {
         return builder.build().message();
     }
 
+    private MailMessage withInline(Path image, String contentId, Path... files) throws InvalidMailException {
+        Mail.Builder builder = base().html("<img src=\"cid:" + contentId + "\">").inline(image, contentId);
+        for (Path file : files) {
+            builder.attach(file);
+        }
+        return builder.build().message();
+    }
+
     @ParameterizedTest
     @CsvSource({"0,0", "1,4", "2,4", "3,4", "4,8", "3145727,4194304", "3145728,4194304"})
     void base64SizeIsExactInLongArithmetic(long size, long expected) {
@@ -125,6 +133,42 @@ class GraphValidateTest {
         MailMessage message = withFiles("see attachment", sparse("ok.bin", 2_900_000));
 
         assertThatCode(() -> transport(wm).validate(message)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void inlineImageOfThreeMiBIsReportedByThePerFileRule(WireMockRuntimeInfo wm) throws Exception {
+        MailMessage message = withInline(sparse("big.png", 3_145_728), "big");
+
+        assertThatThrownBy(() -> transport(wm).validate(message))
+                .isExactlyInstanceOf(InvalidMailException.class)
+                .hasMessage("attachment big.png has 3145728 bytes; " + LIMIT_PER_FILE);
+    }
+
+    @Test
+    void inlineImageJustBelowThreeMiBFailsTheEstimateNotTheFileRules(WireMockRuntimeInfo wm) throws Exception {
+        MailMessage message = withInline(sparse("big.png", 3_145_727), "big");
+
+        assertThatThrownBy(() -> transport(wm).validate(message))
+                .isExactlyInstanceOf(InvalidMailException.class)
+                .hasMessageContaining("estimated request size")
+                .hasMessageContaining("4194304")
+                .message().doesNotContain("big.png");
+    }
+
+    @Test
+    void inlineImageOfAboutTwoPointNineMegabytesPasses(WireMockRuntimeInfo wm) throws Exception {
+        MailMessage message = withInline(sparse("big.png", 2_900_000), "big");
+
+        assertThatCode(() -> transport(wm).validate(message)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void inlineImageAndRegularFileShareTheThreeMiBTotal(WireMockRuntimeInfo wm) throws Exception {
+        MailMessage message = withInline(sparse("logo.png", 1_572_864), "logo", sparse("b.bin", 1_572_864));
+
+        assertThatThrownBy(() -> transport(wm).validate(message))
+                .isExactlyInstanceOf(InvalidMailException.class)
+                .hasMessage("attachments logo.png, b.bin have 3145728 bytes together; Graph takes below 3 MiB (3145728 bytes) in total");
     }
 
     @Test
@@ -198,6 +242,20 @@ class GraphValidateTest {
         assertThatThrownBy(() -> Mailer.of(account).send(mail))
                 .isInstanceOf(InvalidMailException.class)
                 .hasMessageContaining("big.bin");
+
+        assertThat(stub.accessCalls()).isZero();
+        assertThat(findAll(postRequestedFor(urlMatching(".*")))).isEmpty();
+    }
+
+    @Test
+    void mailerRejectsAnOversizedInlineImageBeforeAnyTokenOrRequest(WireMockRuntimeInfo wm) throws Exception {
+        MailAccount account = MailAccount.builder("main").transport("graph").auth(stub)
+                .option("baseUrl", wm.getHttpBaseUrl() + "/v1.0").defaultFrom("newsletter@example.com").build();
+        Mail mail = base().html("<img src=\"cid:big\">").inline(sparse("big.png", 3_145_728), "big").build();
+
+        assertThatThrownBy(() -> Mailer.of(account).send(mail))
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessageContaining("big.png");
 
         assertThat(stub.accessCalls()).isZero();
         assertThat(findAll(postRequestedFor(urlMatching(".*")))).isEmpty();
