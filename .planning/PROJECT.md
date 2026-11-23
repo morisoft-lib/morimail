@@ -47,11 +47,13 @@ Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
 
 - ✓ Inline images in core and Graph: `.inline(path, contentId)`, two-way `cid:` checks and image-type check in `build()`, recorded by `recording`, sent by Graph as inline file attachments (bare `contentId`) within the existing 3 MiB / 4 MiB limits; renders inline live (owner UAT) — v0.2.0 Phase 5 (INLN-01..06, GRAPH-10..12)
 
-Everything above this line except the Phase 5 entry shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
+- ✓ Inline images in the serial-mail sample: optional `inline/` directory (file name without extension = content ID), pre-flight inline checks in one report, dry run copies the images to `out/inline/` and rewrites `cid:` only in the written HTML, sent mails keep `cid:`; example campaign ships a generated 166-byte `inline/logo.png` — v0.2.0 Phase 6 (CLI-15..18)
+
+Everything above this line except the Phase 5 and Phase 6 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
 
 ### Active
 
-- [ ] Inline images (CID) per spec §10.3, remaining parts: sample `inline/` directory and dry-run rewrite (Phase 6), docs (Phase 8) — v0.2.0 (REQ-IDs in REQUIREMENTS.md); core and Graph done in Phase 5
+- [ ] Inline images (CID) per spec §10.3, remaining part: docs (Phase 8) — v0.2.0 (REQ-IDs in REQUIREMENTS.md); core and Graph done in Phase 5, sample in Phase 6
 - [ ] HTML image helper per spec §10.4: new module `morimail-html` with `HtmlImages` (template `<img src>` to `cid:` plus inline images; local under a base directory, `http(s)` opt-in) — v0.2.0 Phase 7 (HTML-01..06)
 
 ### Out of Scope
@@ -111,6 +113,7 @@ Everything above this line except the Phase 5 entry shipped in v0.1.0 (released 
 | `Retry-After` read as seconds only | Matches Graph throttling docs; reverses D-10 after review IN-05 | ✓ Accepted by the owner (Phase 3) |
 | Sample default rate 20 mails per minute | A guess pending Exchange limits | ✓ Accepted by the owner (Phase 3) |
 | Graph inline images sent with a bare `contentId` (no angle brackets, no `contentLocation`) | Smallest body the current `fileAttachment` docs allow | ✓ Good — renders inline live (Phase 5 UAT) |
+| Sample inline scan probes each `inline/` file through the core's `build()` instead of copying its type table; the `cid:` pattern is copied into `Campaign` and pinned equal to the core's | One source of truth for the rules; the sample stays small (Rule 0) | ✓ Good — dry-run logo shown in all five mails (Phase 6 UAT) |
 
 ## Evolution
 
@@ -130,4 +133,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-23 after Phase 5*
+*Last updated: 2026-11-23 after Phase 6*

@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Milestone Goal:** A consumer can embed images in a templated HTML mail with `cid:` references and send it through Graph with the images shown inline (spec §10.3).
 
 - [x] **Phase 5: Inline Images in Core and Graph** - `.inline(path, contentId)` with two-way `cid:` checks in `build()`, recorded by `recording`, and sent by Graph as inline file attachments within the 3 MiB / 4 MiB limits. Ends with the owner's live-test checkpoint. (completed 2026-11-23)
-- [ ] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo
+- [x] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo (completed 2026-11-23)
 - [ ] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images
 - [ ] **Phase 8: Docs and Release Readiness** - README inline and helper examples, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green for `morimail` and `morimail-html` at `0.2.0-SNAPSHOT`
 
@@ -89,7 +89,7 @@ Plans:
      - a non-image file
   3. Dry-run writes the inline images next to the rendered HTML files, and the HTML points at them by relative path, so a browser shows the images. The `cid:` rewrite happens only in the dry-run output. Mails sent in a real run keep their `cid:` references.
   4. A dry run of the shipped example campaign produces five rendered mails. Each one shows the small generated `inline/logo.png` that the HTML template references.
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -152,6 +152,6 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 3. Graph and Entra | v0.1.0 | 6/6 | Complete | 2026-11-22 |
 | 4. Docs and Release Readiness | v0.1.0 | 5/5 | Complete | 2026-11-22 |
 | 5. Inline Images in Core and Graph | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
-| 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 2/2 | In Progress | - |
+| 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
 | 7. HTML Image Helper Module | v0.2.0 | 0/TBD | Not started | - |
 | 8. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |

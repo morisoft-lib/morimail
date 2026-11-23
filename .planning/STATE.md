@@ -2,44 +2,44 @@
 gsd_state_version: "1.0"
 milestone: v0.2.0
 milestone_name: Inline Images
-current_phase: 06
-current_phase_name: Inline Images in the Serial-Mail Sample
-status: verifying
-stopped_at: Completed 06-02-PLAN.md
-last_updated: "2026-11-23T08:17:54.277Z"
+current_phase: 07
+current_phase_name: HTML Image Helper Module
+status: planning
+stopped_at: Phase 06 complete, ready to plan Phase 07
+last_updated: "2026-11-23T09:58:19.681Z"
 last_activity: 2026-11-23
-last_activity_desc: Phase 06 execution started
-state_head: 933649be080be3327e4745dcf13ccfb4291521f0
+last_activity_desc: Phase 06 complete, transitioned to Phase 07
+state_head: 44a69fa7fdb05a46ce4089e6e36577cb9e4cb463
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 4
   completed_plans: 4
-  percent: 25
+  percent: 50
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-23 after Phase 5)
+See: .planning/PROJECT.md (updated 2026-11-23 after Phase 6)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 06 — Inline Images in the Serial-Mail Sample
+**Current focus:** Phase 07 — HTML Image Helper Module
 
 ## Current Position
 
-Phase: 06 (Inline Images in the Serial-Mail Sample) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-11-23 — Phase 06 execution started
+Phase: 07 — HTML Image Helper Module
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-23 — Phase 06 complete, transitioned to Phase 07
 
-Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
+Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
+- Total plans completed: 26
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -52,6 +52,7 @@ Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
 | 03 | 6 | - | - |
 | 04 | 5 | - | - |
 | 05 | 2 | - | - |
+| 06 | 2 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -115,6 +116,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 06]: Inline scan uses two probe mails per file through the core's build() (resolved type, and content-ID rule under fixed image/png) instead of a copied type table; each defect of a file is its own pre-flight line
 - [Phase 06]: An inline finding makes Campaign.read return null (D-01); row-level build() and mailer.validate findings show only after inline problems are fixed (A2, owner-confirmed)
 - [Phase 06]: Example campaign ships a generated 166-byte inline/logo.png (IHDR/IDAT/IEND only); attachments/logo.png renamed to sample.png
+- [Phase 06]: UAT 2026-11-23: Temurin 17 CI green on 4ea76d8 (run 45149609185); dry-run logo shown in all five rendered mails; re-review 0 critical / 0 warning / 3 info (open in 06-REVIEW-DISPOSITION.md); SECURITY threats_open 0
 
 ### Pending Todos
 
@@ -125,7 +127,7 @@ None yet.
 - [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
-- [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached. Phase 6 should decide the same rule for `inline/`. Under the CLI-16 non-image check, `Thumbs.db` in `inline/` would fail pre-flight.
+- [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached. Phase 6 applied the same rule to `inline/` (dot-files skipped); `Thumbs.db` in `inline/` fails pre-flight as a non-image file.
 
 ### Roadmap Evolution
 
@@ -141,10 +143,10 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T08:17:54.225Z
-Stopped at: Completed 06-02-PLAN.md
+Last session: 2026-11-23T10:00:00Z
+Stopped at: Phase 06 complete, ready to plan Phase 07
 Resume file: None
 
 ## Operator Next Steps
 
-- Discuss Phase 6 with /gsd-discuss-phase 6 (or plan directly with /gsd-plan-phase 6)
+- Discuss Phase 7 with /gsd-discuss-phase 7 (or plan directly with /gsd-plan-phase 7)
