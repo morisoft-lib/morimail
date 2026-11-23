@@ -1,0 +1,1 @@
+No external API integration: Phase 8 documents the existing Graph transport and the in-repo `HtmlImages` helper and rehearses the release bundle (upload skipped); it adds no new external API call, SDK or endpoint.
