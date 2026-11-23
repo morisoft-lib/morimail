@@ -1,5 +1,5 @@
 ---
-status: complete
+status: diagnosed
 phase: 07-html-image-helper-module
 source: [07-VERIFICATION.md]
 started: 2026-11-23T15:02:23Z
