@@ -96,10 +96,13 @@ public final class HtmlImages {
     static final long MAX_IMAGE_BYTES = 3L * 1024 * 1024;
 
     // NORMAL follows redirects except from https to http (D-14); the client is thread-safe and shared (P6).
-    private static final HttpClient HTTP = HttpClient.newBuilder()
-            .connectTimeout(CONNECT_TIMEOUT)
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .build();
+    // The holder builds it on the first download, so methods that read only local files never create it.
+    private static final class Http {
+        static final HttpClient CLIENT = HttpClient.newBuilder()
+                .connectTimeout(CONNECT_TIMEOUT)
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
+    }
 
     private static final System.Logger LOG = System.getLogger(HtmlImages.class.getName());
 
@@ -510,7 +513,7 @@ public final class HtmlImages {
         long deadline = System.nanoTime() + timeout.toNanos();
         HttpResponse<InputStream> response;
         try {
-            response = HTTP.send(request, HttpResponse.BodyHandlers.ofInputStream());
+            response = Http.CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (HttpTimeoutException e) {
             throw transientFailure(raw, "download timed out", e);
         } catch (IOException e) {
