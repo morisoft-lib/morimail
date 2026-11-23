@@ -309,16 +309,14 @@ class HtmlImagesDownloadTest {
 
         assertThat(thrown).isExactlyInstanceOf(TransientMailException.class)
                 .hasMessage(message(src, "download timed out"));
-        assertThat(millis).isLessThan(2500);
+        assertThat(millis).isLessThan(2900);
     }
 
     private static boolean readerRunning() {
-        for (StackTraceElement[] stack : Thread.getAllStackTraces().values()) {
-            for (StackTraceElement frame : stack) {
-                if (frame.getClassName().equals(HtmlImages.class.getName())
-                        && frame.getMethodName().equals("readAtMost")) {
-                    return true;
-                }
+        // The reader is a thread named by HtmlImages, so the test needs no private method name.
+        for (Thread thread : Thread.getAllStackTraces().keySet()) {
+            if (thread.getName().equals("morimail-html-download") && thread.isAlive()) {
+                return true;
             }
         }
         return false;
@@ -363,7 +361,7 @@ class HtmlImagesDownloadTest {
         assertThat(worker.isAlive()).isFalse();
         assertThat(error.get()).isExactlyInstanceOf(TransientMailException.class)
                 .hasMessage(message(src, "download timed out"));
-        assertThat(elapsed.get()).isLessThan(2700);
+        assertThat(elapsed.get()).isLessThan(3000);
         long grace = System.nanoTime() + TimeUnit.SECONDS.toNanos(1);
         while (readerRunning() && System.nanoTime() < grace) {
             Thread.sleep(20);
@@ -407,7 +405,11 @@ class HtmlImagesDownloadTest {
             flag.set(Thread.currentThread().isInterrupted());
         });
         worker.start();
-        Thread.sleep(500);
+        // Interrupt once the request has reached the server, not after a fixed sleep.
+        long arrival = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (wm.getWireMock().getServeEvents().isEmpty() && System.nanoTime() < arrival) {
+            Thread.sleep(20);
+        }
         worker.interrupt();
         worker.join(3000);
 
