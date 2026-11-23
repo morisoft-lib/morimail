@@ -1,6 +1,7 @@
 package de.morisoft.morimail.sample;
 
 import static de.morisoft.morimail.sample.SampleFixtures.ACCOUNT;
+import static de.morisoft.morimail.sample.SampleFixtures.INLINE_HTML;
 import static de.morisoft.morimail.sample.SampleFixtures.THREE_ROWS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,6 +63,37 @@ class SendRunTest {
             assertThat(Instant.parse(line.get("timestamp").asText())).isNotNull();
             assertThat(line.has("errorClass")).isFalse();
         }
+    }
+
+    @Test
+    void sentMailsCarryTheInlineImageAndKeepTheCidReference() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"), INLINE_HTML);
+        SampleFixtures.writeInline(campaign, "logo.png");
+        MailAccount recording = SampleFixtures.recordingAccount();
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(recording), new ArrayList<>(),
+                "send", "--account", account.toString(), "--campaign", campaign.toString());
+
+        assertThat(run.exit()).isZero();
+        List<MailMessage> sent = ((RecordingTransport) recording.transport()).sent();
+        assertThat(sent).hasSize(3);
+        String[] names = {"Anna", "Ben", "Clara"};
+        String[] cities = {"Berlin", "Hamburg", "Köln"};
+        for (int i = 0; i < 3; i++) {
+            assertThat(sent.get(i).html())
+                    .isEqualTo("<p><img src=\"cid:logo\"> Hi " + names[i] + " from " + cities[i] + "</p>");
+            assertThat(sent.get(i).attachments()).hasSize(2);
+            assertThat(sent.get(i).attachments().get(0).filename()).isEqualTo("info.txt");
+            assertThat(sent.get(i).attachments().get(0).contentId()).isNull();
+            assertThat(sent.get(i).attachments().get(1).filename()).isEqualTo("logo.png");
+            assertThat(sent.get(i).attachments().get(1).contentType()).isEqualTo("image/png");
+            assertThat(sent.get(i).attachments().get(1).contentId()).isEqualTo("logo");
+        }
+        assertThat(SampleFixtures.journalLines(campaign.resolve("journal.jsonl")))
+                .hasSize(3)
+                .allSatisfy(line -> assertThat(line.get("outcome").asText()).isEqualTo("accepted"));
     }
 
     @Test

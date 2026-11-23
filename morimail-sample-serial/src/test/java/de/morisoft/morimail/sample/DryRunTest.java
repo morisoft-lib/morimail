@@ -1,6 +1,7 @@
 package de.morisoft.morimail.sample;
 
 import static de.morisoft.morimail.sample.SampleFixtures.ACCOUNT;
+import static de.morisoft.morimail.sample.SampleFixtures.INLINE_HTML;
 import static de.morisoft.morimail.sample.SampleFixtures.THREE_ROWS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -79,6 +80,39 @@ class DryRunTest {
         assertThat(factoryCalls).hasValue(0);
         assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
         assertThat(waits).isEmpty();
+    }
+
+    @Test
+    void inlineImageIsCopiedOnceAndTheHtmlPointsAtIt() throws IOException {
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"), INLINE_HTML);
+        SampleFixtures.writeInline(campaign, "logo.png");
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run run = dryRun(campaign, out);
+
+        assertThat(run.exit()).isZero();
+        assertThat(run.err()).isEmpty();
+        assertThat(run.outLines()).containsExactly(
+                "attachments: info.txt (text/plain, 18 bytes)",
+                "inline: logo.png (image/png, 3 bytes, cid:logo)",
+                "[1/3] anna@example.org rendered",
+                "[2/3] ben@example.org rendered",
+                "[3/3] clara@example.org rendered",
+                "dry run: 3 mails written to " + out);
+        assertThat(fileNames(out.resolve("inline"))).containsExactly("logo.png");
+        assertThat(Files.readString(out.resolve("inline").resolve("logo.png"))).isEqualTo("png");
+        assertThat(Files.readString(out.resolve(name("01", "anna@example.org", ".html"))))
+                .isEqualTo("<p><img src=\"inline/logo.png\"> Hi Anna from Berlin</p>");
+        assertThat(Files.readString(out.resolve(name("03", "clara@example.org", ".html"))))
+                .isEqualTo("<p><img src=\"inline/logo.png\"> Hi Clara from Köln</p>");
+        for (String file : fileNames(out)) {
+            if (file.endsWith(".html")) {
+                assertThat(Files.readString(out.resolve(file))).doesNotContain("cid:");
+            }
+        }
+        assertThat(factoryCalls).hasValue(0);
+        assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
     }
 
     @Test

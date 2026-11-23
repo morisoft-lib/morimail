@@ -12,16 +12,21 @@ import de.morisoft.morimail.SenderRejectedException;
 import de.morisoft.morimail.TransientMailException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Model.CommandSpec;
@@ -165,6 +170,10 @@ final class SendCommand implements Callable<Integer> {
                     for (Path attachment : campaign.attachments()) {
                         builder.attach(attachment);
                     }
+                    // Regular attachments first, inline images after them, so v0.1.0 mails keep their attachment order.
+                    for (Path image : campaign.inlineImages()) {
+                        builder.inline(image, Campaign.contentId(image));
+                    }
                     mails.add(builder.build());
                 } catch (InvalidMailException e) {
                     mails.add(null);
@@ -243,27 +252,56 @@ final class SendCommand implements Callable<Integer> {
         return name.toString();
     }
 
+    /** The stdout entries of attachments, joined by a comma; an inline image also shows its content ID. */
+    private static String describeAll(List<Attachment> attachments, boolean withContentId)
+            throws IOException {
+        List<String> entries = new ArrayList<>();
+        for (Attachment attachment : attachments) {
+            entries.add(attachment.filename() + " (" + attachment.contentType() + ", "
+                    + Files.size(attachment.file()) + " bytes"
+                    + (withContentId ? ", cid:" + attachment.contentId() : "") + ")");
+        }
+        return String.join(", ", entries);
+    }
+
     private int writeDryRun(Campaign campaign, List<Mail> mails, PrintWriter out, PrintWriter err) {
         int total = limit == null ? campaign.rows().size() : Math.min(limit, campaign.rows().size());
         int width = Math.max(2, String.valueOf(total).length());
         try {
             Files.createDirectories(outDir);
-            List<Attachment> attachments = mails.get(0).message().attachments();
-            if (attachments.isEmpty()) {
+            List<Attachment> regular = new ArrayList<>();
+            List<Attachment> inline = new ArrayList<>();
+            for (Attachment attachment : mails.get(0).message().attachments()) {
+                (attachment.contentId() == null ? regular : inline).add(attachment);
+            }
+            if (regular.isEmpty()) {
                 out.println("attachments: none");
             } else {
-                List<String> entries = new ArrayList<>();
-                for (Attachment attachment : attachments) {
-                    entries.add(attachment.filename() + " (" + attachment.contentType() + ", "
-                            + Files.size(attachment.file()) + " bytes)");
+                out.println("attachments: " + describeAll(regular, false));
+            }
+            // The dry-run files point at the copies; the mails keep cid: (spec 10.3, CLI-17).
+            Map<String, String> srcById = new HashMap<>();
+            if (!inline.isEmpty()) {
+                out.println("inline: " + describeAll(inline, true));
+                Path inlineDir = Files.createDirectories(outDir.resolve("inline"));
+                for (Attachment image : inline) {
+                    Files.copy(image.file(), inlineDir.resolve(image.filename()),
+                            StandardCopyOption.REPLACE_EXISTING);
+                    srcById.put(image.contentId(),
+                            new URI(null, null, "inline/" + image.filename(), null)
+                                    .toASCIIString().replace("&", "&amp;"));
                 }
-                out.println("attachments: " + String.join(", ", entries));
             }
             for (int i = 0; i < total; i++) {
                 String email = campaign.rows().get(i).email();
                 MailMessage message = mails.get(i).message();
                 String base = String.format("%0" + width + "d-%s", i + 1, safeName(email));
-                Files.writeString(outDir.resolve(base + ".html"), message.html());
+                String html = message.html();
+                if (!srcById.isEmpty()) {
+                    html = Campaign.CID_REFERENCE.matcher(html).replaceAll(
+                            m -> Matcher.quoteReplacement(srcById.getOrDefault(m.group(1), m.group())));
+                }
+                Files.writeString(outDir.resolve(base + ".html"), html);
                 Files.writeString(outDir.resolve(base + ".subject.txt"), message.subject());
                 if (message.text() != null) {
                     Files.writeString(outDir.resolve(base + ".txt"), message.text());
@@ -271,7 +309,7 @@ final class SendCommand implements Callable<Integer> {
                 out.println("[" + (i + 1) + "/" + total + "] " + email + " rendered");
             }
             out.println("dry run: " + total + " mails written to " + outDir);
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             err.println("Dry run stopped: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             err.flush();
             return 1;

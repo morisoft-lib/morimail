@@ -21,18 +21,28 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * The files of a campaign directory: the template, the recipient rows and the attachments.
+ * The files of a campaign directory: the template, the recipient rows, the attachments and the
+ * inline images.
  *
  * <p>Immutable and safe to share between threads.
  *
  * @param template subject, HTML body and optional text body
  * @param rows one row per recipient, in file order
  * @param attachments the regular files of {@code attachments/}, sorted by file name
+ * @param inlineImages the regular files of {@code inline/}, sorted by file name; each one is an
+ *     inline image whose content ID is {@link #contentId(Path)}
  */
-record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
+record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, List<Path> inlineImages) {
 
     /** The placeholder pattern of the core's template renderer, copied so both agree on every name. */
     static final Pattern PLACEHOLDER = Pattern.compile("\\$\\$(!?)([A-Za-z0-9_.-]+)\\$\\$");
+
+    /**
+     * The cid: reference pattern of the core's Mail.Builder, copied so the dry-run rewrite and the
+     * pre-flight scan agree with build(); keep both equal.
+     */
+    static final Pattern CID_REFERENCE =
+            Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)>]*)");
 
     /**
      * One recipient row.
@@ -76,19 +86,8 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
         Path textFile = dir.resolve("body.txt");
         String text = Files.exists(textFile) ? readText(textFile, problems) : null;
         String csv = readText(dir.resolve("recipients.csv"), problems);
-        List<Path> attachments = new ArrayList<>();
-        Path attachmentDir = dir.resolve("attachments");
-        if (Files.isDirectory(attachmentDir)) {
-            try (Stream<Path> files = Files.list(attachmentDir)) {
-                // Hidden files such as .DS_Store are editor and OS leftovers, never attachments.
-                files.filter(Files::isRegularFile)
-                        .filter(file -> !file.getFileName().toString().startsWith("."))
-                        .forEach(attachments::add);
-            } catch (IOException e) {
-                problems.add("attachments/ cannot be listed");
-            }
-            attachments.sort(Comparator.comparing(file -> file.getFileName().toString()));
-        }
+        List<Path> attachments = listFiles(dir.resolve("attachments"), "attachments", problems);
+        List<Path> inlineImages = listFiles(dir.resolve("inline"), "inline", problems);
         if (subject == null || html == null || csv == null) {
             return null;
         }
@@ -163,7 +162,35 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments) {
             return null;
         }
         return new Campaign(new MailTemplate(subject, html, text), List.copyOf(rows),
-                List.copyOf(attachments));
+                List.copyOf(attachments), List.copyOf(inlineImages));
+    }
+
+    /**
+     * The content ID of an inline image: its file name without the last extension (D-03); a name
+     * without a dot stays whole.
+     */
+    static String contentId(Path file) {
+        String name = file.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        return dot > 0 ? name.substring(0, dot) : name;
+    }
+
+    /** The regular files of a directory sorted by file name; empty when the directory is missing. */
+    private static List<Path> listFiles(Path dir, String label, List<String> problems) {
+        List<Path> found = new ArrayList<>();
+        if (Files.isDirectory(dir)) {
+            try (Stream<Path> files = Files.list(dir)) {
+                // Dot-files such as .DS_Store are editor and OS leftovers, never attachments or
+                // inline images; other names such as Thumbs.db are not skipped.
+                files.filter(Files::isRegularFile)
+                        .filter(file -> !file.getFileName().toString().startsWith("."))
+                        .forEach(found::add);
+            } catch (IOException e) {
+                problems.add(label + "/ cannot be listed");
+            }
+            found.sort(Comparator.comparing(file -> file.getFileName().toString()));
+        }
+        return found;
     }
 
     /**

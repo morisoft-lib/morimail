@@ -21,6 +21,7 @@ final class SampleFixtures {
     static final String SUBJECT = "Hello $$firstName$$";
     static final String HTML = "<p>Hi $$firstName$$ from $$city$$</p>";
     static final String TEXT = "Hi $$firstName$$";
+    static final String INLINE_HTML = "<p><img src=\"cid:logo\"> Hi $$firstName$$ from $$city$$</p>";
 
     static final String THREE_ROWS = String.join("\n",
             "email,firstName,city",
@@ -60,6 +61,18 @@ final class SampleFixtures {
         Files.writeString(dir.resolve("body.txt"), TEXT);
         Files.writeString(dir.resolve("recipients.csv"), csv);
         Files.writeString(dir.resolve("attachments").resolve("info.txt"), "example attachment");
+        return dir;
+    }
+
+    /**
+     * Writes the named files into campaign/inline and returns that directory. The core resolves the
+     * type from the extension and never decodes the content, so three bytes are enough.
+     */
+    static Path writeInline(Path campaign, String... names) throws IOException {
+        Path dir = Files.createDirectories(campaign.resolve("inline"));
+        for (String name : names) {
+            Files.writeString(dir.resolve(name), "png");
+        }
         return dir;
     }
 
