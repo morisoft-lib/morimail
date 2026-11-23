@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -40,7 +41,7 @@ import java.util.regex.Pattern;
  * rendered, so recipient data never reaches it. The subject and the text part are never touched.
  *
  * <p>Which {@code src} values change: a value that contains {@code $$} (a placeholder), a value
- * with the scheme {@code cid:} or {@code data:}, a value with the scheme {@code http:} or
+ * with the scheme {@code cid:}, a value with the scheme {@code data:} or {@code http:} or
  * {@code https:} unless a work directory is given (see below), and a value with any other scheme
  * stay exactly as written. A value without a scheme, and a {@code file:} URI, is
  * a local image: the file must lie inside the base directory, must be readable and must be an
@@ -63,6 +64,13 @@ import java.util.regex.Pattern;
  * fails with a {@link TransientMailException}, because a retry can help; every other failure is an
  * {@link InvalidMailException}, because the template is wrong. The author of a template is
  * trusted: a template URL, also after a redirect, can reach any host this machine can reach.
+ *
+ * <p>Storable form: {@link #toDataUris(MailTemplate, Path)} turns every local image into a
+ * {@code data:TYPE;base64,PAYLOAD} source, so the HTML alone carries its images and can be stored
+ * as one string next to the subject and the text. Later, {@link #embed(MailTemplate, Path, Path)}
+ * decodes the {@code data:image/...;base64,} sources back into inline images in a work directory.
+ * The stored form carries no file names, so after the round trip the content IDs are
+ * {@code image}, {@code image-2} and so on.
  *
  * <p>How to use the result: pass {@link Result#template()} to
  * {@code Mail.Builder.template(MailTemplate, Map)} and each image of {@link Result#images()} to
@@ -157,8 +165,8 @@ public final class HtmlImages {
      * Rewrites the local image sources of a template to {@code cid:} references.
      *
      * <p>The method reads no file content and writes nothing: each image attachment points at the
-     * file in place. A template whose HTML is {@code null} or has nothing to rewrite comes back as
-     * the same instance with an empty list.
+     * file in place. A {@code data:} source stays unchanged. A template whose HTML is {@code null}
+     * or has nothing to rewrite comes back as the same instance with an empty list.
      *
      * @param template the template to convert
      * @param baseDir the directory that local sources resolve against; it is checked only when a
@@ -172,7 +180,7 @@ public final class HtmlImages {
         Objects.requireNonNull(template, "template");
         Objects.requireNonNull(baseDir, "baseDir");
         try {
-            return rewrite(template, baseDir, null, REQUEST_TIMEOUT);
+            return rewrite(template, baseDir, null, REQUEST_TIMEOUT, false);
         } catch (TransientMailException e) {
             throw new AssertionError("no download without a work directory", e);
         }
@@ -199,6 +207,15 @@ public final class HtmlImages {
      * failure the status only, never a response body. The one DEBUG log record per download
      * ({@code java.util.logging} level FINE) shows only scheme, host, port and path.
      *
+     * <p>A {@code data:image/...;base64,} source (the stored form of
+     * {@link #toDataUris(MailTemplate, Path)}) is decoded into a new unique file in {@code workDir}
+     * and becomes an inline image, with the same type check and the same 3 MiB cap. The ID is
+     * {@code image}, {@code image-2} and so on, and the file name is the ID plus the subtype of the
+     * type. A failure names the source by position and reason only, for example
+     * {@code data: image source #2: payload is not valid base64}, and never any part of the
+     * payload. Parameters between the type and {@code base64} are ignored, and white space in the
+     * payload is removed before decoding.
+     *
      * <p>The author of a template is trusted: a URL in the template, also after a redirect, can reach
      * any host this machine can reach. Recipient data never reaches this method, because a
      * {@code src} with {@code $$} is never fetched.
@@ -206,12 +223,14 @@ public final class HtmlImages {
      * @param template the template to convert
      * @param baseDir the directory that local sources resolve against; it is checked only when a
      *     local source is resolved
-     * @param workDir the existing directory that receives the downloaded images
+     * @param workDir the existing directory that receives the downloaded and decoded images
      * @return the converted template and the inline images
      * @throws InvalidMailException if a local source is outside the base directory, missing,
      *     unreadable, not an image or not a valid path, if a remote source is not a valid URL, the
      *     server answers with an HTTP 4xx status (other than 429) or another unsuccessful status, the
-     *     response is not an image or is 3 MiB or larger, or if the work directory is not usable
+     *     response is not an image or is 3 MiB or larger, if a {@code data:} image source is not
+     *     base64, not an image type, not valid or 3 MiB or larger, or if the work directory is not
+     *     usable
      * @throws TransientMailException if a download fails with a network error, times out, is
      *     interrupted, or the server answers with an HTTP 5xx status or 429; a retry can help
      * @throws NullPointerException if an argument is {@code null}
@@ -227,12 +246,79 @@ public final class HtmlImages {
     // Test seam: the timeout tests use seconds instead of REQUEST_TIMEOUT (P9).
     static Result embed(MailTemplate template, Path baseDir, Path workDir, Duration requestTimeout)
             throws InvalidMailException, TransientMailException {
-        return rewrite(template, baseDir, workDir, requestTimeout);
+        return rewrite(template, baseDir, workDir, requestTimeout, false);
     }
 
-    // A null workDir means "no downloads".
-    private static Result rewrite(MailTemplate template, Path baseDir, Path workDir, Duration requestTimeout)
+    /**
+     * Rewrites the local image sources of a template to {@code data:} URIs, the storable form.
+     *
+     * <p>Every local image becomes {@code data:TYPE;base64,PAYLOAD}, so the HTML alone carries its
+     * images and can be stored as one string next to the subject and the text. Later,
+     * {@link #embed(MailTemplate, Path, Path)} turns it back into the sendable form. The local rules
+     * and messages are those of {@link #embed(MailTemplate, Path)}, and each image must be under
+     * 3 MiB, as Graph requires, so every stored form can be embedded again. A {@code cid:},
+     * {@code data:}, {@code http:}, {@code https:}, {@code $$} or unknown-scheme source stays
+     * unchanged, and so do the subject and the text. A template whose HTML is {@code null} or has
+     * nothing to convert comes back as the same instance.
+     *
+     * <p>The stored form carries no file names, so after the round trip the content IDs are
+     * {@code image}, {@code image-2} and so on.
+     *
+     * <p>This method is stateless and safe for concurrent use.
+     *
+     * @param template the template to convert
+     * @param baseDir the directory that local sources resolve against; it is checked only when a
+     *     local source is resolved
+     * @return the template with every local image source replaced by a {@code data:} URI
+     * @throws InvalidMailException if a local source is outside the base directory, missing,
+     *     unreadable, not an image, not a valid path or 3 MiB or larger, or if the base directory
+     *     is not usable
+     * @throws NullPointerException if an argument is {@code null}
+     */
+    public static MailTemplate toDataUris(MailTemplate template, Path baseDir) throws InvalidMailException {
+        Objects.requireNonNull(template, "template");
+        Objects.requireNonNull(baseDir, "baseDir");
+        try {
+            return rewrite(template, baseDir, null, REQUEST_TIMEOUT, true).template();
+        } catch (TransientMailException e) {
+            throw new AssertionError("no download without a work directory", e);
+        }
+    }
+
+    /**
+     * Rewrites the local and the remote image sources of a template to {@code data:} URIs.
+     *
+     * <p>Like {@link #toDataUris(MailTemplate, Path)}, and in addition the {@code http:} and
+     * {@code https:} sources (without {@code $$}) are downloaded with the limits and the failure
+     * categories of {@link #embed(MailTemplate, Path, Path)} and become {@code data:} URIs.
+     * {@code workDir} is only the opt-in for downloads: this method never writes, creates or deletes
+     * a file there.
+     *
+     * @param template the template to convert
+     * @param baseDir the directory that local sources resolve against; it is checked only when a
+     *     local source is resolved
+     * @param workDir the opt-in for downloads; it is not written
+     * @return the template with every local and remote image source replaced by a {@code data:} URI
+     * @throws InvalidMailException if a local source is outside the base directory, missing,
+     *     unreadable, not an image, not a valid path or 3 MiB or larger, if a remote source is not a
+     *     valid URL, the server answers with an HTTP 4xx status (other than 429) or another
+     *     unsuccessful status, or the response is not an image or is 3 MiB or larger
+     * @throws TransientMailException if a download fails with a network error, times out, is
+     *     interrupted, or the server answers with an HTTP 5xx status or 429; a retry can help
+     * @throws NullPointerException if an argument is {@code null}
+     */
+    public static MailTemplate toDataUris(MailTemplate template, Path baseDir, Path workDir)
             throws InvalidMailException, TransientMailException {
+        Objects.requireNonNull(template, "template");
+        Objects.requireNonNull(baseDir, "baseDir");
+        Objects.requireNonNull(workDir, "workDir");
+        return rewrite(template, baseDir, workDir, REQUEST_TIMEOUT, true).template();
+    }
+
+    // A null workDir means "no downloads" and no data: decoding. With dataUris the values become
+    // data: URIs and no image is created; otherwise they become cid: references plus images.
+    private static Result rewrite(MailTemplate template, Path baseDir, Path workDir, Duration requestTimeout,
+            boolean dataUris) throws InvalidMailException, TransientMailException {
         String html = template.html();
         if (html == null) {
             return new Result(template, List.of());
@@ -244,10 +330,11 @@ public final class HtmlImages {
                 taken.add(references.group(1));
             }
         }
-        Map<String, String> cidByKey = new HashMap<>();
+        Map<String, String> replacementByKey = new HashMap<>();
         List<Attachment> images = new ArrayList<>();
         StringBuilder out = new StringBuilder(html.length());
         int last = 0;
+        int dataPosition = 0;
         boolean replaced = false;
         Matcher m = IMG_SRC.matcher(html);
         while (m.find()) {
@@ -259,43 +346,65 @@ public final class HtmlImages {
             }
             Matcher s = SCHEME.matcher(value);
             String scheme = s.find() ? s.group(1).toLowerCase(Locale.ROOT) : null;
-            // http(s) is remote only with a work directory (spec 10.4 opt-in); Plan 07-03 adds data:.
+            // http(s) is remote only with a work directory (spec 10.4 opt-in); data: is decoded only by embed with one.
             boolean remote = workDir != null && ("http".equals(scheme) || "https".equals(scheme));
-            if (scheme != null && !scheme.equals("file") && !remote) {
+            boolean data = !dataUris && workDir != null && "data".equals(scheme);
+            if (scheme != null && !scheme.equals("file") && !remote && !data) {
                 continue;
             }
             String key;
-            if (remote) {
+            if (data) {
+                // Every data: value counts, repeats included (the position names the source in a message).
+                dataPosition++;
+                key = value;
+                if (!replacementByKey.containsKey(key)) {
+                    String label = "data: image source #" + dataPosition + ": ";
+                    Fetched decoded = decodeData(value, label);
+                    String id = newId("", taken);
+                    String type = decoded.contentType();
+                    Path file = writeToWorkDir(label, workDir, decoded.bytes());
+                    images.add(new Attachment(fileName("", id, type), type, file, id));
+                    replacementByKey.put(key, "cid:" + id);
+                }
+            } else if (remote) {
                 // The source after &amp; decoding is the key: one source, one download (D-19).
                 key = value;
-                if (!cidByKey.containsKey(key)) {
+                if (!replacementByKey.containsKey(key)) {
                     URI uri = parseUrl(raw, value);
                     Fetched fetched = download(raw, uri, requestTimeout);
-                    String path = uri.getPath();
-                    String segment = path == null ? "" : path.substring(path.lastIndexOf('/') + 1);
-                    String id = newId(segment, taken);
                     String type = fetched.contentType();
-                    Path file = writeToWorkDir(raw, workDir, fetched.bytes());
-                    images.add(new Attachment(fileName(segment, id, type), type, file, id));
-                    cidByKey.put(key, "cid:" + id);
+                    if (dataUris) {
+                        replacementByKey.put(key, dataUri(type, fetched.bytes()));
+                    } else {
+                        String path = uri.getPath();
+                        String segment = path == null ? "" : path.substring(path.lastIndexOf('/') + 1);
+                        String id = newId(segment, taken);
+                        Path file = writeToWorkDir("img src \"" + raw + "\": ", workDir, fetched.bytes());
+                        images.add(new Attachment(fileName(segment, id, type), type, file, id));
+                        replacementByKey.put(key, "cid:" + id);
+                    }
                 }
             } else {
                 LocalFile local = resolveLocal(raw, value, scheme != null, baseDir);
                 Path file = local.file();
                 key = file.toString();
-                if (!cidByKey.containsKey(key)) {
+                if (!replacementByKey.containsKey(key)) {
                     String name = local.name();
                     String type = contentTypeOf(file, name);
                     if (type == null || !IMAGE_TYPE.matcher(type).matches()) {
                         throw invalid(raw, "is not an image file (content type "
                                 + (type == null ? "unknown" : type) + ")");
                     }
-                    String id = newId(name, taken);
-                    images.add(new Attachment(fileName(name, id, type), type, file, id));
-                    cidByKey.put(key, "cid:" + id);
+                    if (dataUris) {
+                        replacementByKey.put(key, dataUri(type, readSmallFile(raw, file)));
+                    } else {
+                        String id = newId(name, taken);
+                        images.add(new Attachment(fileName(name, id, type), type, file, id));
+                        replacementByKey.put(key, "cid:" + id);
+                    }
                 }
             }
-            out.append(html, last, m.start(g)).append(cidByKey.get(key));
+            out.append(html, last, m.start(g)).append(replacementByKey.get(key));
             last = m.end(g);
             replaced = true;
         }
@@ -306,11 +415,59 @@ public final class HtmlImages {
         return new Result(new MailTemplate(template.subject(), out.toString(), template.text()), images);
     }
 
+    // The comparison GraphTransport.validate uses: a file of 3 MiB or more is refused, so a stored form can always be embedded again (A2).
+    private static byte[] readSmallFile(String raw, Path file) throws InvalidMailException {
+        try {
+            if (Files.size(file) >= MAX_IMAGE_BYTES) {
+                throw invalid(raw, "image is 3 MiB or larger");
+            }
+            return Files.readAllBytes(file);
+        } catch (IOException e) {
+            throw invalid(raw, "is not a readable file");
+        }
+    }
+
+    private static String dataUri(String type, byte[] bytes) {
+        return "data:" + type + ";base64," + Base64.getEncoder().encodeToString(bytes);
+    }
+
+    // Parses data:TYPE[;parameter]*;base64,PAYLOAD. A message names the source by position and the reason, never the payload (D-23).
+    private static Fetched decodeData(String value, String label) throws InvalidMailException {
+        int comma = value.indexOf(',');
+        if (comma < 0) {
+            throw new InvalidMailException(label + "is not base64");
+        }
+        String[] header = value.substring(5, comma).split(";", -1);
+        String type = header[0].trim();
+        if (!IMAGE_TYPE.matcher(type).matches()) {
+            throw new InvalidMailException(label + "is not an image type");
+        }
+        if (header.length < 2 || !"base64".equalsIgnoreCase(header[header.length - 1].trim())) {
+            throw new InvalidMailException(label + "is not base64");
+        }
+        String payload = value.substring(comma + 1).replaceAll("[ \\t\\r\\n\\f]", "");
+        // The base64 length of 3 MiB: a longer payload cannot decode to less, so it is refused before decoding.
+        if (payload.length() > 4 * (MAX_IMAGE_BYTES / 3)) {
+            throw new InvalidMailException(label + "is 3 MiB or larger");
+        }
+        byte[] bytes;
+        try {
+            // The strict decoder: the MIME decoder would skip illegal characters.
+            bytes = Base64.getDecoder().decode(payload);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidMailException(label + "payload is not valid base64");
+        }
+        if (bytes.length >= MAX_IMAGE_BYTES) {
+            throw new InvalidMailException(label + "is 3 MiB or larger");
+        }
+        return new Fetched(bytes, type);
+    }
+
     // A resolved local source: the real path is the attachment's file and the dedupe key (D-11, D-19); the name is the last segment as written (D-17, D-20, P2).
     private record LocalFile(Path file, String name) {
     }
 
-    // A downloaded (or, in Plan 07-03, decoded) image.
+    // A downloaded or decoded image.
     private record Fetched(byte[] bytes, String contentType) {
     }
 
@@ -415,13 +572,14 @@ public final class HtmlImages {
         }
     }
 
-    private static Path writeToWorkDir(String raw, Path workDir, byte[] bytes) throws InvalidMailException {
+    // The label starts the message: img src "SRC": or data: image source #N: .
+    private static Path writeToWorkDir(String label, Path workDir, byte[] bytes) throws InvalidMailException {
         try {
             Path file = Files.createTempFile(workDir, "morimail-", null);
             Files.write(file, bytes);
             return file;
         } catch (IOException e) {
-            throw new InvalidMailException("img src \"" + raw + "\": work directory is not usable", e);
+            throw new InvalidMailException(label + "work directory is not usable", e);
         }
     }
 
