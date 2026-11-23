@@ -145,10 +145,10 @@ Plans:
 |-------|--------------|-------|
 | 5. Inline Images in Core and Graph | INLN-01..06, GRAPH-10..12 | 9 |
 | 6. Inline Images in the Serial-Mail Sample | CLI-15..18 | 4 |
-| 7. HTML Image Helper Module | HTML-01..06 | 6 |
+| 7. HTML Image Helper Module | HTML-01..07 | 7 |
 | 8. Docs and Release Readiness | DOCS-05..07 | 3 |
 
-Mapped: 22/22 v0.2.0 requirements. No orphans, no duplicates.
+Mapped: 23/23 v0.2.0 requirements. No orphans, no duplicates.
 
 Spec §10.3 also says "a transport that cannot send inline images rejects them in `validate`". No requirement covers this line. Both transports in this repository handle inline images (`graph` sends them, `recording` records them), so no code is needed under Rule 0. It is a rule for external transports.
 

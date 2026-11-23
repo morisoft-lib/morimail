@@ -382,7 +382,7 @@ try (InputStream body = response.body()) {
 }
 ```
 
-`readAtMost` is `InputStream.readNBytes(CAP + 1)`: it stops at the cap plus one byte, so a chunked response without `Content-Length` is capped too. An `InterruptedException` from `send` or `get` must call `Thread.currentThread().interrupt()` and throw `TransientMailException`.
+`readAtMost` is `InputStream.readNBytes(CAP + 1)`: it stops at the cap plus one byte, so a chunked response without `Content-Length` is capped too. (Resolved boundary, Open Question 2: the plans read `readNBytes(CAP)` and refuse `bytes.length >= CAP`, the comparison Graph `validate` uses; the shape is otherwise unchanged.) An `InterruptedException` from `send` or `get` must call `Thread.currentThread().interrupt()` and throw `TransientMailException`.
 
 Status mapping per D-13, plus the gap D-13 does not name: 2xx continues; 5xx and 429 and any `IOException` (connect refused, unknown host, `HttpTimeoutException`, reset) -> `TransientMailException`; every other status, **including 3xx that were not followed** (an https-to-http redirect, a redirect without `Location`, 304) and 1xx/204 -> `InvalidMailException` with the status only. Redirect policy: `HttpClient.Redirect.NORMAL` is documented as "Always redirect, except from HTTPS URLs to HTTP URLs." [CITED: docs.oracle.com/en/java/javase/17/docs/api/java.net.http/java/net/http/HttpClient.Redirect.html]. The Graph transport sets `.connectTimeout(CONNECT_TIMEOUT)` and `.followRedirects(HttpClient.Redirect.NEVER)` with `Duration.ofSeconds(10)` / `Duration.ofSeconds(30)` constants [VERIFIED: morimail/src/main/java/de/morisoft/morimail/graph/GraphTransport.java:44-45,71-74]; reuse the same constants and style, only the redirect policy differs (D-14).
 
@@ -519,29 +519,37 @@ Test images: generate tiny byte arrays in the test (`@TempDir`), distinct conten
 |---|-------|---------|---------------|
 | A1 | Treating a one-letter scheme (`C:`) as an unknown scheme (unchanged) is what the owner wants, despite D-09's "two or more characters" sentence | Pattern 2, Pitfall 5, Open Question 1 | `C:\img\x.png` would fail with `InvalidMailException` instead of being left alone |
 | A2 | `toDataUris` also applies the 3 MiB cap to **local** files (D-22 says "Any 3 MiB cap applies per image to the raw bytes"), so the stored form can always be embedded again | Pattern 4 | A 5 MiB local image would convert to a huge string that `embed` later refuses |
-| A3 | Exactly 3 MiB (3,145,728 bytes) is accepted and 3 MiB + 1 is refused, following D-13/D-23 "over/more than"; Graph `validate` itself refuses `size >= 3 MiB` | Pattern 3 | A 3 MiB image passes the helper and then fails Graph validation, a one-byte boundary |
+| A3 | Exactly 3 MiB (3,145,728 bytes) is accepted and 3 MiB + 1 is refused, following D-13/D-23 "over/more than"; Graph `validate` itself refuses `size >= 3 MiB` | Pattern 3 | A 3 MiB image passes the helper and then fails Graph validation, a one-byte boundary. Not adopted: see Open Question 2 (the helper refuses 3 MiB or more) |
 | A4 | Non-2xx statuses that D-13 does not name (3xx not followed, 1xx, 204, 408) map to `InvalidMailException` | Pattern 3 | 408 arguably wants a retry; any of them reclassified is a one-line change |
 | A5 | `<img src="">` (empty) is classified local and fails like a missing file | Pattern 1 table | Could instead be left unchanged; either way a deliberate choice for the planner |
 | A6 | In `toDataUris(t, baseDir, workDir)` the work directory is only the download opt-in and is not written | Pattern 4 | If the owner expects temp files there, downloads would go to disk first (no functional gain) |
 | A7 | JDK 17 behaves like the JDK 21 used for every experiment (HttpClient body behaviour, `URI`, `Path.of(URI)`, `probeContentType`) | Pitfall 8 | Fixed by CI on Temurin 17 |
 | A8 | WireMock 3.13.2 offers `withFixedDelay` and `withChunkedDribbleDelay` (or an equivalent) for slow headers and a stalled body | Pattern 3 test notes | Fall back to a `ServerSocket` stub like the experiment (about 15 lines) |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **One-letter scheme (D-09).**
+Each question is resolved with the answer Plans 07-01 to 07-03 adopt. The plan IDs (A1 to A7) differ from the Assumptions Log numbering above, so each answer names its plan ID. The owner's confirmation is a separate Owner review item: the SUMMARY of each plan lists these IDs, and Plan 07-03 Task 2 asks the owner to confirm or correct them.
+
+1. **One-letter scheme (D-09).** RESOLVED as plan A1 (Plan 07-01).
    - What we know: the stated outcome is "`C:\img\logo.png` stays unchanged"; the stated reason ("a scheme is two or more characters") would make it local and failing.
    - Recommendation: scheme regex `^[A-Za-z][A-Za-z0-9+.-]*:` (one or more characters), which yields the stated outcome, and record the choice in the plan as A1 for the owner to confirm.
+   - Answer adopted: the scheme pattern needs one or more characters, so `C:\img\logo.png` has the unknown scheme `c` and stays unchanged, the outcome D-09 states.
 
-2. **Cap on local files in `toDataUris` and the exact boundary (A2, A3).**
+2. **Cap on local files in `toDataUris` and the exact boundary (A2, A3).** RESOLVED as plan A2 (Plans 07-02 and 07-03), with a different boundary from the recommendation.
    - Recommendation: cap applies to every image `toDataUris` reads, boundary "more than 3 MiB fails", pin both with tests at the cap and cap + 1.
+   - Answer adopted: the cap applies to every image `toDataUris` reads (local files and downloads), to every download in `embed` and to every decoded `data:` source. The boundary follows D-14 ("the Graph per-file limit") and `GraphTransport.validate`, which refuses `size >= MAX_ATTACHMENT_BYTES` (GraphTransport.java line 105, GRAPH-11): an image of 3 MiB (3,145,728 bytes) or more fails, and 3,145,727 bytes pass. Tests pin 3,145,727 (passes) and 3,145,728 (fails) in each of the three modes. This replaces the Assumptions Log claim A3 and the `CAP + 1` read in Pattern 3: the plans read at most `MAX_IMAGE_BYTES` bytes and refuse `length >= MAX_IMAGE_BYTES`. The pre-decode check for `data:` refuses a payload longer than `4 * (MAX_IMAGE_BYTES / 3)` = 4,194,304 characters, which is the base64 length of both 3 MiB - 1 byte and 3 MiB.
 
-3. **Statuses outside D-13 (A4).** Recommendation: Invalid, status only in the message.
+3. **Statuses outside D-13 (A4).** RESOLVED as plan A3 (Plan 07-02). Recommendation: Invalid, status only in the message.
+   - Answer adopted: an unfollowed 3xx, 1xx, 204 and 408 give `InvalidMailException` with the status only; any 2xx except 204 continues.
 
-4. **Shape of `toDataUris` (A6).** Recommendation: keep the 2-arg/3-arg pair from D-04; the 3-arg overload takes `workDir` as the opt-in and documents that it is not written to. Alternatives (a boolean) conflict with "no nullable parameter / no flag" spirit.
+4. **Shape of `toDataUris` (A6).** RESOLVED as plan A4 (Plan 07-03). Recommendation: keep the 2-arg/3-arg pair from D-04; the 3-arg overload takes `workDir` as the opt-in and documents that it is not written to. Alternatives (a boolean) conflict with "no nullable parameter / no flag" spirit.
+   - Answer adopted: the 2-argument and 3-argument pair of D-04; in the 3-argument overload the work directory is only the opt-in for downloads and is never written.
 
-5. **Release-build approach.** Recommendation: unbound test executions in the module's release profile (tested). Needs the owner's nod only if the owner dislikes a profile that skips tests; the fallback is the local test provider (Alternatives table).
+5. **Release-build approach.** RESOLVED as plan A7 (Plan 07-01). Recommendation: unbound test executions in the module's release profile (tested). Needs the owner's nod only if the owner dislikes a profile that skips tests; the fallback is the local test provider (Alternatives table).
+   - Answer adopted: `morimail-html`'s `release` profile sets `default-testResources`, `default-testCompile` and `default-test` to phase `none`; only the scoped line `./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail,morimail-html -am` is supported, and the plain `verify` in the same CI job runs the module's tests.
 
-6. **Work dir cleanup on a failed call.** Recommendation: best-effort delete of this call's files; skip it if the planner judges it beyond Rule 0.
+6. **Work dir cleanup on a failed call.** RESOLVED as plan A6 (Plans 07-02 and 07-03). Recommendation: best-effort delete of this call's files; skip it if the planner judges it beyond Rule 0.
+   - Answer adopted: no cleanup (Rule 0, the skip this question allows). Files one call wrote before a later source failed stay in the work directory, which the caller owns and cleans up (D-04); the Javadoc of the work-directory overloads says so, and no file the call did not create is deleted, overwritten or renamed.
 
 ## Environment Availability
 
