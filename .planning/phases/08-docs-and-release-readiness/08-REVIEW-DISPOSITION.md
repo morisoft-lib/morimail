@@ -5,43 +5,43 @@ titles: json
 findings:
   - id: WR-01
     severity: warning
-    disposition: open
+    disposition: fixed
     title: "release.md presents one-time first-release setup as part of every release"
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Step 4 says \"Steps 5 to 8 use both variables\", which is not true"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "README tells readers to depend on a version that is not on Maven Central"
   - id: IN-03
     severity: info
-    disposition: open
+    disposition: fixed
     title: "spec section 10.3 still says \"without extension\" and \"not verified\""
   - id: IN-04
     severity: info
-    disposition: open
+    disposition: fixed
     title: "SendCommandHelpTest cannot detect a missing dry-run description"
   - id: IN-05
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Dry-run rewrite writes the file name into an HTML attribute without escaping quotes"
-open: 6
+open: 0
 total: 6
-recorded: 2026-11-23T20:40:05.540Z
+recorded: 2026-11-23T20:46:28.620Z
 ---
 
 # Phase 08: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | open | - |
-| IN-01 | info | open | - |
-| IN-02 | info | open | - |
-| IN-03 | info | open | - |
-| IN-04 | info | open | - |
-| IN-05 | info | open | - |
+| WR-01 | warning | fixed | 08-REVIEW-FIX.md |
+| IN-01 | info | fixed | 08-REVIEW-FIX.md |
+| IN-02 | info | fixed | 08-REVIEW-FIX.md |
+| IN-03 | info | fixed | 08-REVIEW-FIX.md |
+| IN-04 | info | fixed | 08-REVIEW-FIX.md |
+| IN-05 | info | fixed | 08-REVIEW-FIX.md |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
