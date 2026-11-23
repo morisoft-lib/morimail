@@ -95,10 +95,10 @@ The warm-up prints nothing on success. If it prints a `gpg:` line, fix that befo
 
 By default the agent keeps the passphrase for 10 minutes after its last use. If more time passes before the deploy, warm up again. If you have several secret keys, add `--local-user <KEYID>` to the `gpg` line and `-Dgpg.keyname=<KEYID>` to both deploy commands.
 
-First, an optional check that sends nothing. It builds and signs the bundle and skips the upload. Both deploy commands start with the same guard line, so copy both lines together. If a POM still holds `-SNAPSHOT`, grep prints that line and the deploy does not start: finish step 4 first.
+First, an optional check that sends nothing. It builds and signs the bundle and skips the upload. Both deploy commands start with the same guard line, so copy both lines together. The deploy starts only when grep finds no `-SNAPSHOT` in all three POMs. If a POM still holds `-SNAPSHOT`, grep prints that line and the deploy does not start: finish step 4 first. If grep prints an error such as `No such file`, you are in the wrong directory or a POM is missing, and the deploy does not start either.
 
 ```
-! grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml &&
+grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml; [ $? -eq 1 ] &&
 ./mvnw -B -ntp -Prelease clean deploy -DskipUpload=true -pl morimail,morimail-html -am
 ```
 
@@ -133,7 +133,7 @@ echo test | gpg --clearsign > /dev/null
 Then deploy:
 
 ```
-! grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml &&
+grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml; [ $? -eq 1 ] &&
 ./mvnw -B -ntp -Prelease clean deploy -pl morimail,morimail-html -am
 ```
 
