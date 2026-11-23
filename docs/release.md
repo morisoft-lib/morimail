@@ -1,11 +1,11 @@
 # Releasing morimail
 
-The owner runs every step on their own machine. Claude prepares the build and rehearses the bundle, and never runs these steps. Use `./mvnw`, which pins Maven 3.10.1. Never use Maven 4, which the Central publishing plugin documents as not working.
+The owner runs every step on their own machine. Claude prepares the build and rehearses the bundle, and never runs these steps. Use `./mvnw`, which pins Maven 3.10.1. Never use Maven 4, which the Central publishing plugin documents as not working. A release publishes the parent POM `de.morisoft:morimail-parent`, the library `de.morisoft:morimail` and the helper `de.morisoft:morimail-html`, all with the same version; the sample and the test-jar are never published.
 
 ## Before the first release
 
 - Enable GitHub private vulnerability reporting (Settings, Code security), because `SECURITY.md` routes reports there.
-- CI must be green on Temurin 17 for the commit you release. That includes the release build with `-Prelease verify -Dgpg.skip -pl morimail -am`. Step 4 pushes that commit and waits for CI before the deploy.
+- CI must be green on Temurin 17 for the commit you release. That includes the release build with `-Prelease verify -Dgpg.skip -pl morimail,morimail-html -am`. Step 4 pushes that commit and waits for CI before the deploy.
 
 ## 1. Verify the namespace
 
@@ -53,15 +53,30 @@ The owner runs every step on their own machine. Claude prepares the build and re
 
 ## 4. Set the release version
 
-1. Change the three POM versions from `0.1.0-SNAPSHOT` to `0.1.0`. On macOS use `sed -i ''`.
+1. Set the release version and the next SNAPSHOT in the shell:
 
    ```
-   sed -i 's/0\.1\.0-SNAPSHOT/0.1.0/' pom.xml morimail/pom.xml morimail-sample-serial/pom.xml
+   VERSION=0.2.0
+   NEXT=0.3.0-SNAPSHOT
    ```
 
-2. `git diff` must show exactly three changed lines.
-3. Run `./mvnw -B -ntp verify`, then commit with the message "release 0.1.0" and push the commit.
-4. Wait until CI is green on that commit. Only then go on to the deploy, because publishing to Central cannot be undone.
+   Steps 5 to 8 use both variables, so set them again in every new shell.
+
+2. Change the four POM versions from `${VERSION}-SNAPSHOT` to `${VERSION}`. On macOS use `sed -i ''`.
+
+   ```
+   sed -i "s#<version>${VERSION}-SNAPSHOT</version>#<version>${VERSION}</version>#" pom.xml morimail/pom.xml morimail-html/pom.xml morimail-sample-serial/pom.xml
+   ```
+
+3. `git diff` must show exactly four changed lines, the `<version>` line of each POM.
+4. Run `./mvnw -B -ntp verify`. It runs the tests of every module, `morimail-html` included. Then commit and push:
+
+   ```
+   git commit -m "release ${VERSION}" pom.xml morimail/pom.xml morimail-html/pom.xml morimail-sample-serial/pom.xml
+   git push
+   ```
+
+5. Wait until CI is green on that commit. Only then go on to the deploy, because publishing to Central cannot be undone.
 
 ## 5. Deploy
 
@@ -79,25 +94,29 @@ By default the agent keeps the passphrase for 10 minutes after its last use. If 
 First, an optional check that sends nothing. It builds and signs the bundle and skips the upload:
 
 ```
-./mvnw -B -ntp -Prelease clean deploy -DskipUpload=true -pl morimail -am
+./mvnw -B -ntp -Prelease clean deploy -DskipUpload=true -pl morimail,morimail-html -am
 ```
 
-It writes `target/central-publishing/central-bundle.zip`. List it with `unzip -Z1`. It must hold exactly 30 entries. These are the five base files:
+It writes `target/central-publishing/central-bundle.zip`. List it with `unzip -Z1`. It must hold exactly 54 entries. These are the nine base files, with `${VERSION}` standing for the release version:
 
-- `morimail-parent-0.1.0.pom`
-- `morimail-0.1.0.pom`
-- `morimail-0.1.0.jar`
-- `morimail-0.1.0-sources.jar`
-- `morimail-0.1.0-javadoc.jar`
+- `morimail-parent-${VERSION}.pom`
+- `morimail-${VERSION}.pom`
+- `morimail-${VERSION}.jar`
+- `morimail-${VERSION}-sources.jar`
+- `morimail-${VERSION}-javadoc.jar`
+- `morimail-html-${VERSION}.pom`
+- `morimail-html-${VERSION}.jar`
+- `morimail-html-${VERSION}-sources.jar`
+- `morimail-html-${VERSION}-javadoc.jar`
 
-Each one comes with `.asc`, `.md5`, `.sha1`, `.sha256` and `.sha512` files. There is no `-tests.jar` and no sample artifact. This is the bundle seen in the rehearsal on 2026-11-22, run with a throwaway key.
+Each one comes with `.asc`, `.md5`, `.sha1`, `.sha256` and `.sha512` files. There is no `-tests.jar` and no sample artifact. This list was checked in a rehearsal with a throwaway key.
 
 Two notes on that check:
 
 - At a SNAPSHOT version no zip is made, so run it after step 4.
 - With `-o` (offline) the publish goal is skipped, so never add `-o`.
 
-The check installs the 0.1.0 artifacts under `~/.m2/repository/de/morisoft`. Remove that directory afterwards if you do not want them there.
+The check installs the `$VERSION` artifacts under `~/.m2/repository/de/morisoft`. Remove that directory afterwards if you do not want them there.
 
 Then the real deploy. Warm up the agent again:
 
@@ -109,10 +128,10 @@ echo test | gpg --clearsign > /dev/null
 Then deploy:
 
 ```
-./mvnw -B -ntp -Prelease clean deploy -pl morimail -am
+./mvnw -B -ntp -Prelease clean deploy -pl morimail,morimail-html -am
 ```
 
-Tests run. The deploy signs from the agent cache and cannot prompt, because of `-B`. `autoPublish` is false, and the plugin waits until the deployment is validated, so nothing is public yet.
+The `morimail` tests run again. The `morimail-html` tests do not run in a release-profile build, because its profile skips them; step 4 ran them. The deploy signs from the agent cache and cannot prompt, because of `-B`. `autoPublish` is false, and the plugin waits until the deployment is validated, so nothing is public yet.
 
 If a deploy fails with `maven-gpg-plugin:3.2.8:sign` and `Exit code: 2`, that line gives no reason. gpg's own message is a `gpg:` line without `[INFO]` or `[ERROR]`, under `--- gpg:3.2.8:sign` and above the Reactor Summary. `gpg: signing failed: No pinentry` means the agent held no passphrase for the signing key: warm up and run the same command again. If you have several secret keys, check that the warm-up and the deploy name the same `<KEYID>`.
 
@@ -124,16 +143,22 @@ If a deploy fails with `maven-gpg-plugin:3.2.8:sign` and `Exit code: 2`, that li
 
 ## 7. Tag
 
-Tag the "release 0.1.0" commit from step 4, not whatever `HEAD` is now. Later commits can sit on top of it. Check that the second command shows that commit before you push the tag.
+Tag the "release ${VERSION}" commit from step 4, not whatever `HEAD` is now. Later commits can sit on top of it. Check that the second command shows that commit before you push the tag.
 
 ```
-git tag -a v0.1.0 -m "morimail 0.1.0" "$(git log -1 --format=%H --grep='^release 0\.1\.0$')"
-git show --no-patch --format='%h %s' v0.1.0^{commit}
-git push origin v0.1.0
+git tag -a "v${VERSION}" -m "morimail ${VERSION}" "$(git log -1 --format=%H --grep="^release ${VERSION}\$")"
+git show --no-patch --format='%h %s' "v${VERSION}^{commit}"
+git push origin "v${VERSION}"
 ```
 
 ## 8. Bump to the next SNAPSHOT
 
-1. Set the three versions to the next SNAPSHOT, for example `0.2.0-SNAPSHOT` (or `0.1.1-SNAPSHOT` for a fix line). Use the same `sed` pattern as in step 4, with the new version.
-2. Update the README sentences that say 0.1.0 is not released or not published yet.
-3. Run `./mvnw -B -ntp verify`, commit, and push.
+1. Set the four versions to the next SNAPSHOT:
+
+   ```
+   sed -i "s#<version>${VERSION}</version>#<version>${NEXT}</version>#" pom.xml morimail/pom.xml morimail-html/pom.xml morimail-sample-serial/pom.xml
+   ```
+
+2. `git diff` must show exactly four changed lines.
+3. In `README.md`, set the dependency blocks to `${VERSION}` where they show another version, and change the sentence under Coordinates so it names `${VERSION}` as the current release on Maven Central.
+4. Run `./mvnw -B -ntp verify`, commit, and push.
