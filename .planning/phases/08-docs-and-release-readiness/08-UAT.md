@@ -3,7 +3,7 @@ status: diagnosed
 phase: 08-docs-and-release-readiness
 source: [08-VERIFICATION.md]
 started: 2026-11-23T20:42:44Z
-updated: 2026-11-23T20:59:25Z
+updated: 2026-11-23T21:31:45Z
 ---
 
 ## Current Test
@@ -30,12 +30,16 @@ result: pass
 expected: Setting enabled (SECURITY.md routes reports there).
 result: pass
 
+### 5. Confirm that no phase 8 Claude run deployed, pushed or tagged, and that the only deploy was your own 0.2.0 release (the three flagged prohibitions above)
+expected: Yes. Everything Claude ran in phase 8 was a git-archive copy or a skipUpload rehearsal; the 0.2.0 deploy, push and tag v0.2.0 were yours.
+result: [pending]
+
 ## Summary
 
-total: 4
+total: 5
 passed: 3
 issues: 1
-pending: 0
+pending: 1
 skipped: 0
 blocked: 0
 
