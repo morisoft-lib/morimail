@@ -1,73 +1,67 @@
 ---
 phase: 08-docs-and-release-readiness
-reviewed: 2026-11-23T22:00:00Z
+reviewed: 2026-11-23T23:30:00Z
 depth: standard
 files_reviewed: 1
 files_reviewed_list:
   - docs/release.md
 findings:
   critical: 0
-  warning: 2
-  info: 0
-  total: 2
+  warning: 0
+  info: 3
+  total: 3
   necessity: 0
 status: issues_found
 ---
 
 # Phase 8: Code Review Report
 
-**Reviewed:** 2026-11-23T22:00:00Z
+**Reviewed:** 2026-11-23T23:30:00Z
 **Depth:** standard
 **Files Reviewed:** 1
 **Status:** issues_found
 
 ## Summary
 
-This is an incremental re-review of `docs/release.md`. I focused on commit 2ad672c, which added the `! grep -- -SNAPSHOT ... &&` guard before both step 5 deploy commands and rewrote the SNAPSHOT bullet. I also checked the rest of the procedure against the current POMs, tags and README.
+This is the incremental re-review of `docs/release.md` after the fixes in da6bc67 (WR-01) and 088d37d (WR-02). I read the whole file and checked it against the four POMs, `README.md`, the tags and the commit log.
 
-The SNAPSHOT bullet is accurate. `08-UAT.md` G-08-2 records the plugin behaviour from the 0.12.0 bytecode: a SNAPSHOT build is routed to the snapshots URL, and `skipUpload` stops it. The root POM has no `distributionManagement`, and the plugin supplies the snapshots URL itself.
+**Status of the prior findings**
 
-I ran the guard as a two-line paste under bash against scratch copies of the POMs:
-- With `-SNAPSHOT` in all three POMs, grep prints the three lines, the chained command does not start, and the exit status is 1.
-- With `0.3.0` in all three POMs, nothing prints and the chained command starts.
-- With a missing POM, or from the wrong working directory, grep exits 2 and the guard lets the deploy start. This is WR-01.
+- **WR-01 (SNAPSHOT guard fails open when grep errors): fixed.** Both blocks, at lines 101-102 and 136-137, now read `grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml; [ $? -eq 1 ] &&` followed by the `./mvnw` line. I ran the two-line paste under `bash -c`:
+  - With `0.3.0` in all three scratch POMs, nothing is printed and the deploy line runs.
+  - With `-SNAPSHOT` in one POM, grep prints the match (exit 0) and the deploy line does not run.
+  - A missing file gives grep exit 2, which also fails `[ $? -eq 1 ]`, so the deploy does not run. This follows from grep's exit codes and from the fix report's test table. I did not re-run it.
+  - The guard has no `!`, so history expansion is not an issue. `$?` is read straight after grep. The trailing `&&` continues onto the next line in bash and zsh, so pasting both lines works. zsh is not installed here, so I did not run it there. Nothing in the guard is shell-specific.
+  - The prose at line 98 matches the behaviour: a match stops the deploy, and so does a grep error such as `No such file`.
+- **WR-02 (defaults target the released 0.2.0): fixed.** `VERSION=0.3.0` and `NEXT=0.4.0-SNAPSHOT` match the POMs at `0.3.0-SNAPSHOT`.
+  - Only the four expected lines match the step 4 `sed` pattern: the root `<version>` at `pom.xml:10` and the parent `<version>` at line 10 of each of the three module POMs. All other `<version>` entries are `${...}` properties or plugin versions, so the step 4.3 diff check and the step 8 reverse `sed` (`<version>${VERSION}</version>` to `${NEXT}`) touch exactly four lines.
+  - No tag `v0.3.0` and no commit "release 0.3.0" exists yet, so the step 7 `--grep="^release ${VERSION}\$"` cannot match the `release 0.2.0` commit (2c4ea80).
+  - The only `0.x.y` strings left in the file are the two defaults at lines 63-64. Line 12 now says "any version".
 
-zsh is not installed here, so I could not run the guard there. By the language rules, `! ` followed by a space is not history-expanded in zsh and `!` is a reserved word, so I expect the same result as bash. That expectation is unverified.
+The guard is correct and the VERSION/NEXT wording is consistent across steps 4, 7 and 8. The step 7 quoting (`\$`, `^{commit}`) is safe in bash and zsh. The guard checks three POMs and step 4 edits four. This is intentional, because the sample POM is not deployed (`-pl morimail,morimail-html -am`), and the prose says "three POMs". I found no new correctness issue. Three minor wording points follow.
 
-The step 4 and step 8 `sed` lines, the step 7 tag commands and the quoting are copy-paste safe. I found no problem with `${VERSION}`, `\$` or `^{commit}` inside double quotes.
+## Info
 
-No critical issues. Two warnings.
+### IN-01: README step 8 only renames the version, but the Coordinates sentence is release-specific
 
-## Warnings
+**File:** `docs/release.md:169`
+**Issue:** The README sentence under Coordinates currently reads "0.2.0 is the current release on Maven Central. It adds inline images and the `morimail-html` helper." (`README.md:21`). Step 8.3 says to change the sentence "so that it names `${VERSION}`". Following that literally for 0.3.0 gives "0.3.0 is the current release ... It adds inline images and the `morimail-html` helper", which is false. The second sentence describes what 0.2.0 added.
+**Fix:** Say to rewrite the sentence, for example: "In `README.md`, rewrite the sentence under Coordinates so that it names `${VERSION}` as the current release on Maven Central and describes what that release adds. Check that both dependency blocks show `${VERSION}`, and change them if they do not."
 
-### WR-01: SNAPSHOT guard fails open when grep errors
+### IN-02: Step 8 `sed -i` has no macOS note
 
-**File:** `docs/release.md:101` and `docs/release.md:136`
-**Issue:** `! grep ...` negates grep's exit status, so exit 2 (error) counts as "no SNAPSHOT found" and the chained deploy starts. I reproduced this with bash:
-- Run from a directory without the POMs: grep prints three `No such file` errors, then the next command runs.
-- One POM missing while another still holds `-SNAPSHOT`: grep prints the match plus the error, exits 2, and the next command runs.
+**File:** `docs/release.md:165`
+**Issue:** Step 4 (line 69) says "On macOS use `sed -i ''`", but step 8 repeats the same `sed -i` form without the note. On BSD sed, `sed -i "s#...#...#" pom.xml ...` takes the script as the backup suffix and then fails or misreads the file list. A reader who starts at step 8 in a new shell, as step 4 invites, may miss the note. Step 8 is after the Central publish and the tag, so a failed sed there is recoverable, but it is confusing.
+**Fix:** Add "On macOS use `sed -i ''`." to step 8.1, or move the note above both `sed` commands.
 
-In normal use `./mvnw` is also missing from a wrong directory, so the damage is limited. The guard exists to be the only barrier against the unrecoverable SNAPSHOT upload from UAT G-08-2, and it should stop on any outcome other than "searched everything, found nothing". The doc also tells the reader that grep "prints that line and the deploy does not start", which is untrue in the error case.
-**Fix:** Require grep's exit status to be exactly 1 (no match) instead of negating it. This is still a two-line paste and still prints the matching lines:
-```
-grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml; [ $? -eq 1 ] &&
-./mvnw -B -ntp -Prelease clean deploy -pl morimail,morimail-html -am
-```
-Change both blocks, and adjust the prose before the first block to say "copy both lines".
+### IN-03: "Steps 5 to 8 use `VERSION`" overstates the shell dependency
 
-### WR-02: Procedure defaults and wording still target the already-released 0.2.0
-
-**File:** `docs/release.md:12`, `docs/release.md:63-64`, `docs/release.md:169`
-**Issue:** The tag `v0.2.0` exists, `2c4ea80` is the release commit, and the POMs are at `0.3.0-SNAPSHOT` (`8df5f6a`). The doc is still written as the procedure for 0.2.0:
-- Step 4 sets `VERSION=0.2.0` and `NEXT=0.3.0-SNAPSHOT`. Pasted as written, `sed` matches nothing, because it looks for `0.2.0-SNAPSHOT`. Later steps then behave oddly. `git commit` finds nothing to commit. If the owner skips that, step 7's `--grep="^release 0.2.0\$"` matches the old release commit `2c4ea80`, and `git tag` fails because `v0.2.0` already exists.
-- Line 12 says "If you already released 0.1.0", which is wrong now that 0.2.0 is out and signed with the same key.
-- Line 169 says "for the 0.2.0 release they already do" (the README dependency blocks). That is now past tense for a finished release.
-
-The step 4.3 diff check (exactly four changed lines) and the new guard stop the worst outcomes, but the first copy-paste of the next release fails confusingly.
-**Fix:** Change the defaults to the next release, for example `VERSION=0.3.0` and `NEXT=0.4.0-SNAPSHOT`, or use an obvious placeholder (`VERSION=X.Y.Z`) with a note to set it. Reword line 12 to "If you already released any version, ..." and line 169 to "for a release where the README already shows `${VERSION}` nothing changes there". Do this as a doc-only edit; do not re-run any release step for 0.2.0.
+**File:** `docs/release.md:67`
+**Issue:** Step 5 only names `${VERSION}` as a placeholder in the bundle file list, which is prose, not a command. Step 6 does not use it. Only steps 7 and 8 read the shell variables (`VERSION` in both, `NEXT` in step 8). The sentence implies that the variables must be set for the step 5 deploy, which they do not. The guard and deploy commands contain no variables.
+**Fix:** "Steps 7 and 8 use `VERSION`, and step 8 also uses `NEXT`. Step 5 names `${VERSION}` only in the bundle listing. Set them again in every new shell."
 
 ---
 
-_Reviewed: 2026-11-23T22:00:00Z_
+_Reviewed: 2026-11-23T23:30:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
