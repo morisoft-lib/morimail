@@ -3,43 +3,42 @@ gsd_state_version: "1.0"
 milestone: v0.2.0
 milestone_name: Inline Images
 current_phase: 08
-current_phase_name: Docs and Release Readiness
-status: verifying
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-11-23T21:25:45.459Z"
+status: completed
+stopped_at: Phase 08 complete — all phases complete
+last_updated: "2026-11-23T21:48:30.981Z"
 last_activity: 2026-11-23
-last_activity_desc: Phase 08 execution started
-state_head: 1c21c294971427995a351fe442999f168c223d9b
+last_activity_desc: Phase 08 complete
+state_head: eabd844f105383409c188e7fcdcf920869d4ac2c
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 11
   completed_plans: 11
-  percent: 75
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-23 after Phase 7)
+See: .planning/PROJECT.md (updated 2026-11-23 after Phase 8)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 08 — Docs and Release Readiness
+**Current focus:** Milestone v0.2.0 complete — ready for milestone audit and close
 
 ## Current Position
 
-Phase: 08 (Docs and Release Readiness) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-11-23 — Phase 08 execution started
+Phase: 08
+Plan: Not started
+Status: All phases complete
+Last activity: 2026-11-23 — Phase 08 complete
 
-Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
+Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 33
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -54,6 +53,7 @@ Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
 | 05 | 2 | - | - |
 | 06 | 2 | - | - |
 | 07 | 4 | - | - |
+| 08 | 3 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -136,6 +136,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 08]: 08-01: README inline, morimail-html and Serial-mail sample sections with compiled snippets; spec 5/5.1/6.2/8.1/8.3/10.3/10.4/12 and docs/architecture.md describe 0.2.0 with the live result of 2026-11-23; send usage names inline/ and cid:NAME, pinned by SendCommandHelpTest; no new option
 - [Phase 08]: 08-02: docs/release.md version-neutral (VERSION/NEXT, four POMs, -pl morimail,morimail-html -am as in CI, 54-entry bundle listed with the VERSION variable); rehearsed 2026-11-23 with a throwaway key, upload skipped, cleanup of the key and of the local de/morisoft artifacts; offline verify and scoped release build green with zero warning lines
 - [Phase 08]: 08-03 (G-08-2): release.md step 5 chains both deploy commands behind `! grep -- -SNAPSHOT` over the three published POMs; a SNAPSHOT deploy goes to Central's snapshots repository unless -DskipUpload; docs only; the owner reported the 0.2.0 release as working on 2026-11-23 (tag v0.2.0 on 2c4ea80), the guard applies from the next release
+- [Phase 08]: UAT 2026-11-23 complete (4 pass, G-08-2 resolved by 08-03); review fixes WR-01 (guard `; [ $? -eq 1 ] &&` stops on grep error) and WR-02 (defaults VERSION=0.3.0, NEXT=0.4.0-SNAPSHOT); re-review 0 critical / 0 warning / 3 info (open in 08-REVIEW-DISPOSITION.md); SECURITY threats_open 0; re-verification passed
 
 ### Pending Todos
 
@@ -143,7 +144,6 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
 - [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached. Phase 6 applied the same rule to `inline/` (dot-files skipped); `Thumbs.db` in `inline/` fails pre-flight as a non-image file.
@@ -162,10 +162,10 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T21:25:45.127Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-11-23T22:50:00Z
+Stopped at: Phase 08 complete (UAT, security and verification passed) — milestone v0.2.0 ready to close
 Resume file: None
 
 ## Operator Next Steps
 
-- Discuss Phase 8 with /gsd-discuss-phase 8 (or plan directly with /gsd-plan-phase 8)
+- Audit the milestone with /gsd-audit-milestone, then close it with /gsd-complete-milestone

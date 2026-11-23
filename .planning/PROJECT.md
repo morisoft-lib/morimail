@@ -51,11 +51,13 @@ Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
 
 - ✓ HTML image helper per spec §10.4: module `morimail-html` (depends on `morimail` in compile scope) with `HtmlImages.embed` (local images under a base directory, `http(s)` downloads opt-in via a work directory, `data:` decoded) and `toDataUris`; 3 MiB per-image cap as in Graph; Temurin 17 CI green, owner accepted A1-A7 and P1-P10 (Phase 7 UAT) — v0.2.0 Phase 7 (HTML-01..06)
 
-Everything above this line except the Phase 5, 6 and 7 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
+- ✓ Docs and release readiness: README inline-image, `morimail-html` and sample sections with compiled snippets; spec and `docs/architecture.md` describe 0.2.0 with the live result; `docs/release.md` is one version-neutral procedure for parent, `morimail` and `morimail-html`, with both deploy commands guarded against SNAPSHOT versions; the owner released 0.2.0 (tag `v0.2.0`) — v0.2.0 Phase 8 (DOCS-05..07)
+
+Everything above this line except the Phase 5 to 8 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
 
 ### Active
 
-- [ ] Inline images (CID) per spec §10.3, remaining part: docs (Phase 8) — v0.2.0 (REQ-IDs in REQUIREMENTS.md); core and Graph done in Phase 5, sample in Phase 6
+None. All v0.2.0 requirements are validated; the next milestone defines new ones.
 
 ### Out of Scope
 
@@ -75,8 +77,8 @@ Everything above this line except the Phase 5, 6 and 7 entries shipped in v0.1.0
 ## Context
 
 - Shipped v0.1.0 (2026-11-22): about 3,350 lines of main Java and 10,600 lines in total with tests, in the library and the sample. Java 17, Maven 3.10.1 wrapper, Jackson 2.23.0 only at runtime, picocli in the sample, JUnit 6, AssertJ and WireMock for tests.
-- Repository: https://github.com/morisoft-lib/morimail. Public from the first commit; git history is permanent. The `v0.1.0` tag was set by the owner on the CI-green release commit; `main` is now at `0.2.0-SNAPSHOT`.
-- Published artifacts: `de.morisoft:morimail-parent` and `de.morisoft:morimail`. The sample and the test-jar are not published. The release build only works scoped (`-Prelease ... -pl morimail -am`, D-20).
+- Repository: https://github.com/morisoft-lib/morimail. Public from the first commit; git history is permanent. The owner set the `v0.1.0` and `v0.2.0` tags on the CI-green release commits; `main` is now at `0.3.0-SNAPSHOT`.
+- Published artifacts: `de.morisoft:morimail-parent`, `de.morisoft:morimail` and (from 0.2.0) `de.morisoft:morimail-html`. The sample and the test-jar are not published. The release build only works scoped (`-Prelease ... -pl morimail,morimail-html -am`).
 - Microsoft docs to read before coding against an endpoint: Graph `user: sendMail` and `fileAttachment` (inline properties are unverified), Entra client-credentials flow, certificate credentials (PS256, `x5t#S256`), Exchange RBAC for Applications.
 - The live test confirmed PS256, the 403/404 error rows and the binary MiB limits. The spec §6.3 table has a live-status column.
 - Known tech debt (v0.1.0 audit): a quoted local part is not redacted; `isHeaderSafe` duplicates Graph's `requireToken`; Entra messages can name app and tenant IDs; settable timeouts and authority/`baseUrl` keys in `account.properties` are deferred; `SerialMail` duplicates the Graph base URL constant; `TransportRegistry.load()` runs on every account build.
@@ -116,6 +118,7 @@ Everything above this line except the Phase 5, 6 and 7 entries shipped in v0.1.0
 | Graph inline images sent with a bare `contentId` (no angle brackets, no `contentLocation`) | Smallest body the current `fileAttachment` docs allow | ✓ Good — renders inline live (Phase 5 UAT) |
 | Sample inline scan probes each `inline/` file through the core's `build()` instead of copying its type table; the `cid:` pattern is copied into `Campaign` and pinned equal to the core's | One source of truth for the rules; the sample stays small (Rule 0) | ✓ Good — dry-run logo shown in all five mails (Phase 6 UAT) |
 | `morimail-html` declares `morimail` in compile scope, not `provided` (reverses D-02) | Nearest-wins lets a consumer's direct `morimail` override it anyway; compile scope keeps the version link, so a pre-0.2.0 core without inline-image support is not silently used | ✓ Owner decision (Phase 7 UAT, G-07-2) |
+| Release deploys in `docs/release.md` are chained behind `grep -- -SNAPSHOT ...; [ $? -eq 1 ] &&` | A SNAPSHOT deploy uploads to Central's snapshots repository (the 401 in Phase 8 UAT); the guard also stops on a grep error (review WR-01) | ✓ Good — G-08-2 closed, re-verified (Phase 8) |
 
 ## Evolution
 
@@ -135,4 +138,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-23 after Phase 7*
+*Last updated: 2026-11-23 after Phase 8*
