@@ -15,11 +15,10 @@
   <description>Turns the image URLs of a morimail HTML template into cid: references plus inline images.</description>
 
   <dependencies>
-    <!-- provided (D-02): a consumer depends on morimail directly to build the mail, so this POM forces neither a morimail version nor Jackson on it -->
+    <!-- compile scope (D-02, amended 2026-11-23): the published POM names the morimail version the helper is built against; a consumer's own morimail dependency still wins under Maven's nearest-wins rule -->
     <dependency>
       <groupId>de.morisoft</groupId>
       <artifactId>morimail</artifactId>
-      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>de.morisoft</groupId>

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
  *
  * <ul>
  *   <li>The helper imports only {@code java.*} and core types. Jackson is on its compile classpath
- *       (provided scope brings it in), so this is what keeps it out.
+ *       (it comes with the compile-scoped {@code morimail}), so this is what keeps it out.
  *   <li>The core names the helper nowhere: not in its POM and not under its {@code src}.
  *   <li>The two public types of the helper state their thread safety.
  * </ul>
