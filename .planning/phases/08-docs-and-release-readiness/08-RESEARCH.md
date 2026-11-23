@@ -367,18 +367,21 @@ Not a rename/refactor phase, so the full inventory does not apply. The one relev
 | A2 | The unescaped dots in `sed "s/${VERSION}-SNAPSHOT/${VERSION}/"` cannot hit another string in the four POMs for versions other than 0.2.0 | release.md edit table | The four-line `git diff` check in the guide catches it |
 | A3 | The three "Hard link not supported" warnings are caused by the scratch copy's different filesystem, not by the repo | Build Results | Only affects whether the owner sees them; the real-tree release build has zero warnings |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`send --help` (decision needed or default accepted)**
    - What we know: `send --help` prints the usage text on stderr with exit 2 because `--help` is unknown and required options are missing; there is no help option (verified). D-09 says "annotation texts only, with no new option".
    - What's unclear: whether the owner wants a real help option (`mixinStandardHelpOptions = true` would add `-h/--help` and `-V/--version`, a new option and a version string that needs `versionProvider`) or accepts the current behaviour.
    - Recommendation: Rule 0, keep the CONTEXT decision (no new option). Write "run `send --help` for the options" in the README, because that is true for a human reader. Record the exit-code 2 and stderr quirk in the plan summary so the owner can decide later. Do not add the option without asking.
+   - RESOLVED: recommendation taken (08-01-PLAN.md FA-1). No help option is added (D-09, Rule 0), and the 08-01 source gate fails on a help mixin. The README points to `send --help` as it is, and 08-01-SUMMARY.md lists the stderr output with exit code 2 under "Owner review" (08-01 Task 3 steps 3 and 7).
 
 2. **Rehearsal re-run after the doc edits?**
    - The edits touch nothing that enters the bundle, and the evidence above is from the current tree. Recommendation: do not re-run unless the plan edits a POM; do re-run the two gate builds.
+   - RESOLVED: re-run at execution, against this recommendation (08-02-PLAN.md FA-6). D-14 locks "Claude re-runs the rehearsal", the evidence above lives only in a session scratchpad, and the re-run also proves that the step 4 sed and the skipUpload line work as written in the new release.md (08-02 Task 1 rehearsal gate). The two gate builds are re-run as well (08-02 Task 2).
 
 3. **Unlisted spec spots (§8.1 layout, §8.3 dry-run sentence)**
    - They describe the sample without `inline/`. D-05 says "edit in place so the spec describes the code" but lists only §5, §5.1, §6.2, §10.3/§10.4, §12. Recommendation: add one line to §8.1 (`inline/` directory with the content-ID rule) and one sentence to §8.3 (dry-run writes `out/inline/` and rewrites `src`), each short; this follows the intent of D-05/D-10. If the planner prefers to stay strictly inside D-05..D-07, leave them and note the gap.
+   - RESOLVED: recommendation taken (08-01-PLAN.md FA-3). 08-01 Task 3 step 4 adds one `inline/` line to §8.1 and one paragraph to §8.3, the 08-01 spec hunk gates allow no other line of section 8, and 08-01-SUMMARY.md lists both under "Owner review".
 
 ## Environment Availability
 
