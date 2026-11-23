@@ -3,6 +3,18 @@ phase: 08
 review: 08-REVIEW.md
 titles: json
 findings:
+  - id: IN-01
+    severity: info
+    disposition: open
+    title: "README step 8 only renames the version, but the Coordinates sentence is release-specific"
+  - id: IN-02
+    severity: info
+    disposition: open
+    title: "Step 8 `sed -i` has no macOS note"
+  - id: IN-03
+    severity: info
+    disposition: open
+    title: "\"Steps 5 to 8 use `VERSION`\" overstates the shell dependency"
   - id: WR-01
     severity: warning
     disposition: fixed
@@ -11,18 +23,6 @@ findings:
     severity: warning
     disposition: fixed
     title: "Procedure defaults and wording still target the already-released 0.2.0"
-  - id: IN-01
-    severity: info
-    disposition: fixed
-    title: "Step 4 says \"Steps 5 to 8 use both variables\", which is not true"
-  - id: IN-02
-    severity: info
-    disposition: fixed
-    title: "README tells readers to depend on a version that is not on Maven Central"
-  - id: IN-03
-    severity: info
-    disposition: fixed
-    title: "spec section 10.3 still says \"without extension\" and \"not verified\""
   - id: IN-04
     severity: info
     disposition: fixed
@@ -31,20 +31,20 @@ findings:
     severity: info
     disposition: fixed
     title: "Dry-run rewrite writes the file name into an HTML attribute without escaping quotes"
-open: 0
+open: 3
 total: 7
-recorded: 2026-11-23T21:41:30.571Z
+recorded: 2026-11-23T21:46:17.079Z
 ---
 
 # Phase 08: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 08-REVIEW-FIX.md |
-| WR-02 | warning | fixed | 08-REVIEW-FIX.md |
-| IN-01 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
-| IN-02 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
-| IN-03 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
+| IN-03 | info | open | - |
+| WR-01 | warning | fixed | 08-REVIEW-FIX.md (not in the current review) |
+| WR-02 | warning | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | IN-04 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | IN-05 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |
 
