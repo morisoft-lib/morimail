@@ -9,7 +9,7 @@ The owner runs every step on their own machine. Claude prepares the build and re
 
 ## One-time setup (steps 1 to 3)
 
-Steps 1 to 3 are one-time. If you already released 0.1.0, check that the namespace shows as verified, that `gpg --list-secret-keys` shows the key that signed 0.1.0, and that the token in settings.xml is still valid, then continue at step 4. Do not create a second signing key, because consumers who verify signatures expect the same key.
+Steps 1 to 3 are one-time. If you already released any version, check that the namespace shows as verified, that `gpg --list-secret-keys` shows the key that signed that release, and that the token in settings.xml is still valid, then continue at step 4. Do not create a second signing key, because consumers who verify signatures expect the same key.
 
 ## 1. Verify the namespace
 
@@ -60,8 +60,8 @@ Steps 1 to 3 are one-time. If you already released 0.1.0, check that the namespa
 1. Set the release version and the next SNAPSHOT in the shell:
 
    ```
-   VERSION=0.2.0
-   NEXT=0.3.0-SNAPSHOT
+   VERSION=0.3.0
+   NEXT=0.4.0-SNAPSHOT
    ```
 
    Steps 5 to 8 use `VERSION`, and step 8 also uses `NEXT`. Set them again in every new shell.
@@ -166,5 +166,5 @@ git push origin "v${VERSION}"
    ```
 
 2. `git diff` must show exactly four changed lines.
-3. In `README.md`, replace the "not on Maven Central yet" sentence under Coordinates with one that names `${VERSION}` as the current release on Maven Central. Check that both dependency blocks show `${VERSION}`; for the 0.2.0 release they already do, and for a later release change them.
+3. In `README.md`, change the sentence under Coordinates that names the current release on Maven Central so that it names `${VERSION}`. Check that both dependency blocks show `${VERSION}`, and change them if they do not.
 4. Run `./mvnw -B -ntp verify`, commit, and push.
