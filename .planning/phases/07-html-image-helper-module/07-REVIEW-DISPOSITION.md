@@ -5,11 +5,11 @@ titles: json
 findings:
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: deferred
     title: "`strip()` trimming is undocumented and not the HTML rule"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: deferred
     title: "The Error-rethrow path has no test"
   - id: IN-03
     severity: info
@@ -44,8 +44,8 @@ recorded: 2026-11-23T17:25:03.319Z
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| IN-01 | info | open | - |
-| IN-02 | info | open | - |
+| IN-01 | info | deferred | owner accepted as-is in 07-UAT test 4, 2026-11-23 |
+| IN-02 | info | deferred | owner accepted as-is in 07-UAT test 4, 2026-11-23 |
 | IN-03 | info | fixed | 07-REVIEW-FIX.md (not in the current review) |
 | WR-01 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
 | WR-02 | warning | fixed | 07-REVIEW-FIX.md (not in the current review) |
