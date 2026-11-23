@@ -49,12 +49,13 @@ Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
 
 - ✓ Inline images in the serial-mail sample: optional `inline/` directory (file name without extension = content ID), pre-flight inline checks in one report, dry run copies the images to `out/inline/` and rewrites `cid:` only in the written HTML, sent mails keep `cid:`; example campaign ships a generated 166-byte `inline/logo.png` — v0.2.0 Phase 6 (CLI-15..18)
 
-Everything above this line except the Phase 5 and Phase 6 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
+- ✓ HTML image helper per spec §10.4: module `morimail-html` (depends on `morimail` in compile scope) with `HtmlImages.embed` (local images under a base directory, `http(s)` downloads opt-in via a work directory, `data:` decoded) and `toDataUris`; 3 MiB per-image cap as in Graph; Temurin 17 CI green, owner accepted A1-A7 and P1-P10 (Phase 7 UAT) — v0.2.0 Phase 7 (HTML-01..06)
+
+Everything above this line except the Phase 5, 6 and 7 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
 
 ### Active
 
 - [ ] Inline images (CID) per spec §10.3, remaining part: docs (Phase 8) — v0.2.0 (REQ-IDs in REQUIREMENTS.md); core and Graph done in Phase 5, sample in Phase 6
-- [ ] HTML image helper per spec §10.4: new module `morimail-html` with `HtmlImages` (template `<img src>` to `cid:` plus inline images; local under a base directory, `http(s)` opt-in) — v0.2.0 Phase 7 (HTML-01..06)
 
 ### Out of Scope
 
@@ -114,6 +115,7 @@ Everything above this line except the Phase 5 and Phase 6 entries shipped in v0.
 | Sample default rate 20 mails per minute | A guess pending Exchange limits | ✓ Accepted by the owner (Phase 3) |
 | Graph inline images sent with a bare `contentId` (no angle brackets, no `contentLocation`) | Smallest body the current `fileAttachment` docs allow | ✓ Good — renders inline live (Phase 5 UAT) |
 | Sample inline scan probes each `inline/` file through the core's `build()` instead of copying its type table; the `cid:` pattern is copied into `Campaign` and pinned equal to the core's | One source of truth for the rules; the sample stays small (Rule 0) | ✓ Good — dry-run logo shown in all five mails (Phase 6 UAT) |
+| `morimail-html` declares `morimail` in compile scope, not `provided` (reverses D-02) | Nearest-wins lets a consumer's direct `morimail` override it anyway; compile scope keeps the version link, so a pre-0.2.0 core without inline-image support is not silently used | ✓ Owner decision (Phase 7 UAT, G-07-2) |
 
 ## Evolution
 
@@ -133,4 +135,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-23 after Phase 6*
+*Last updated: 2026-11-23 after Phase 7*

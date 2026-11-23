@@ -2,44 +2,44 @@
 gsd_state_version: "1.0"
 milestone: v0.2.0
 milestone_name: Inline Images
-current_phase: 07
-current_phase_name: HTML Image Helper Module
-status: verifying
-stopped_at: Completed 07-04-PLAN.md
-last_updated: "2026-11-23T16:53:47.713Z"
+current_phase: 8
+current_phase_name: Docs and Release Readiness
+status: planning
+stopped_at: Phase 07 complete, ready to plan Phase 8
+last_updated: "2026-11-23T17:42:31.798Z"
 last_activity: 2026-11-23
-last_activity_desc: Phase 07 execution started
-state_head: b0ff5782f57b8b6d18081a4eef0c7372150226df
+last_activity_desc: Phase 07 complete, transitioned to Phase 8
+state_head: bb91d4182f712aa29df4398211dd2d3729d696a6
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 8
   completed_plans: 8
-  percent: 50
+  percent: 75
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-23 after Phase 6)
+See: .planning/PROJECT.md (updated 2026-11-23 after Phase 7)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 07 — HTML Image Helper Module
+**Current focus:** Phase 8 — Docs and Release Readiness
 
 ## Current Position
 
-Phase: 07 (HTML Image Helper Module) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-11-23 — Phase 07 execution started
+Phase: 8 — Docs and Release Readiness
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-23 — Phase 07 complete, transitioned to Phase 8
 
-Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
+Progress (v0.2.0): [████████░░] 75% (3 of 4 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
+- Total plans completed: 30
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -53,6 +53,7 @@ Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
 | 04 | 5 | - | - |
 | 05 | 2 | - | - |
 | 06 | 2 | - | - |
+| 07 | 4 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -128,6 +129,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 07]: 07-03 A2: toDataUris and data: decoding refuse exactly 3 MiB (3,145,728 bytes), 3,145,727 passes, the GraphTransport.validate comparison
 - [Phase 07]: 07-03 A4/A6/P10: toDataUris never writes the work directory; no cleanup after a failed decode; decoded images are named ID.SUBTYPE
 - [Phase 07]: 07-04 (G-07-2): morimail-html declares morimail in compile scope (owner decision in UAT, D-02 and D-03 amended 2026-11-23); runtime classpath morimail plus Jackson through morimail; morimail jar unchanged
+- [Phase 07]: UAT 2026-11-23: Temurin 17 CI green on 44206a9 (run 45229673247); owner accepted A1-A7, P1-P10 and review IN-01/IN-02 as-is (deferred in 07-REVIEW-DISPOSITION.md); SECURITY threats_open 0
 
 ### Pending Todos
 
@@ -155,9 +157,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 ## Session Continuity
 
 Last session: 2026-11-23T16:53:47.542Z
-Stopped at: Completed 07-04-PLAN.md
+Stopped at: Phase 07 complete, ready to plan Phase 8
 Resume file: None
 
 ## Operator Next Steps
 
-- Discuss Phase 7 with /gsd-discuss-phase 7 (or plan directly with /gsd-plan-phase 7)
+- Discuss Phase 8 with /gsd-discuss-phase 8 (or plan directly with /gsd-plan-phase 8)
