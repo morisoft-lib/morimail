@@ -3,40 +3,40 @@ phase: 06
 review: 06-REVIEW.md
 titles: json
 findings:
+  - id: IN-01
+    severity: info
+    disposition: open
+    title: "Pre-flight accepts content IDs that an HTML parser or mail client may rewrite"
+  - id: IN-02
+    severity: info
+    disposition: open
+    title: "The copied `CID_REFERENCE` is kept in step by a comment and eight sample inputs"
+  - id: IN-03
+    severity: info
+    disposition: open
+    title: "`inlineSrcIsPercentEncodedAndHtmlSafe` assumes the host keeps `ü` as written"
   - id: WR-01
     severity: warning
     disposition: fixed
     title: "Test creates non-ASCII file names, so it fails on hosts with a non-UTF-8 file-name encoding"
-  - id: IN-01
-    severity: info
-    disposition: fixed
-    title: "Core logic is copied into the sample and kept in step only by a test and a comment"
-  - id: IN-02
-    severity: info
-    disposition: skipped
-    title: "Two throw-away `Mail.build()` probes per image, with a forced `image/png`, are an indirect way to reuse the core's checks"
-  - id: IN-03
-    severity: info
-    disposition: fixed
-    title: "Over-long lines and a magic number"
   - id: IN-04
     severity: info
     disposition: fixed
     title: "Pre-flight scans the unrendered template for `cid:` references, so a placeholder inside a reference is reported as a missing image"
-open: 0
+open: 3
 total: 5
-recorded: 2026-11-23T08:50:38.245Z
+recorded: 2026-11-23T09:55:58.576Z
 ---
 
 # Phase 06: Code Review Disposition
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| WR-01 | warning | fixed | 06-REVIEW-FIX.md |
-| IN-01 | info | fixed | 06-REVIEW-FIX.md |
-| IN-02 | info | skipped | 06-REVIEW-FIX.md |
-| IN-03 | info | fixed | 06-REVIEW-FIX.md |
-| IN-04 | info | fixed | 06-REVIEW-FIX.md |
+| IN-01 | info | open | - |
+| IN-02 | info | open | - |
+| IN-03 | info | open | - |
+| WR-01 | warning | fixed | 06-REVIEW-FIX.md (not in the current review) |
+| IN-04 | info | fixed | 06-REVIEW-FIX.md (not in the current review) |
 
 Dispositions: `open` (recorded, not yet triaged), `fixed`, `skipped`, `deferred`.
 Set `deferred` by hand and put the reason in the Source cell; both are preserved. A `|` in the reason is kept as prose and escaped on the next run.
