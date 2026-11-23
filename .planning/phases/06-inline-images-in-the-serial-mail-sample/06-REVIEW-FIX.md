@@ -42,7 +42,7 @@ status: partial
 **Commit:** 0aea8d0
 **Applied fix:** Wrapped the record header, the comment in `checkInline`, the `SendCommand` comment and the `describeAll` Javadoc. Added `IMAGE_PREFIX = "image/"` and used `IMAGE_PREFIX.length()` in `regionMatches`.
 
-### IN-04: Pre-flight scans the unrendered template for `cid:` references
+### IN-04: Pre-flight scans the unrendered template for `cid:` references, so a placeholder inside a reference is reported as a missing image
 
 **Files modified:** `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java`
 **Commit:** 48bb97e
@@ -50,7 +50,7 @@ status: partial
 
 ## Skipped Issues
 
-### IN-02: Two throw-away `Mail.build()` probes per image
+### IN-02: Two throw-away `Mail.build()` probes per image, with a forced `image/png`, are an indirect way to reuse the core's checks
 
 **File:** `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:195-221`
 **Reason:** skipped: the review marks it "not urgent" and only worth doing if the D-01 "two defects, two lines" rule is dropped. That rule is still in force and pinned by tests, and no trivial improvement exists. Restructuring would go against Rule 0 and the task instructions.
