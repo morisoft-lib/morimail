@@ -683,6 +683,8 @@ public final class HtmlImages {
         if (usable) {
             return segment;
         }
-        return id + "." + type.substring(type.indexOf('/') + 1).replaceAll("[^A-Za-z0-9._-]", "-");
+        // The structured-syntax suffix is cut first, so image/svg+xml gives .svg, not .svg-xml.
+        return id + "." + type.substring(type.indexOf('/') + 1).replaceFirst("\\+.*", "")
+                .replaceAll("[^A-Za-z0-9._-]", "-");
     }
 }

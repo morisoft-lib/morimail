@@ -253,7 +253,7 @@ class HtmlImagesDataUriTest {
                 data("image/png", A), data("image/jpeg", A), data("image/svg+xml", A)), base, work);
 
         assertThat(result.images()).extracting(Attachment::filename)
-                .containsExactly("image.png", "image-2.jpeg", "image-3.svg-xml");
+                .containsExactly("image.png", "image-2.jpeg", "image-3.svg");
         assertThat(result.images()).extracting(Attachment::contentType)
                 .containsExactly("image/png", "image/jpeg", "image/svg+xml");
     }
