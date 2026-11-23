@@ -47,7 +47,7 @@ No library, Graph or helper behaviour changes. The only code change is picocli a
   - inline images count toward the same limits
   - live status: confirmed 2026-11-23
   - a pointer to `docs/architecture.md` for the Microsoft sources
-- **D-07:** Retitle §10.3 and §10.4 to say they are implemented in 0.2.0, and keep their text. In §12, fill the rows "HTML parser for `morimail-html`" (outcome: none, a JDK regex) and "Failed download" (outcome: transient for network error, timeout, 5xx and 429; invalid otherwise; 3 MiB cap, 10 s connect, 30 s budget, no https→http redirect) with a pointer to `docs/architecture.md`.
+- **D-07:** Retitle §10.3 and §10.4 to say they are implemented in 0.2.0, and keep their text, with one exception: the §10.3 sentence "Dry-run writes the images next to the rendered HTML" (spec line 392) takes the copy-once wording of amended D-09 (amended 2026-11-23 by the owner during plan check, so the spec does not contradict itself). In §12, fill the rows "HTML parser for `morimail-html`" (outcome: none, a JDK regex) and "Failed download" (outcome: transient for network error, timeout, 5xx and 429; invalid otherwise; 3 MiB cap, 10 s connect, 30 s budget, no https→http redirect) with a pointer to `docs/architecture.md`.
 
 ### docs/architecture.md
 - **D-08:** Replace "Live status: not yet confirmed..." in the inline Microsoft-docs bullet (line 53) with: "Confirmed live on 2026-11-23: the image showed inline, not as a separate attachment, in Outlook on the web and one desktop client (`LiveGraphTest.sendsOneMailWithAnInlineImage`)." Use the same wording in spec §6.2.
