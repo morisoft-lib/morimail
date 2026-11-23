@@ -553,9 +553,9 @@ public final class HtmlImages {
             Thread reader = new Thread(() -> {
                 try {
                     read.complete(readAtMost(body));
-                } catch (RuntimeException e) {
-                    // An Error ends this thread only; the caller then times out instead of seeing a transient failure.
-                    read.completeExceptionally(e);
+                } catch (Throwable t) {
+                    // Handed to the caller, which rethrows an Error instead of reporting it as transient.
+                    read.completeExceptionally(t);
                 }
             }, "morimail-html-download");
             reader.setDaemon(true);
@@ -566,6 +566,9 @@ public final class HtmlImages {
             } catch (TimeoutException e) {
                 throw transientFailure(raw, "download timed out", e);
             } catch (ExecutionException e) {
+                if (e.getCause() instanceof Error error) {
+                    throw error;
+                }
                 throw transientFailure(raw, "download failed", e.getCause());
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
