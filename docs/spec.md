@@ -121,8 +121,8 @@ public record MailAddress(String email, String displayName) {}
 // SMTP transport will use both in one file.
 
 public record Attachment(String filename, String contentType, Path file, String contentId) {}
-// contentId null = regular attachment. Non-null = inline image (milestone 6);
-// in the MVP, build() rejects a non-null contentId.
+// contentId null = regular attachment. Non-null = inline image (section 10.3); build() checks
+// its content ID, its image type and the cid: references of the HTML body.
 
 public record MailMessage(MailAddress from, List<MailAddress> to, List<MailAddress> cc, List<MailAddress> bcc,
                           MailAddress replyTo, String subject, String html, String text,
@@ -174,7 +174,7 @@ Mail mail = Mail.using("entra-main")
 mailer.send(mail);
 ```
 
-- `build()` checks what every transport needs: at least one recipient, a subject, html or text present, attachment files exist and are readable, no `contentId` set.
+- `build()` checks what every transport needs: at least one recipient, a subject, html or text present, attachment files exist and are readable, and inline images pass the section 10.3 checks (a valid content ID, an `image/` content type, unique content IDs, `cid:` references in both directions).
 - `mailer.validate(mail)` resolves the account and runs the transport's `validate`. `mailer.send(mail)` runs it too before sending.
 - If `from` is not set on the mail, the account's `defaultFrom` is used.
 - `Mail` and `MailMessage` are plain records without behaviour, so a consumer can serialize them for a queue with its own tooling. The library ships no serialization code.
@@ -220,6 +220,11 @@ One final class, `TemplateRenderer`. No interface.
 - Microsoft documents the direct route for files under 3 MB and an upload session on a draft message for files from 3 MB to 150 MB (Microsoft n.d.-a).
 - MVP rule, implemented in the Graph transport's `validate`: reject any attachment of 3 MB or more, and reject when the attachments together reach 3 MB. The message names the file and the limit.
 - The upload-session route is a later milestone. It needs a draft-then-send sequence and the `Mail.ReadWrite` application permission in addition to `Mail.Send` (Microsoft n.d.-a).
+- Inline images (section 10.3) are file attachments with `"isInline": true` and `"contentId"` set to the bare content ID, without angle brackets, that the HTML refers to as `cid:<contentId>`. `contentLocation` is not sent.
+- Regular attachments carry no `isInline` key.
+- Inline images count toward the same limits as regular attachments.
+- Confirmed live on 2026-11-23: the image showed inline, not as a separate attachment, in Outlook on the web and one desktop client (`LiveGraphTest.sendsOneMailWithAnInlineImage`).
+- The Microsoft pages behind these property names are listed in `docs/architecture.md`.
 
 ### 6.3 Error mapping
 
@@ -382,7 +387,7 @@ The sample comes before the Graph work on purpose: it exercises the contracts fi
 
 Stop after milestone 4 and report, so the owner can run the live test and feed real responses back into section 6.3.
 
-### 10.3 Next after the MVP: milestone 6, inline images
+### 10.3 Milestone 6: inline images, implemented in 0.2.0
 
 - Builder: `.inline(Path image, String contentId)`; the HTML template refers to the image as `<img src="cid:logo">`.
 - `build()`: every `cid:` reference in the rendered HTML has a matching inline attachment and the other way round; content IDs are unique within a mail; only image content types.

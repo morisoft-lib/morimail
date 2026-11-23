@@ -14,11 +14,11 @@ morimail is pre-1.0. The API may change between minor versions.
 <dependency>
   <groupId>de.morisoft</groupId>
   <artifactId>morimail</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
-0.1.0 is the first release, published on Maven Central.
+Inline images and `morimail-html` arrive in 0.2.0, which is not on Maven Central yet; 0.1.0 is the current release.
 
 ## Quick start
 
@@ -71,14 +71,36 @@ public class QuickStart {
 }
 ```
 
-You can try the sample without any account. It renders the example campaign to files and sends nothing:
+## Inline images
 
-```bash
-./mvnw -B -ntp -DskipTests package -pl morimail-sample-serial -am
-java -jar morimail-sample-serial/target/morimail-sample-serial-*.jar send --account morimail-sample-serial/example-campaign/account.properties --campaign morimail-sample-serial/example-campaign --dry-run --out out
+An inline image is shown inside the HTML body instead of arriving as a separate attachment. Add it with `.inline(file, contentId)` and refer to it in the HTML as `cid:` plus the content ID. The `mailer` below is the one from the Quick start.
+
+```java
+import de.morisoft.morimail.*;
+import java.nio.file.Path;
+import java.util.Map;
+
+public class InlineImage {
+    public static void send(Mailer mailer) throws MailException {
+        MailTemplate template = new MailTemplate(
+            "Hello $$firstName$$",
+            "<p><img src=\"cid:logo\" alt=\"Logo\"></p><p>Hello $$firstName$$,</p>",
+            "Hello $$firstName$$,");
+
+        Mail mail = Mail.using("entra-main")
+            .to("anna@example.org")
+            .template(template, Map.of("firstName", "Anna"))
+            .inline(Path.of("logo.png"), "logo")
+            .build();
+
+        mailer.send(mail);
+    }
+}
 ```
 
-This writes the rendered mails to `out/` and needs no secrets. For a real send, follow [docs/entra-setup.md](docs/entra-setup.md). The sample sends no `saveToSentItems`, so Graph's default applies and every campaign mail also lands in the sender's Sent Items.
+`build()` checks the images. Every `cid:` reference in the rendered HTML must match the content ID of an inline image exactly, case included, and every inline image must be referenced, so an inline image in a mail without an HTML body fails. Content IDs must be unique in a mail, not blank and free of whitespace, quotes, parentheses and angle brackets, and an inline image needs an `image/` content type.
+
+Inline images count toward the Graph transport's attachment limits: under 3 MiB (3 x 1024 x 1024 bytes) per file and for all attachments together, and at most 4 MiB for the estimated request. Details are in [docs/architecture.md](docs/architecture.md).
 
 ## What morimail is not
 
