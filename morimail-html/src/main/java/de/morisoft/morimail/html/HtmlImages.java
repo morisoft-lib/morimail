@@ -553,8 +553,9 @@ public final class HtmlImages {
             Thread reader = new Thread(() -> {
                 try {
                     read.complete(readAtMost(body));
-                } catch (Throwable t) {
-                    read.completeExceptionally(t);
+                } catch (RuntimeException e) {
+                    // An Error ends this thread only; the caller then times out instead of seeing a transient failure.
+                    read.completeExceptionally(e);
                 }
             }, "morimail-html-download");
             reader.setDaemon(true);
