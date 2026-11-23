@@ -225,6 +225,85 @@ class PreflightTest {
     }
 
     @Test
+    void inlineProblemsAreReportedWithTheOtherFindings() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT.replace(
+                "tenantId=00000000-0000-0000-0000-000000000000\n", ""));
+        Path campaign = SampleFixtures.writeCampaign(root, SampleFixtures.THREE_ROWS);
+        Files.writeString(campaign.resolve("body.html"), "<p><img src=\"cid:logo\">"
+                + "<img src=\"cid:banner\"> Hi $$firstName$$ from $$city$$ in $$country$$</p>");
+        SampleFixtures.writeInline(campaign, "extra.gif", "logo.jpg", "logo.png", "my logo.png",
+                "notes.txt");
+        MailAccount recording = SampleFixtures.recordingAccount();
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(recording), new ArrayList<>(),
+                "send", "--account", account.toString(), "--campaign", campaign.toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.out()).isEmpty();
+        assertThat(run.errLines()).containsExactly(
+                "account.properties: missing key 'tenantId'",
+                "inline/logo.png: same content ID as inline/logo.jpg (cid:logo)",
+                "inline/my logo.png: contentId contains whitespace, a quote, a parenthesis "
+                        + "or an angle bracket",
+                "inline/notes.txt: inline image notes has content type text/plain, "
+                        + "which is not an image type",
+                "body.html: cid:banner has no image in inline/",
+                "inline/extra.gif: no cid:extra reference in body.html",
+                "body.html: placeholder $$country$$ has no column in recipients.csv",
+                "Pre-flight failed with 7 problem(s); nothing was sent.");
+        assertThat(((RecordingTransport) recording.transport()).attempts()).isZero();
+        assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
+    }
+
+    @Test
+    void rowChecksWaitUntilTheInlineProblemsAreFixed() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root,
+                "email,firstName,city\nanna@example.org,Anna,Berlin\nnot-an-address,Ben,Hamburg\n");
+        Path inline = SampleFixtures.writeInline(campaign, "extra.gif");
+        Path out = root.resolve("out");
+
+        SampleFixtures.Run first = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
+                new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
+                campaign.toString(), "--dry-run", "--out", out.toString());
+
+        assertThat(first.exit()).isEqualTo(2);
+        assertThat(first.errLines()).containsExactly(
+                "inline/extra.gif: no cid:extra reference in body.html",
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
+        assertThat(out).doesNotExist();
+
+        Files.delete(inline.resolve("extra.gif"));
+        SampleFixtures.Run second = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
+                new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
+                campaign.toString(), "--dry-run", "--out", out.toString());
+
+        assertThat(second.exit()).isEqualTo(2);
+        assertThat(second.errLines()).containsExactly(
+                INVALID_ADDRESS,
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
+        assertThat(out).doesNotExist();
+    }
+
+    @Test
+    void cidThatOnlyARecipientValueAddsIsReportedByBuild() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, "email,firstName,city,note\n"
+                + "anna@example.org,Anna,Berlin,\nben@example.org,Ben,Hamburg,see cid:x\n");
+        Files.writeString(campaign.resolve("body.html"),
+                "<p>Hi $$firstName$$ from $$city$$ $$note$$ </p>");
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
+                new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
+                campaign.toString(), "--dry-run", "--out", root.resolve("out").toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.errLines()).containsExactly(
+                "recipients.csv line 3: no inline image for cid:x",
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
+    }
+
+    @Test
     void theSameDefectInSomeRowsIsReportedOnceWithItsLines() throws IOException {
         Path account = SampleFixtures.writeAccount(root, ACCOUNT);
         String csv = String.join("\n", "email,firstName,city",

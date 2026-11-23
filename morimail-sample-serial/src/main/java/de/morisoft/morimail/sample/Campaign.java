@@ -1,5 +1,8 @@
 package de.morisoft.morimail.sample;
 
+import de.morisoft.morimail.Attachment;
+import de.morisoft.morimail.InvalidMailException;
+import de.morisoft.morimail.Mail;
 import de.morisoft.morimail.MailTemplate;
 import java.io.IOException;
 import java.nio.charset.MalformedInputException;
@@ -67,7 +70,8 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, L
 
     /**
      * Reads the campaign directory. Adds a message to {@code problems} for every defect and
-     * returns null when the campaign cannot be used.
+     * returns null when the campaign cannot be used; a defect in {@code inline/} makes it unusable
+     * too, so that no mail is built.
      */
     static Campaign read(Path dir, List<String> problems) {
         if (!Files.isDirectory(dir)) {
@@ -87,7 +91,10 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, L
         String text = Files.exists(textFile) ? readText(textFile, problems) : null;
         String csv = readText(dir.resolve("recipients.csv"), problems);
         List<Path> attachments = listFiles(dir.resolve("attachments"), "attachments", problems);
+        int beforeInline = problems.size();
         List<Path> inlineImages = listFiles(dir.resolve("inline"), "inline", problems);
+        checkInline(inlineImages, html, problems);
+        boolean inlineBroken = problems.size() > beforeInline;
         if (subject == null || html == null || csv == null) {
             return null;
         }
@@ -161,8 +168,92 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments, L
             problems.add("recipients.csv: no recipient rows");
             return null;
         }
+        // Mails are built only when the inline scan found nothing, so build() cannot report a
+        // scan finding a second time (D-01).
+        if (inlineBroken) {
+            return null;
+        }
         return new Campaign(new MailTemplate(subject, html, text), List.copyOf(rows),
                 List.copyOf(attachments), List.copyOf(inlineImages));
+    }
+
+    /**
+     * The pre-flight inline scan: one problem per defect. Each file gets two probe mails through
+     * the core, so the type and the content-ID rule are build()'s own; then the files are
+     * compared with each other and with the {@code cid:} references of the HTML body. The probes
+     * are only built, never sent.
+     */
+    private static void checkInline(List<Path> images, String html, List<String> problems) {
+        Map<String, String> firstById = new LinkedHashMap<>();
+        List<Path> valid = new ArrayList<>();
+        for (Path image : images) {
+            String name = image.getFileName().toString();
+            String id = contentId(image);
+            String prefix = "inline/" + name + ": ";
+            boolean fine = true;
+            String type = null;
+            try {
+                // The type build() resolves for this file, so the scan never disagrees with build().
+                type = Mail.using("probe").to("probe@example.org").subject("probe").text("probe")
+                        .attach(image).build().message().attachments().get(0).contentType();
+            } catch (InvalidMailException e) {
+                problems.add(prefix + withoutField(e));
+                fine = false;
+            }
+            if (type != null) {
+                try {
+                    // The type is fixed to image/png so this build checks the content-ID rule
+                    // only, and a file with a bad name and a wrong type gets both lines (D-01);
+                    // the ID is the file's own and is never changed (D-02).
+                    Mail.using("probe").to("probe@example.org").subject("probe")
+                            .html("<img src=\"cid:" + id + "\">")
+                            .attach(new Attachment(null, "image/png", image, id)).build();
+                } catch (InvalidMailException e) {
+                    problems.add(prefix + withoutField(e));
+                    fine = false;
+                }
+                // The image rule of build() (D-10) on the type build() resolved, in the core's wording.
+                if (!type.regionMatches(true, 0, "image/", 0, 6)) {
+                    problems.add(prefix + "inline image " + id + " has content type " + type
+                            + ", which is not an image type");
+                    fine = false;
+                }
+            }
+            if (fine) {
+                valid.add(image);
+            }
+            String first = firstById.putIfAbsent(id, name);
+            if (first != null) {
+                problems.add(prefix + "same content ID as inline/" + first + " (cid:" + id + ")");
+            }
+        }
+        if (html == null) {
+            return;
+        }
+        Set<String> referenced = new LinkedHashSet<>();
+        Matcher matcher = CID_REFERENCE.matcher(html);
+        while (matcher.find()) {
+            if (!matcher.group(1).isEmpty()) {
+                referenced.add(matcher.group(1));
+            }
+        }
+        for (String id : referenced) {
+            if (!firstById.containsKey(id)) {
+                problems.add("body.html: cid:" + id + " has no image in inline/");
+            }
+        }
+        for (Path image : valid) {
+            String id = contentId(image);
+            if (!referenced.contains(id)) {
+                problems.add("inline/" + image.getFileName() + ": no cid:" + id
+                        + " reference in body.html");
+            }
+        }
+    }
+
+    /** The core's message without its {@code attachments[0]: } prefix. */
+    private static String withoutField(InvalidMailException e) {
+        return e.getMessage().replaceFirst("^attachments\\[0\\]: ", "");
     }
 
     /**
