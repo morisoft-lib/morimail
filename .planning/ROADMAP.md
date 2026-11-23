@@ -89,11 +89,11 @@ Plans:
      - a non-image file
   3. Dry-run writes the inline images next to the rendered HTML files, and the HTML points at them by relative path, so a browser shows the images. The `cid:` rewrite happens only in the dry-run output. Mails sent in a real run keep their `cid:` references.
   4. A dry run of the shipped example campaign produces five rendered mails. Each one shows the small generated `inline/logo.png` that the HTML template references.
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
 **Wave 1**
-- [ ] 06-01-PLAN.md — Tracer: inline/ images in every mail and in the dry run (out/inline/ copies, percent-encoded relative paths, sent mails keep cid:), then the dry-run and send edges (CLI-15, CLI-17)
+- [x] 06-01-PLAN.md — Tracer: inline/ images in every mail and in the dry run (out/inline/ copies, percent-encoded relative paths, sent mails keep cid:), then the dry-run and send edges (CLI-15, CLI-17)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 - [ ] 06-02-PLAN.md — Tracer: inline problems in the pre-flight report, then the example campaign's generated inline logo and the phase gate (CLI-15, CLI-16, CLI-18)
@@ -152,6 +152,6 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 3. Graph and Entra | v0.1.0 | 6/6 | Complete | 2026-11-22 |
 | 4. Docs and Release Readiness | v0.1.0 | 5/5 | Complete | 2026-11-22 |
 | 5. Inline Images in Core and Graph | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
-| 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 0/2 | Planned | - |
+| 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 1/2 | In Progress | - |
 | 7. HTML Image Helper Module | v0.2.0 | 0/TBD | Not started | - |
 | 8. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |

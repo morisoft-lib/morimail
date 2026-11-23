@@ -5,16 +5,16 @@ milestone_name: Inline Images
 current_phase: 06
 current_phase_name: Inline Images in the Serial-Mail Sample
 status: executing
-stopped_at: Phase 6 context gathered
-last_updated: "2026-11-23T07:46:41.058Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-11-23T08:11:31.030Z"
 last_activity: 2026-11-23
-last_activity_desc: Phase 05 complete, transitioned to Phase 6
-state_head: 3a83a1dca70cb6179ba7d0ef7c415be298fd99f2
+last_activity_desc: Phase 06 execution started
+state_head: b171f0ff224dc74f8a91cfa46ec48f466c28fede
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 25
 ---
 
@@ -25,14 +25,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-11-23 after Phase 5)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 6 — Inline Images in the Serial-Mail Sample
+**Current focus:** Phase 06 — Inline Images in the Serial-Mail Sample
 
 ## Current Position
 
-Phase: 06 (Inline Images in the Serial-Mail Sample) — READY TO EXECUTE
-Plan: Not started
+Phase: 06 (Inline Images in the Serial-Mail Sample) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-11-23 — Phase 05 complete, transitioned to Phase 6
+Last activity: 2026-11-23 — Phase 06 execution started
 
 Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
 
@@ -86,6 +86,7 @@ Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
 | Phase 04 P05 | 5min | 1 tasks | 1 files |
 | Phase 05 P01 | 6 min | 3 tasks | 6 files |
 | Phase 05 P02 | 15 min | 2 tasks | 3 files |
+| Phase 06 P01 | 22 min | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,8 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 05]: 05-02: No production change for inline images in Graph limits; validate already counts every attachment (D-15 to D-17), tests pin it
 - [Phase 05]: UAT 2026-11-23: inline image renders inline live through Graph with the bare contentId; Temurin 17 CI green on the 05-02 commits
 - [Phase 05]: 05-02: docs/spec.md untouched; deviation rows in docs/architecture.md record that spec 5 and 5.1 still describe the MVP (Phase 8 updates them)
+- [Phase 06]: 06-01: dry-run src is new URI(null, null, "inline/"+name, null).toASCIIString() with & written as &amp;; the cid: pattern is copied into Campaign and pinned byte-equal to the core's; inline: stdout line follows attachments: and only appears with inline images
+- [Phase 06]: 06-01: Temurin 17 CI green on 2633e3a (verify, scoped release build, offline build); Task 2 needed no source fix; until 06-02 inline problems are reported only by build() per row
 
 ### Pending Todos
 
@@ -134,9 +137,9 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T06:44:42.420Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-inline-images-in-the-serial-mail-sample/06-CONTEXT.md
+Last session: 2026-11-23T08:11:30.982Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
 
 ## Operator Next Steps
 
