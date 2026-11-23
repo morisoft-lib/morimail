@@ -4,11 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
 import de.morisoft.morimail.entra.EntraClientCredentials;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
@@ -35,6 +38,10 @@ import org.junit.jupiter.api.io.TempDir;
  *   <li>{@code MORIMAIL_LIVE_BIG_ATTACHMENT} (optional): the path of a file of about 2.9 MB;
  *       enables the big-attachment probe.
  * </ul>
+ *
+ * <p>The inline-image test sends one mail whose HTML body shows a generated 64 x 64 PNG through
+ * {@code cid:logo}. The owner checks in a mail client that the image is shown inside the mail and
+ * not as a separate attachment. It needs no further variable.
  *
  * <p>With a required variable missing the class fails before any network call and names every
  * missing variable. Each test prints one line with the flow, the outcome and the exception class
@@ -128,6 +135,35 @@ class LiveGraphTest {
             throw e;
         }
         System.out.println("live main: flow " + flow() + ", accepted");
+    }
+
+    private static byte[] tinyPng() throws IOException {
+        BufferedImage image = new BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB);
+        for (int y = 0; y < 64; y++) {
+            for (int x = 0; x < 64; x++) {
+                image.setRGB(x, y, 0x2060c0);
+            }
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", out);
+        return out.toByteArray();
+    }
+
+    @Test
+    void sendsOneMailWithAnInlineImage() throws IOException, MailException {
+        Path image = tmp.resolve("logo.png");
+        Files.write(image, tinyPng());
+        Mail mail = Mail.using("live").from(from).to(to).subject("morimail live test, inline image")
+                .html("<p>The blue square below should show inside this mail, not as a separate attachment.</p>"
+                        + "<p><img src=\"cid:logo\" alt=\"morimail test image\"></p>")
+                .inline(image, "logo").build();
+        try {
+            mailer().send(mail);
+        } catch (MailException | RuntimeException e) {
+            System.out.println("live inline: flow " + flow() + ", " + describe(e));
+            throw e;
+        }
+        System.out.println("live inline: flow " + flow() + ", accepted");
     }
 
     @Test
