@@ -5,15 +5,15 @@ titles: json
 findings:
   - id: IN-01
     severity: info
-    disposition: open
+    disposition: fixed
     title: "README step 8 only renames the version, but the Coordinates sentence is release-specific"
   - id: IN-02
     severity: info
-    disposition: open
+    disposition: fixed
     title: "Step 8 `sed -i` has no macOS note"
   - id: IN-03
     severity: info
-    disposition: open
+    disposition: fixed
     title: "\"Steps 5 to 8 use `VERSION`\" overstates the shell dependency"
   - id: WR-01
     severity: warning
@@ -31,7 +31,7 @@ findings:
     severity: info
     disposition: fixed
     title: "Dry-run rewrite writes the file name into an HTML attribute without escaping quotes"
-open: 3
+open: 0
 total: 7
 recorded: 2026-11-23T21:46:17.079Z
 ---
@@ -40,9 +40,9 @@ recorded: 2026-11-23T21:46:17.079Z
 
 | Finding | Severity | Disposition | Source |
 |---------|----------|-------------|--------|
-| IN-01 | info | open | - |
-| IN-02 | info | open | - |
-| IN-03 | info | open | - |
+| IN-01 | info | fixed | quick 261123-ubm (9f15ca1) |
+| IN-02 | info | fixed | quick 261123-ubm (9f15ca1) |
+| IN-03 | info | fixed | quick 261123-ubm (9f15ca1) |
 | WR-01 | warning | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | WR-02 | warning | fixed | 08-REVIEW-FIX.md (not in the current review) |
 | IN-04 | info | fixed | 08-REVIEW-FIX.md (not in the current review) |

@@ -5,10 +5,10 @@ milestone_name: Inline Images
 current_phase: 08
 status: completed
 stopped_at: Phase 08 complete — all phases complete
-last_updated: "2026-11-23T21:48:30.981Z"
+last_updated: "2026-11-23T21:57:02.996Z"
 last_activity: 2026-11-23
 last_activity_desc: Phase 08 complete
-state_head: eabd844f105383409c188e7fcdcf920869d4ac2c
+state_head: 9f15ca1c444ac905ed351f42e0bff91849c57257
 progress:
   total_phases: 4
   completed_phases: 4
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 8)
 Phase: 08
 Plan: Not started
 Status: All phases complete
-Last activity: 2026-11-23 — Phase 08 complete
+Last activity: 2026-11-23 - Completed quick task 261123-ubm: fix IN-01 to IN-03 in docs/release.md
 
 Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 plans)
 
@@ -147,6 +147,12 @@ None yet.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
 - [Phase 02]: The journal has no exclusive lock, so two concurrent runs on one campaign can double-send (review IN-06, left out under Rule 0); `attachments/` skips only dot-files, so `Thumbs.db`/`desktop.ini` are still attached. Phase 6 applied the same rule to `inline/` (dot-files skipped); `Thumbs.db` in `inline/` fails pre-flight as a non-image file.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 261123-ubm | fix IN-01 to IN-03 in docs/release.md | 2026-11-23 | 9f15ca1 | [261123-ubm-fix-in-01-to-in-03-in-docs-release-md](./quick/261123-ubm-fix-in-01-to-in-03-in-docs-release-md/) |
 
 ### Roadmap Evolution
 
