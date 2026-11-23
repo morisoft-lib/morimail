@@ -1,24 +1,18 @@
 ---
 phase: 06-inline-images-in-the-serial-mail-sample
-reviewed: 2026-11-23T08:30:00Z
+reviewed: 2026-11-23T09:15:00Z
 depth: standard
-files_reviewed: 10
+files_reviewed: 4
 files_reviewed_list:
   - morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java
   - morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/SendCommand.java
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/CampaignTest.java
   - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/DryRunTest.java
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/ExampleCampaignTest.java
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/GraphEndToEndTest.java
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/PreflightTest.java
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/SampleFixtures.java
-  - morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/SendRunTest.java
-  - morimail-sample-serial/example-campaign/body.html
+  - morimail/src/main/java/de/morisoft/morimail/Mail.java
 findings:
   critical: 0
-  warning: 1
-  info: 4
-  total: 5
+  warning: 0
+  info: 3
+  total: 3
   necessity: 0
 status: issues_found
 ---
@@ -27,80 +21,51 @@ status: issues_found
 
 **Reviewed:** 2026-11-23
 **Depth:** standard
-**Files Reviewed:** 10
+**Files Reviewed:** 4
 **Status:** issues_found
 
 ## Summary
 
-I reviewed the phase 6 diff (`git diff 9655d19`) for the sample module: the `inline/` directory handling in `Campaign`, the inline wiring and dry-run rewrite in `SendCommand`, the example campaign, and the tests. I checked each behaviour against the core's `Mail.Builder` (`resolveAttachments`, `contentIdProblem`, `checkReferences`, `CID_REFERENCE`). I also ran `./mvnw -o -pl morimail-sample-serial -am test` and it passes.
+This is a second pass over the four files after the first review's fixes (WR-01, IN-01, IN-03, IN-04 were applied; IN-02 was skipped). I read each file in full and traced the inline-image path end to end:
 
-I found no correctness or security defects in the production code. The checks that could plausibly go wrong all hold:
+- `Campaign.read` and `checkInline`
+- `SendCommand.call` and `writeDryRun`
+- `Mail.Builder.resolveAttachments` and `checkReferences`
 
-- The copied `CID_REFERENCE` is byte-identical to the core's.
-- Every character a content ID may contain is accepted by that pattern, so an accepted ID is always captured whole.
-- The dry-run replacement goes through `Matcher.quoteReplacement`, so `$` and `\` in a file name cannot corrupt the output.
-- The `URI` multi-argument constructor always quotes `%`, and `&` is escaped afterwards.
-- Dry-run copies use only `image.filename()`, so there is no traversal. Symlinks in `inline/` are the campaign author's own input and are no worse than the existing `attachments/` behaviour.
-- The `inlineBroken` size comparison is correct.
-- Attachment order is unchanged for v0.1.0 campaigns.
+I found no bugs, security problems or correctness defects that I can prove.
 
-The one real weakness is a test that depends on the host's file-name encoding. The remaining items are maintainability notes.
+- **Pre-flight vs `build()`:** the pre-flight probes match `build()`'s order and wording. The two `CID_REFERENCE` patterns are identical.
+- **Dry-run rewrite:** it uses the same pattern. A reference with an empty ID is left alone, which matches the core.
+- **Dry-run `src` values:** they are built with the multi-argument `URI` constructor, which always quotes `%`, `#`, `"`, `<`, `>` and space. A path starting with `inline/` cannot trip the colon-in-first-segment rule. The only HTML-significant character left unquoted is `&`, which is escaped. A single quote also stays unquoted, but an extension containing one cannot resolve to an image type, so that case cannot be reached.
+- **Empty `mails` / null first mail:** `mails.get(0)` in `writeDryRun` and the `mailer.validate` call cannot see an empty or null-first list. Both situations add a problem and exit with 2 first.
+- **Unreadable inline files:** a defect in `inline/` makes `read` return null, so no mail is built. The scan does not report a defect twice. `withoutField` strips the `attachments[0]: ` prefix, and the core always emits that prefix for these probes.
 
-I read no necessity reference and report no necessity findings. I found no guard that protects against a state that cannot occur. The `getOrDefault` fallback in the dry-run rewrite is reachable for an empty `cid:` reference, and a test covers it.
-
-## Warnings
-
-### WR-01: Test creates non-ASCII file names, so it fails on hosts with a non-UTF-8 file-name encoding
-
-**File:** `morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/DryRunTest.java:131-134`
-**Issue:** `inlineSrcIsPercentEncodedAndHtmlSafe` writes the inline file `ü.png` through `SampleFixtures.writeInline`. It then asserts exact output: `cid:ü` in the stdout line, `inline/%C3%BC.png` in the HTML, and the sort order `50%.png, a&b.png, x#1.png, ü.png`. The file-name round trip depends on `sun.jnu.encoding`, which follows the locale. Under the POSIX/C locale, which is common in minimal CI containers, the JDK cannot represent `ü` in a path. `Files.writeString` then throws `InvalidPathException` or creates a mangled name, and the test fails for a reason unrelated to the code under test. On macOS, HFS+ normalises names to NFD. The listed ID is then `u` plus a combining diaeresis and no longer equals the NFC `cid:ü` in the body, so the pre-flight reports a missing image. The existing suite only puts non-ASCII text in file contents (`Köln`), never in file names, so this is a new host dependency. CLAUDE.md requires `mvn verify` to pass offline on every host that builds the project, and CI runs on Java 17.
-**Fix:** Keep the percent-encoding coverage but skip it when the platform cannot hold the name. For example:
-
-```java
-@Test
-void inlineSrcIsPercentEncodedAndHtmlSafe() throws IOException {
-    org.junit.jupiter.api.Assumptions.assumeTrue(
-            java.nio.charset.Charset.forName(System.getProperty("sun.jnu.encoding"))
-                    .newEncoder().canEncode('ü'),
-            "file names cannot hold non-ASCII characters on this host");
-    ...
-```
-
-Alternatively, move the `ü` case into its own test with that assumption and keep the `&`, `%` and `#` cases unconditional.
+Three Info items remain. None blocks shipping.
 
 ## Info
 
-### IN-01: Core logic is copied into the sample and kept in step only by a test and a comment
+### IN-01: Pre-flight accepts content IDs that an HTML parser or mail client may rewrite
 
-**File:** `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:47-48, 216-220, 255-257`
-**Issue:** Three pieces of core behaviour are duplicated here:
-- the `CID_REFERENCE` regex;
-- the image-type rule, including its exact wording, "inline image X has content type Y, which is not an image type";
-- the `^attachments\[0\]: ` prefix that `withoutField` strips from the core's messages.
+**File:** `morimail/src/main/java/de/morisoft/morimail/Mail.java:492-506`, `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:268-272`
+**Issue:** The content ID of an inline image is its file name minus the last extension (D-03). `contentIdProblem` only rejects blank IDs, line breaks, whitespace, quotes, parentheses and angle brackets. An ID such as `50%` or `a&b` passes the pre-flight, and `DryRunTest.inlineSrcIsPercentEncodedAndHtmlSafe` pins both as accepted.
 
-If the core changes any of them, the pre-flight scan and `build()` drift apart silently. A campaign then passes pre-flight and fails per row, or the reverse. `CampaignTest.cidPatternAgreesWithTheCore` guards the regex with eight cases, and the exact-string assertions guard the wording, so the drift would be caught in CI, but only for the cases listed. The same `PLACEHOLDER` precedent already exists in this file, so the choice is consistent with the project.
-**Fix:** Leave it for now, because exposing the core's pattern would widen the public API and conflicts with Rule 0. If the core ever gains a public "check one inline image" helper, replace the probes with it. At minimum, add a comment in `Mail.java` next to its private `CID_REFERENCE` saying that the sample copies it.
+I could not run a mail client here, so this part is inferred and not verified. In a real mail, the HTML parser reads `src="cid:..."` as an attribute value. Legacy named character references without a semicolon (for example `&copy`) can be decoded there. RFC 2392 also defines the `cid:` URL as percent-encoded, so some clients decode `%XX` before they look the part up. In either case the reference would no longer equal the `Content-ID` header. The image would be missing in the recipient's mail while the pre-flight said it was fine. The core's "never decoded" rule is deliberate (D-05, D-06), so this is a known limit and not a regression. The pre-flight is the place that could catch it.
+**Fix:** Either document the limit in the sample's README or `--help` text (use letters, digits, `-`, `_`, `.` in inline file names), or make `checkInline` report an ID that holds `%` or `&` as a problem. If the second option is chosen, change `Campaign` only, not the core.
 
-### IN-02: Two throw-away `Mail.build()` probes per image, with a forced `image/png`, are an indirect way to reuse the core's checks
+### IN-02: The copied `CID_REFERENCE` is kept in step by a comment and eight sample inputs
 
-**File:** `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:195-221`
-**Issue:** `checkInline` builds a fake mail twice per file. The first probe resolves the type. The second forces `image/png` and a synthetic HTML body so that only the content-ID rule can fire. The image rule is then re-implemented by hand, and the "type is non-null" branch hides the second probe when the first fails. The result is correct, and the comments explain it, but it is the most intricate code in the phase for a sample, and Rule 0 prefers a short direct method. It also depends on `Mail.using("probe")...build()` not needing a `from`, an account or a transport. That is true today only because `build()` does not require them.
-**Fix:** Not urgent. If this code is touched again, consider a single probe per file with the real type and a matching `cid:` body, and map its one `InvalidMailException` to one problem line. This would lose the "two defects, two lines" behaviour that tests D-01 pin, so only do it if that rule is dropped.
+**File:** `morimail/src/main/java/de/morisoft/morimail/Mail.java:46-49`, `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:44-49`
+**Issue:** The IN-01 fix of the first review added a "keep both equal" comment, and `CampaignTest.cidPatternAgreesWithTheCore` compares the two patterns' behaviour on eight fixed strings. A change to the core's lookbehind or character class that those eight strings do not exercise would not fail any test. Line 46 of `Mail.java` is also a 160-character comment, while the first review's IN-03 wrapped the long lines in the sample.
+**Fix:** Cheap and within Rule 0: add a test that compares `Campaign.CID_REFERENCE.pattern()` and `flags()` with the core pattern. The core's field is private, so the test could build both patterns from the same literal. Alternatively, accept the eight-case test as enough and wrap line 46 at about 100 columns.
 
-### IN-03: Over-long lines and a magic number
+### IN-03: `inlineSrcIsPercentEncodedAndHtmlSafe` assumes the host keeps `ü` as written
 
-**File:** `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:38, 215-216`; `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/SendCommand.java:173, 255`
-**Issue:** The rest of both files wraps at about 100 columns. `Campaign.java:38` is the record header at 102 columns. `SendCommand.java:173` is a single-line comment of about 125 columns, and line 255 is a Javadoc line over 100. `regionMatches(true, 0, "image/", 0, 6)` hard-codes the prefix length, which can drift if the literal changes.
-**Fix:** Wrap the long lines. Use a constant such as `private static final String IMAGE_PREFIX = "image/";` and `IMAGE_PREFIX.length()`.
-
-### IN-04: Pre-flight scans the unrendered template for `cid:` references, so a placeholder inside a reference is reported as a missing image
-
-**File:** `morimail-sample-serial/src/main/java/de/morisoft/morimail/sample/Campaign.java:233-251`
-**Issue:** `CID_REFERENCE` runs on the raw `body.html`, while `build()` runs it on each rendered body. A template like `<img src="cid:$$logo$$">` is reported as `body.html: cid:$$logo$$ has no image in inline/`, and the matching file as "no cid:logo reference". The core would accept the same template if every row's value were `logo`. Conversely, a reference that only a recipient value adds, such as a note column containing "see cid:x", passes this scan and fails at build, per row. `PreflightTest.cidThatOnlyARecipientValueAddsIsReportedByBuild` covers that case, and the message is correct there. The first direction has no test or note. The core's rule that every inline image must be referenced in every mail means a per-row choice of image cannot work anyway, so the practical impact is a constant-valued column used as an image ID.
-**Fix:** State in the sample's documentation, or in a one-line comment on `checkInline`, that the scan reads the template as written and that `cid:` references cannot be built from placeholders.
+**File:** `morimail-sample-serial/src/test/java/de/morisoft/morimail/sample/DryRunTest.java:127-156`
+**Issue:** The `assumeTrue` added for WR-01 only checks that `sun.jnu.encoding` can encode `ü`. The test then needs the name read back from the directory to equal the `ü` in the HTML (`cid:ü`) code point for code point. On a host or file system that stores names in decomposed form (macOS HFS+ is the usual example), the listed name could be `u` plus a combining diaeresis. The scan would then report `cid:ü has no image` and the test would fail. I have not run the test on such a host, so this is a risk and not a confirmed failure. The CI described in the project runs on Linux, where the risk does not exist.
+**Fix:** If the test ever fails on macOS, build the HTML reference from the listed name instead of the literal, or add a second `assumeTrue` that `Files.list` returns the name that was written.
 
 ---
 
-_Reviewed: 2026-11-23_
+_Reviewed: 2026-11-23T09:15:00Z_
 _Reviewer: Claude (gsd-code-reviewer)_
 _Depth: standard_
