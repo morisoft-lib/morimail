@@ -432,6 +432,9 @@ class HtmlImagesDownloadTest {
             {"/a%0Ab.png", "a-b.png", "a-b"},
             // One "-" per code point, not per UTF-16 unit.
             {"/%F0%9F%98%80.png", "😀.png", "-"},
+            // A segment of "..", or one longer than 100 characters, also falls back to ID.ext.
+            {"/img/..", "image.png", "image"},
+            {"/" + "%C3%A9".repeat(101) + ".png", "-".repeat(101) + ".png", "-".repeat(101)},
         };
         for (String[] c : cases) {
             String src = wm.getHttpBaseUrl() + c[0];

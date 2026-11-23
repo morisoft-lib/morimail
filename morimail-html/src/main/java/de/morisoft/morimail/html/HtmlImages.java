@@ -666,7 +666,7 @@ public final class HtmlImages {
     private static String newId(String name, Set<String> taken) {
         int dot = name.lastIndexOf('.');
         String base = (dot >= 0 ? name.substring(0, dot) : name).replaceAll("[^A-Za-z0-9._-]", "-");
-        if (base.isEmpty()) {
+        if (base.isEmpty() || base.chars().allMatch(c -> c == '.')) {
             base = "image";
         }
         String id = base;
@@ -678,7 +678,9 @@ public final class HtmlImages {
     }
 
     private static String fileName(String segment, String id, String type) {
+        // A name that is "." or ".." or very long is not a file name worth showing to the recipient.
         boolean usable = !segment.isBlank() && segment.indexOf('/') < 0 && segment.indexOf('\\') < 0
+                && !segment.equals(".") && !segment.equals("..") && segment.length() <= 100
                 && segment.chars().noneMatch(Character::isISOControl);
         if (usable) {
             return segment;
