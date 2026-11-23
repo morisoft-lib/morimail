@@ -395,9 +395,9 @@ Stop after milestone 4 and report, so the owner can run the live test and feed r
 - Builder: `.inline(Path image, String contentId)`; the HTML template refers to the image as `<img src="cid:logo">`.
 - `build()`: every `cid:` reference in the rendered HTML has a matching inline attachment and the other way round; content IDs are unique within a mail; only image content types.
 - A transport that cannot send inline images rejects them in `validate`.
-- Graph transport: send inline images as file attachments marked inline with their content ID. Read the current `fileAttachment` resource documentation for the property names first; they were not verified for this spec.
+- Graph transport: send inline images as file attachments marked inline with their content ID. The property names are recorded in section 6.2 and in `docs/architecture.md`.
 - Inline images count toward the same size limits as other attachments.
-- Sample: an optional `inline/` directory in the campaign; the file name without extension is the content ID. Dry-run copies each inline image once into `inline/` under `--out` and rewrites `cid:` references to relative paths in the dry-run output only.
+- Sample: an optional `inline/` directory in the campaign; the file name without its last extension is the content ID. Dry-run copies each inline image once into `inline/` under `--out` and rewrites `cid:` references to relative paths in the dry-run output only.
 - The core library does not rewrite HTML and does not generate content IDs. That is the job of the helper in section 10.4.
 
 ### 10.4 Milestone 6, continued: HTML image helper (`morimail-html`), implemented in 0.2.0
