@@ -1,7 +1,7 @@
 ---
 phase: 05-inline-images-in-core-and-graph
 verified: 2026-11-23T06:30:00Z
-status: human_needed
+status: passed
 score: 5/6 must-haves verified
 covered_files:
   - ".planning/phases/05-inline-images-in-core-and-graph/05-01-PLAN.md"

@@ -45,11 +45,13 @@ Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
 
 - ✓ Address scrub in `clean()` cuts at a word boundary, so an address straddling the 1000-character cut cannot leak its start (review WR-01) — v0.1.0 (Phase 4, 04-01)
 
-All of the above shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
+- ✓ Inline images in core and Graph: `.inline(path, contentId)`, two-way `cid:` checks and image-type check in `build()`, recorded by `recording`, sent by Graph as inline file attachments (bare `contentId`) within the existing 3 MiB / 4 MiB limits; renders inline live (owner UAT) — v0.2.0 Phase 5 (INLN-01..06, GRAPH-10..12)
+
+Everything above this line except the Phase 5 entry shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
 
 ### Active
 
-- [ ] Inline images (CID) per spec §10.3: builder `.inline(...)`, two-way `cid:` checks in `build()`, Graph inline file attachments within the existing size limits, sample `inline/` directory and dry-run rewrite, docs — v0.2.0 (REQ-IDs in REQUIREMENTS.md)
+- [ ] Inline images (CID) per spec §10.3, remaining parts: sample `inline/` directory and dry-run rewrite (Phase 6), docs (Phase 8) — v0.2.0 (REQ-IDs in REQUIREMENTS.md); core and Graph done in Phase 5
 - [ ] HTML image helper per spec §10.4: new module `morimail-html` with `HtmlImages` (template `<img src>` to `cid:` plus inline images; local under a base directory, `http(s)` opt-in) — v0.2.0 Phase 7 (HTML-01..06)
 
 ### Out of Scope
@@ -108,6 +110,7 @@ All of the above shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0
 | Graph failure messages drop Graph's free-text `error.message` | It can name the sender address (404 ErrorInvalidUser seen live) | ✓ Good — G-03-2, confirmed live (Phase 3) |
 | `Retry-After` read as seconds only | Matches Graph throttling docs; reverses D-10 after review IN-05 | ✓ Accepted by the owner (Phase 3) |
 | Sample default rate 20 mails per minute | A guess pending Exchange limits | ✓ Accepted by the owner (Phase 3) |
+| Graph inline images sent with a bare `contentId` (no angle brackets, no `contentLocation`) | Smallest body the current `fileAttachment` docs allow | ✓ Good — renders inline live (Phase 5 UAT) |
 
 ## Evolution
 
@@ -127,4 +130,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-22 after starting milestone v0.2.0*
+*Last updated: 2026-11-23 after Phase 5*

@@ -2,44 +2,44 @@
 gsd_state_version: "1.0"
 milestone: v0.2.0
 milestone_name: Inline Images
-current_phase: 05
-current_phase_name: Inline Images in Core and Graph
-status: verifying
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-11-23T06:19:29.559Z"
-last_activity: 2026-11-22
-last_activity_desc: Phase 05 execution started
-state_head: 32ffa4749b2e5b8d9877a3b994d346aae9b7668e
+current_phase: 6
+current_phase_name: Inline Images in the Serial-Mail Sample
+status: planning
+stopped_at: Phase 05 complete, ready to plan Phase 6
+last_updated: "2026-11-23T06:37:36.555Z"
+last_activity: 2026-11-23
+last_activity_desc: Phase 05 complete, transitioned to Phase 6
+state_head: 8c00e128bcc364548c0b3806bdc286dc69e2f174
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
   completed_plans: 2
-  percent: 0
+  percent: 25
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-22 after starting milestone v0.2.0)
+See: .planning/PROJECT.md (updated 2026-11-23 after Phase 5)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 05 — Inline Images in Core and Graph
+**Current focus:** Phase 6 — Inline Images in the Serial-Mail Sample
 
 ## Current Position
 
-Phase: 05 (Inline Images in Core and Graph) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-11-22 — Phase 05 execution started
+Phase: 6 — Inline Images in the Serial-Mail Sample
+Plan: Not started
+Status: Ready to plan
+Last activity: 2026-11-23 — Phase 05 complete, transitioned to Phase 6
 
-Progress (v0.2.0): [░░░░░░░░░░] 0%
+Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
+- Total plans completed: 24
 - Average duration: -
 - Total execution time: 0.0 hours
 
@@ -51,6 +51,7 @@ Progress (v0.2.0): [░░░░░░░░░░] 0%
 | 02 | 4 | - | - |
 | 03 | 6 | - | - |
 | 04 | 5 | - | - |
+| 05 | 2 | - | - |
 
 **Recent Trend:**
 - Last 5 plans: -
@@ -105,6 +106,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 05]: Reference pattern implements D-04 as amended 2026-11-22 (owner-approved): cid: in any case, not after a letter or digit, empty ID skipped; ID read from HTML cut at 64 code points in the message
 - [Phase 05]: Graph gets a bare contentId (no angle brackets, no contentLocation, no isInline false on regular attachments); unconfirmed until the owner live run in 05-02
 - [Phase 05]: 05-02: No production change for inline images in Graph limits; validate already counts every attachment (D-15 to D-17), tests pin it
+- [Phase 05]: UAT 2026-11-23: inline image renders inline live through Graph with the bare contentId; Temurin 17 CI green on the 05-02 commits
 - [Phase 05]: 05-02: docs/spec.md untouched; deviation rows in docs/architecture.md record that spec 5 and 5.1 still describe the MVP (Phase 8 updates them)
 
 ### Pending Todos
@@ -113,8 +115,6 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 5]: The Graph `fileAttachment` inline property names are unverified (spec §10.3). Read the current Microsoft page before coding and note any difference in `docs/architecture.md`.
-- [Phase 5]: Only JDK 21 is installed locally. Content-type resolution for images and the doclint result on the changed records need a Temurin 17 CI round-trip.
 - [Phase 1]: GitHub private vulnerability reporting is disabled on the repository (`enabled: false`), although SECURITY.md routes reports there (T-01-05, non-blocking). The owner enables it in Settings → Code security.
 - [Phase 3]: Live test done: PS256 accepted, 403/404 rows confirmed, size limits are binary MiB. Still unverified live: `from` display name, shared mailbox as sender, out-of-scope RBAC, `MailboxNotEnabledForRESTAPI`, mailbox 401 (WireMock-covered only).
 - [Checkpoint]: Owner confirmed `LICENSE` holder, `SECURITY.md` contact, `Co-Authored-By` trailer and the 20/min rate (Phase 3 UAT). The `saveToSentItems` default in the sample is still unconfirmed.
@@ -134,11 +134,10 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T06:19:29.523Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-11-23T06:38:18Z
+Stopped at: Phase 05 complete, ready to plan Phase 6
 Resume file: None
 
 ## Operator Next Steps
 
-- Review and approve the v0.2.0 roadmap (.planning/ROADMAP.md)
-- Then plan the first phase with /gsd-plan-phase 5 (or /gsd-discuss-phase 5 first)
+- Discuss Phase 6 with /gsd-discuss-phase 6 (or plan directly with /gsd-plan-phase 6)

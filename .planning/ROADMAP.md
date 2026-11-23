@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Milestone Goal:** A consumer can embed images in a templated HTML mail with `cid:` references and send it through Graph with the images shown inline (spec §10.3).
 
-- [ ] **Phase 5: Inline Images in Core and Graph** - `.inline(path, contentId)` with two-way `cid:` checks in `build()`, recorded by `recording`, and sent by Graph as inline file attachments within the 3 MiB / 4 MiB limits. Ends with the owner's live-test checkpoint.
+- [x] **Phase 5: Inline Images in Core and Graph** - `.inline(path, contentId)` with two-way `cid:` checks in `build()`, recorded by `recording`, and sent by Graph as inline file attachments within the 3 MiB / 4 MiB limits. Ends with the owner's live-test checkpoint. (completed 2026-11-23)
 - [ ] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo
 - [ ] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images
 - [ ] **Phase 8: Docs and Release Readiness** - README inline and helper examples, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green for `morimail` and `morimail-html` at `0.2.0-SNAPSHOT`
@@ -65,7 +65,7 @@ These apply to every phase. They come from the binding spec (§10.2, §11, §13.
   3. Against WireMock, the Graph transport sends each inline image as a base64 file attachment marked inline with its content ID. The property names come from the current Microsoft `fileAttachment` page, and any difference from the spec is noted in `docs/architecture.md`. Regular attachments in the same mail are not marked inline.
   4. `validate` rejects a mail when an inline image is 3 MiB or more, when inline images and regular attachments together reach 3 MiB, or when the estimated request exceeds 4 MiB (the v0.1.0 limits, unchanged; 05-CONTEXT D-15). The message names the file or the limit, and the rejection comes before any token request or HTTP call.
   5. The `live` test (tag `live`, run with `-Plive`, configured through environment variables) sends one mail with one inline image. The default offline `./mvnw verify` excludes it and stays green. Claude does not run it.
-**Plans:** 2/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -143,7 +143,7 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 2. Serial-Mail Sample | v0.1.0 | 4/4 | Complete | 2026-11-22 |
 | 3. Graph and Entra | v0.1.0 | 6/6 | Complete | 2026-11-22 |
 | 4. Docs and Release Readiness | v0.1.0 | 5/5 | Complete | 2026-11-22 |
-| 5. Inline Images in Core and Graph | v0.2.0 | 2/2 | In Progress | - |
+| 5. Inline Images in Core and Graph | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
 | 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 0/TBD | Not started | - |
 | 7. HTML Image Helper Module | v0.2.0 | 0/TBD | Not started | - |
 | 8. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |
