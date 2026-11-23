@@ -16,7 +16,7 @@ jobs:
           java-version: '17'
           cache: maven
       - run: ./mvnw -B -ntp verify
-      # release build scoped to the published modules: an unattached test-jar breaks a full-reactor release build
-      - run: ./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail -am
+      # release build scoped to the published modules morimail and morimail-html: an unattached test-jar breaks a full-reactor release build, so morimail-html's release profile skips its tests (the verify step above ran them)
+      - run: ./mvnw -B -ntp -Prelease clean verify -Dgpg.skip -pl morimail,morimail-html -am
       # REPO-08: the same build with no network at all: a fresh network namespace with only loopback up, Maven offline on the warmed cache, run as the runner user (sudo only creates the namespace)
       - run: sudo --preserve-env=HOME,JAVA_HOME unshare --net sh -c "ip link set lo up && exec setpriv --reuid=$(id -u) --regid=$(id -g) --init-groups ./mvnw -B -ntp -o verify"

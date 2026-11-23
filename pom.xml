@@ -40,6 +40,7 @@
 
   <modules>
     <module>morimail</module>
+    <module>morimail-html</module>
     <module>morimail-sample-serial</module>
   </modules>
 
@@ -179,8 +180,9 @@
 
     <!--
       Release build. Always scope it to the published modules:
-      ./mvnw -Prelease clean verify -Dgpg.skip -pl morimail -am
+      ./mvnw -Prelease clean verify -Dgpg.skip -pl morimail,morimail-html -am
       A full-reactor build cannot resolve the unattached test-jar (attach false in morimail/pom.xml).
+      morimail-html's own release profile skips its tests for the same reason; the plain verify runs them.
     -->
     <profile>
       <id>release</id>
