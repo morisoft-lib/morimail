@@ -19,9 +19,9 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 
 ### Graph transport
 
-- [ ] **GRAPH-10**: The Graph transport sends each inline image as a file attachment marked inline with its content ID, using the property names from the current Microsoft `fileAttachment` documentation (read before coding; differences from the spec noted in `docs/architecture.md`).
-- [ ] **GRAPH-11**: Inline images count toward the existing limits in `validate` (each file under 3 MiB, all attachments together under 3 MiB, estimated request at most 4 MiB), rejected before any token request.
-- [ ] **GRAPH-12**: The owner-run `live` test sends a mail with one inline image, so the owner can confirm it renders inline (not as a separate attachment).
+- [x] **GRAPH-10**: The Graph transport sends each inline image as a file attachment marked inline with its content ID, using the property names from the current Microsoft `fileAttachment` documentation (read before coding; differences from the spec noted in `docs/architecture.md`).
+- [x] **GRAPH-11**: Inline images count toward the existing limits in `validate` (each file under 3 MiB, all attachments together under 3 MiB, estimated request at most 4 MiB), rejected before any token request.
+- [x] **GRAPH-12**: The owner-run `live` test sends a mail with one inline image, so the owner can confirm it renders inline (not as a separate attachment).
 
 ### Serial-mail sample
 
@@ -80,9 +80,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INLN-04 | Phase 5 | Complete |
 | INLN-05 | Phase 5 | Complete |
 | INLN-06 | Phase 5 | Complete |
-| GRAPH-10 | Phase 5 | Pending |
-| GRAPH-11 | Phase 5 | Pending |
-| GRAPH-12 | Phase 5 | Pending |
+| GRAPH-10 | Phase 5 | Complete |
+| GRAPH-11 | Phase 5 | Complete |
+| GRAPH-12 | Phase 5 | Complete |
 | CLI-15 | Phase 6 | Pending |
 | CLI-16 | Phase 6 | Pending |
 | CLI-17 | Phase 6 | Pending |

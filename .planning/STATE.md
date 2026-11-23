@@ -4,17 +4,17 @@ milestone: v0.2.0
 milestone_name: Inline Images
 current_phase: 05
 current_phase_name: Inline Images in Core and Graph
-status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-11-23T06:15:54.215Z"
+status: verifying
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-11-23T06:19:29.559Z"
 last_activity: 2026-11-22
 last_activity_desc: Phase 05 execution started
-state_head: ea77e48d924e906c1f180e72c0af9d52d7d491db
+state_head: 32ffa4749b2e5b8d9877a3b994d346aae9b7668e
 progress:
   total_phases: 4
   completed_phases: 0
   total_plans: 2
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-22 after starting milestone v0.2.0)
 
 Phase: 05 (Inline Images in Core and Graph) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-22 — Phase 05 execution started
 
 Progress (v0.2.0): [░░░░░░░░░░] 0%
@@ -84,6 +84,7 @@ Progress (v0.2.0): [░░░░░░░░░░] 0%
 | Phase 04 P04 | 12 min | 2 tasks | 1 files |
 | Phase 04 P05 | 5min | 1 tasks | 1 files |
 | Phase 05 P01 | 6 min | 3 tasks | 6 files |
+| Phase 05 P02 | 15 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,8 @@ v0.2.0 roadmap (2026-11-22):
 - Spec §10.3 says "a transport that cannot send inline images rejects them in `validate`". This needs no code: both in-repo transports handle inline images (Rule 0).
 - [Phase 05]: Reference pattern implements D-04 as amended 2026-11-22 (owner-approved): cid: in any case, not after a letter or digit, empty ID skipped; ID read from HTML cut at 64 code points in the message
 - [Phase 05]: Graph gets a bare contentId (no angle brackets, no contentLocation, no isInline false on regular attachments); unconfirmed until the owner live run in 05-02
+- [Phase 05]: 05-02: No production change for inline images in Graph limits; validate already counts every attachment (D-15 to D-17), tests pin it
+- [Phase 05]: 05-02: docs/spec.md untouched; deviation rows in docs/architecture.md record that spec 5 and 5.1 still describe the MVP (Phase 8 updates them)
 
 ### Pending Todos
 
@@ -131,8 +134,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T06:15:54.174Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-11-23T06:19:29.523Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
