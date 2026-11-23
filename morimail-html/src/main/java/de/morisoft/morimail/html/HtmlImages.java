@@ -215,7 +215,8 @@ public final class HtmlImages {
      * {@link #toDataUris(MailTemplate, Path)}) is decoded into a new unique file in {@code workDir}
      * and becomes an inline image, with the same type check and the same 3 MiB cap. The ID is
      * {@code image}, {@code image-2} and so on, and the file name is the ID plus the subtype of the
-     * type. A failure names the source by position and reason only, for example
+     * type without a {@code +suffix} (for example {@code image-3.svg} for {@code image/svg+xml}).
+     * A failure names the source by position and reason only, for example
      * {@code data: image source #2: payload is not valid base64}, and never any part of the
      * payload. Parameters between the type and {@code base64} are ignored, and white space in the
      * payload is removed before decoding.
