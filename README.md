@@ -18,7 +18,7 @@ morimail is pre-1.0. The API may change between minor versions.
 </dependency>
 ```
 
-Inline images and `morimail-html` arrive in 0.2.0, which is not on Maven Central yet; 0.1.0 is the current release.
+0.2.0 is the current release on Maven Central. It adds inline images and the `morimail-html` helper.
 
 ## Quick start
 
