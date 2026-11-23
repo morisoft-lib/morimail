@@ -5,16 +5,16 @@ milestone_name: Inline Images
 current_phase: 07
 current_phase_name: HTML Image Helper Module
 status: verifying
-stopped_at: Completed 07-03-PLAN.md
-last_updated: "2026-11-23T14:53:43.370Z"
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-11-23T16:53:47.713Z"
 last_activity: 2026-11-23
-last_activity_desc: Plan 07-02 complete, remote image downloads pinned offline
-state_head: 87d76b50e9b7555a91f783db8263b5bc15af5b9a
+last_activity_desc: Phase 07 execution started
+state_head: b0ff5782f57b8b6d18081a4eef0c7372150226df
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 7
-  completed_plans: 7
+  total_plans: 8
+  completed_plans: 8
   percent: 50
 ---
 
@@ -30,9 +30,9 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 6)
 ## Current Position
 
 Phase: 07 (HTML Image Helper Module) — EXECUTING
-Plan: 3 of 3
+Plan: 4 of 4
 Status: Phase complete — ready for verification
-Last activity: 2026-11-23 — Plan 07-02 complete, remote image downloads pinned offline
+Last activity: 2026-11-23 — Phase 07 execution started
 
 Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
 
@@ -92,6 +92,7 @@ Progress (v0.2.0): [█████░░░░░] 50% (2 of 4 phases)
 | Phase 07 P01 | 12 min | 3 tasks | 7 files |
 | Phase 07 P02 | 8 min | 2 tasks | 2 files |
 | Phase 07 P03 | 5 min | 2 tasks | 3 files |
+| Phase 07 P04 | 10 min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -126,6 +127,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 07]: 07-02: one Duration is the whole budget of a download, close() of the response stream ends the reader (no extra thread or interrupt); JDK re-arms HttpRequest.timeout per redirect hop (owner review, not built)
 - [Phase 07]: 07-03 A2: toDataUris and data: decoding refuse exactly 3 MiB (3,145,728 bytes), 3,145,727 passes, the GraphTransport.validate comparison
 - [Phase 07]: 07-03 A4/A6/P10: toDataUris never writes the work directory; no cleanup after a failed decode; decoded images are named ID.SUBTYPE
+- [Phase 07]: 07-04 (G-07-2): morimail-html declares morimail in compile scope (owner decision in UAT, D-02 and D-03 amended 2026-11-23); runtime classpath morimail plus Jackson through morimail; morimail jar unchanged
 
 ### Pending Todos
 
@@ -152,8 +154,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T14:53:43.242Z
-Stopped at: Completed 07-03-PLAN.md
+Last session: 2026-11-23T16:53:47.542Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None
 
 ## Operator Next Steps

@@ -112,7 +112,7 @@ Plans:
   5. `http(s)` sources stay unchanged by default. When the caller passes a download directory, they are downloaded there (tested against WireMock, offline) with a timeout, a size cap and an image content-type check, and a failure maps to the category decided in this phase's discussion.
   6. End to end: a template converted once, rendered for two data records and sent through `Mailer` to `recording`, gives two mails that each carry the inline images and pass `build()`.
   7. Storable form: `toDataUris` gives HTML whose images are `data:` URIs and that needs no image files; `embed` with a work directory turns it back into `cid:` references plus inline images that pass `build()`. The `morimail` POM and jar have no reference to `morimail-html`.
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans executed
 
 Plans:
 **Wave 1**
@@ -125,7 +125,7 @@ Plans:
 - [x] 07-03-PLAN.md — Tracer: the storable `data:` form (`toDataUris`, `data:` decoding in `embed` with a work directory, D-24 round trip), then the `data:` edges and the phase gate with the `morimail` jar proof (HTML-07, HTML-01, HTML-06)
 
 **Wave 4** *(gap closure, blocked on Wave 3 completion)*
-- [ ] 07-04-PLAN.md — Gap G-07-2: `morimail-html` declares `morimail` in compile scope (owner decision in UAT; D-02 and D-03 amended), `docs/architecture.md`, the `ModuleRulesTest` Javadoc and `07-CONTEXT.md` aligned; runtime classpath is `morimail` plus Jackson through it, `morimail` jar unchanged (HTML-01; no new code)
+- [x] 07-04-PLAN.md — Gap G-07-2: `morimail-html` declares `morimail` in compile scope (owner decision in UAT; D-02 and D-03 amended), `docs/architecture.md`, the `ModuleRulesTest` Javadoc and `07-CONTEXT.md` aligned; runtime classpath is `morimail` plus Jackson through it, `morimail` jar unchanged (HTML-01; no new code)
 
 **UI hint**: no
 
@@ -168,5 +168,5 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 4. Docs and Release Readiness | v0.1.0 | 5/5 | Complete | 2026-11-22 |
 | 5. Inline Images in Core and Graph | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
 | 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
-| 7. HTML Image Helper Module | v0.2.0 | 3/4 | In Progress | - |
+| 7. HTML Image Helper Module | v0.2.0 | 4/4 | In Progress | - |
 | 8. Docs and Release Readiness | v0.2.0 | 0/TBD | Not started | - |
