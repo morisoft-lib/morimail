@@ -39,8 +39,10 @@ status: all_fixed
 ### IN-03: The reader thread catches `Throwable` and reports it as a retryable failure
 
 **Files modified:** `morimail-html/src/main/java/de/morisoft/morimail/html/HtmlImages.java`
-**Commit:** 457d469
+**Commit:** 457d469, corrected in 2a14312
 **Applied fix:** The reader lambda now catches `RuntimeException` only. `readAtMost` throws `UncheckedIOException`, so I/O failures still map to the transient "download failed". An `Error` ends the daemon reader thread, and the caller sees the timeout. The fix changes error handling, so check it when you review. I added no test, because an `Error` in the reader cannot be triggered deterministically.
+
+**Correction (2a14312):** With only `RuntimeException` caught, an `Error` left the future incomplete. The caller then waited out the whole budget and still threw the transient "download timed out", with the cause lost. The reader now completes the future with every `Throwable` again, and the caller rethrows an `Error` instead of wrapping it. `./mvnw -B -ntp -o -q verify` passed for the whole reactor.
 
 ---
 
