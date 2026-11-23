@@ -95,9 +95,10 @@ The warm-up prints nothing on success. If it prints a `gpg:` line, fix that befo
 
 By default the agent keeps the passphrase for 10 minutes after its last use. If more time passes before the deploy, warm up again. If you have several secret keys, add `--local-user <KEYID>` to the `gpg` line and `-Dgpg.keyname=<KEYID>` to both deploy commands.
 
-First, an optional check that sends nothing. It builds and signs the bundle and skips the upload:
+First, an optional check that sends nothing. It builds and signs the bundle and skips the upload. Both deploy commands start with the same guard line, so copy both lines together. If a POM still holds `-SNAPSHOT`, grep prints that line and the deploy does not start: finish step 4 first.
 
 ```
+! grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml &&
 ./mvnw -B -ntp -Prelease clean deploy -DskipUpload=true -pl morimail,morimail-html -am
 ```
 
@@ -117,7 +118,7 @@ Each one comes with `.asc`, `.md5`, `.sha1`, `.sha256` and `.sha512` files. Ther
 
 Two notes on that check:
 
-- At a SNAPSHOT version no zip is made, so run it after step 4.
+- At a SNAPSHOT version the plugin builds no bundle. It deploys to Central's snapshots repository instead, and only `-DskipUpload=true` stops that upload. The real deploy has no such flag, which is why both commands start with the guard.
 - With `-o` (offline) the publish goal is skipped, so never add `-o`.
 
 The check installs the `${VERSION}` artifacts under `~/.m2/repository/de/morisoft`. Remove that directory afterwards if you do not want them there.
@@ -132,6 +133,7 @@ echo test | gpg --clearsign > /dev/null
 Then deploy:
 
 ```
+! grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml &&
 ./mvnw -B -ntp -Prelease clean deploy -pl morimail,morimail-html -am
 ```
 
