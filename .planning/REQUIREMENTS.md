@@ -25,10 +25,10 @@ Requirements for this milestone. Each maps to one roadmap phase. IDs continue th
 
 ### Serial-mail sample
 
-- [ ] **CLI-15**: A campaign may have an optional `inline/` directory; each file in it becomes an inline image in every mail, with the file name without extension as its content ID.
-- [ ] **CLI-16**: Pre-flight reports inline problems (a template `cid:` with no image, an image no template references, two files with the same base name, a non-image file) together with the other pre-flight findings, exit 2, nothing sent.
+- [x] **CLI-15**: A campaign may have an optional `inline/` directory; each file in it becomes an inline image in every mail, with the file name without extension as its content ID.
+- [x] **CLI-16**: Pre-flight reports inline problems (a template `cid:` with no image, an image no template references, two files with the same base name, a non-image file) together with the other pre-flight findings, exit 2, nothing sent.
 - [x] **CLI-17**: Dry-run writes the inline images next to each rendered HTML file and rewrites `cid:` references to relative paths in the dry-run output only; sent mails keep `cid:`.
-- [ ] **CLI-18**: The shipped example campaign has a small generated `inline/logo.png` referenced from its HTML template, and its dry-run shows the image.
+- [x] **CLI-18**: The shipped example campaign has a small generated `inline/logo.png` referenced from its HTML template, and its dry-run shows the image.
 
 ### HTML image helper (`morimail-html`, spec §10.4)
 
@@ -83,10 +83,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRAPH-10 | Phase 5 | Complete |
 | GRAPH-11 | Phase 5 | Complete |
 | GRAPH-12 | Phase 5 | Complete |
-| CLI-15 | Phase 6 | Pending |
-| CLI-16 | Phase 6 | Pending |
+| CLI-15 | Phase 6 | Complete |
+| CLI-16 | Phase 6 | Complete |
 | CLI-17 | Phase 6 | Complete |
-| CLI-18 | Phase 6 | Pending |
+| CLI-18 | Phase 6 | Complete |
 | HTML-01 | Phase 7 | Pending |
 | HTML-02 | Phase 7 | Pending |
 | HTML-03 | Phase 7 | Pending |

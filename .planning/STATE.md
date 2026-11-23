@@ -4,17 +4,17 @@ milestone: v0.2.0
 milestone_name: Inline Images
 current_phase: 06
 current_phase_name: Inline Images in the Serial-Mail Sample
-status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-11-23T08:11:31.030Z"
+status: verifying
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-11-23T08:17:54.277Z"
 last_activity: 2026-11-23
 last_activity_desc: Phase 06 execution started
-state_head: b171f0ff224dc74f8a91cfa46ec48f466c28fede
+state_head: 933649be080be3327e4745dcf13ccfb4291521f0
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 25
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 5)
 
 Phase: 06 (Inline Images in the Serial-Mail Sample) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-23 — Phase 06 execution started
 
 Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
@@ -87,6 +87,7 @@ Progress (v0.2.0): [██▌░░░░░░░] 25% (1 of 4 phases)
 | Phase 05 P01 | 6 min | 3 tasks | 6 files |
 | Phase 05 P02 | 15 min | 2 tasks | 3 files |
 | Phase 06 P01 | 22 min | 3 tasks | 5 files |
+| Phase 06 P02 | 6 min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -111,6 +112,9 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 05]: 05-02: docs/spec.md untouched; deviation rows in docs/architecture.md record that spec 5 and 5.1 still describe the MVP (Phase 8 updates them)
 - [Phase 06]: 06-01: dry-run src is new URI(null, null, "inline/"+name, null).toASCIIString() with & written as &amp;; the cid: pattern is copied into Campaign and pinned byte-equal to the core's; inline: stdout line follows attachments: and only appears with inline images
 - [Phase 06]: 06-01: Temurin 17 CI green on 2633e3a (verify, scoped release build, offline build); Task 2 needed no source fix; until 06-02 inline problems are reported only by build() per row
+- [Phase 06]: Inline scan uses two probe mails per file through the core's build() (resolved type, and content-ID rule under fixed image/png) instead of a copied type table; each defect of a file is its own pre-flight line
+- [Phase 06]: An inline finding makes Campaign.read return null (D-01); row-level build() and mailer.validate findings show only after inline problems are fixed (A2, owner-confirmed)
+- [Phase 06]: Example campaign ships a generated 166-byte inline/logo.png (IHDR/IDAT/IEND only); attachments/logo.png renamed to sample.png
 
 ### Pending Todos
 
@@ -137,8 +141,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-23T08:11:30.982Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-11-23T08:17:54.225Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
