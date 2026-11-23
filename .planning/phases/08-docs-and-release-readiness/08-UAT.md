@@ -1,9 +1,9 @@
 ---
-status: diagnosed
+status: complete
 phase: 08-docs-and-release-readiness
 source: [08-VERIFICATION.md]
 started: 2026-11-23T20:42:44Z
-updated: 2026-11-23T21:31:45Z
+updated: 2026-11-23T21:42:59.421Z
 ---
 
 ## Current Test
@@ -32,14 +32,14 @@ result: pass
 
 ### 5. Confirm that no phase 8 Claude run deployed, pushed or tagged, and that the only deploy was your own 0.2.0 release (the three flagged prohibitions above)
 expected: Yes. Everything Claude ran in phase 8 was a git-archive copy or a skipUpload rehearsal; the 0.2.0 deploy, push and tag v0.2.0 were yours.
-result: [pending]
+result: pass
 
 ## Summary
 
 total: 5
-passed: 3
+passed: 4
 issues: 1
-pending: 1
+pending: 0
 skipped: 0
 blocked: 0
 
@@ -47,7 +47,9 @@ blocked: 0
 
 - gap_id: G-08-2
   truth: "Following docs/release.md, the step 5 skipUpload check builds and signs central-bundle.zip with exactly 54 entries and sends nothing"
-  status: failed
+  status: resolved
+  resolved_by: 08-03-PLAN.md
+  resolved_at: 2026-11-23
   reason: "User reported: [ERROR] Failed to execute goal org.sonatype.central:central-publishing-maven-plugin:0.12.0:publish (injected-central-publishing) on project morimail-html: Failed to deploy artifacts: Could not transfer artifact de.morisoft:morimail-parent:pom.asc:0.2.0-20261123.205449-1 from/to central (https://central.sonatype.com/repository/maven-snapshots/): HTTP Status: 401"
   severity: blocker
   test: 2
