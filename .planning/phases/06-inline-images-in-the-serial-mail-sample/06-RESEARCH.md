@@ -216,6 +216,8 @@ try {
 ```
 2. **Base-name clash:** `Map<String, String> firstFileById` in file order; for every later file with a taken ID add `inline/<later>: same content ID as inline/<first> (cid:<id>)`. One problem per extra file (3 files with one ID give 2 problems).
 3. **Template cross-check** (only if `html != null`): `Set<String> referenced` from `CID_REFERENCE` (skip empty group 1, keep first-appearance order). For each referenced ID not in the set of all file IDs add `body.html: cid:<id> has no image in inline/`. For each file whose ID is not referenced add `inline/<name>: no cid:<id> reference in body.html`. Use **all** file IDs (valid or not) for the cross-check so a bad file does not also produce a "no image" cascade.
+> **Planning note (2026-11-23):** Plan 06-02 replaces the single probe of step 1 with two independent probes per file, so that each defect of a file is its own line (D-01). One inline build stops at the first defect, because the core checks the content-ID rule before the image type. The **type probe** attaches the file as a regular attachment and reads the content type `build()` resolved; the sample applies the D-10 rule (`image/` prefix, any case) and writes the core's wording. The **content-ID probe** attaches `new Attachment(null, "image/png", file, id)` with the `cid:` reference, so only the content-ID rule is checked. Neither probe uses an ID other than the file's own (D-02). See 06-02 Task 1.
+
 4. At the end of `read`, `if (inlineProblems > 0) return null;` where `inlineProblems` is the count of problems added by steps 1-3 (compare `problems.size()` before and after the inline block, as `SendCommand` already does for the account file).
 
 **Probe messages verified in this session** (core classes from `morimail/target/classes`, JDK 21):
@@ -417,18 +419,20 @@ Note: `RecordingTransport.sent()` returns `MailMessage`s whose `attachments()` c
 | # | Claim | Section | Risk if Wrong |
 |---|-------|---------|---------------|
 | A1 | Stdout format `inline: logo.png (image/png, 166 bytes, cid:logo)` and the wording of the new problem messages are Claude's discretion (CONTEXT) and nobody depends on them yet | Pattern 2, Pattern 4 | Low; owner may prefer other wording, tests pin whatever the plan fixes |
-| A2 | Returning `null` from `Campaign.read` on inline findings (so row-level `build()` findings appear only in a later run) is acceptable; derived from D-01 "mails are built only when the scan finds nothing" | Pitfall 1 | Low-medium; if the owner wants address problems in the same report, the plan needs a flag instead of null and a way to build without `cid:` errors |
+| A2 | Returning `null` from `Campaign.read` on inline findings (so row-level `build()` findings appear only in a later run) is acceptable; derived from D-01 "mails are built only when the scan finds nothing". **CONFIRMED by the owner on 2026-11-23** (plan review: accept the deferral, keep the null return); pinned by `PreflightTest.rowChecksWaitUntilTheInlineProblemsAreFixed` | Pitfall 1 | None now (confirmed). Before confirmation: low-medium; the alternative was a flag instead of null and a way to build without `cid:` errors |
 | A3 | The probe mail uses `probe@example.org` and account id `probe`; the core never contacts anything on `build()` | Pattern 2 | Low; `build()` is pure validation (read in `Mail.java:373-410`) |
 | A4 | JDK 17 behaves like the JDK 21 used here for `URI.toASCIIString`, `Matcher.replaceAll(Function)` (Java 9+) and `Files.probeContentType`; CI on Temurin 17 is the proof | Pattern 4 | Low; all APIs are old, but not run on 17 in this session |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Wording of problem messages and the `inline:` stdout line**
    - What we know: style is `inline/<name>: ...` or `body.html: cid:<id> ...`, no data values.
    - What's unclear: exact text (CONTEXT leaves it to the planner).
    - Recommendation: use the wording in Pattern 2 / Pattern 4 and pin it in tests with `contains` on stable fragments.
+   - RESOLVED (planning, 2026-11-23): 06-01 Choices fix the `inline:` line as `inline: NAME (TYPE, N bytes, cid:ID)`, entries joined by `, `, after the `attachments:` line. 06-02 Choices fix the pre-flight messages: `inline/NAME: <core message>` (content-ID or file problem), `inline/NAME: inline image ID has content type TYPE, which is not an image type`, `inline/NAME: same content ID as inline/FIRST (cid:ID)`, `body.html: cid:ID has no image in inline/`, `inline/NAME: no cid:ID reference in body.html`. Tests pin the full strings; host-dependent content types are asserted by prefix and suffix only.
 2. **Whether to strip the `attachments[0]: ` prefix of the probe message**
    - Recommendation: strip it with one `replaceFirst`; if the core changes the prefix the sample test that asserts the full message fails loudly, which is the intended drift alarm.
+   - RESOLVED (planning, 2026-11-23): stripped with one `replaceFirst("^attachments\\[0\\]: ", "")` on every core message the scan reports (content-ID and file problems). The not-an-image message is composed by the sample from the type `build()` resolved, in the core's wording, so it has no prefix to strip (06-02 Choices).
 
 ## Environment Availability
 
