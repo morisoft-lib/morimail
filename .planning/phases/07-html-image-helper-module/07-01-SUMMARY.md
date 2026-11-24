@@ -8,9 +8,9 @@ requires:
   - phase: 05-inline-images-core-graph
     provides: build() content-ID and image-type checks (Mail.Builder.CID_REFERENCE, CONTENT_TYPES, Attachment.contentId)
   - phase: 06-sample-inline-images
-    provides: the Temurin 17 mid-phase CI round-trip pattern and the pinned cid: pattern copy technique
+    provides: "the Temurin 17 mid-phase CI round-trip pattern and the pinned cid: pattern copy technique"
 provides:
-  - morimail-html module (de.morisoft:morimail-html, package de.morisoft.morimail.html) with morimail in provided scope
+  - morimail-html module (de.morisoft:morimail-html, package de.morisoft.morimail.html) with morimail in compile scope since 07-04 (provided scope at 07-01)
   - HtmlImages.embed(MailTemplate, Path) and HtmlImages.Result for local images
   - scoped release build and CI release line covering morimail and morimail-html
 affects: [07-02 downloads, 07-03 data URIs and ModuleRulesTest, 08 docs and release readiness]
@@ -56,7 +56,7 @@ requirements-completed: [HTML-01, HTML-02, HTML-03, HTML-04, HTML-06]
 
 coverage:
   - id: D1
-    description: "morimail-html module in the reactor and the scoped release build, morimail in provided scope, morimail jar and tree unchanged"
+    description: "morimail-html module in the reactor and the scoped release build, morimail in compile scope since 07-04 (provided scope at 07-01), morimail jar and tree unchanged"
     requirement: HTML-01
     verification:
       - kind: other
@@ -116,7 +116,7 @@ status: complete
 
 # Phase 7 Plan 01: The morimail-html module and local images end to end Summary
 
-**New `morimail-html` module whose `HtmlImages.embed(template, baseDir)` turns local `<img src>` values into `cid:` references plus core-valid inline images, with `morimail` provided-scope only, a scoped release build and CI line for both published modules, and a green Temurin 17 round-trip.**
+**New `morimail-html` module whose `HtmlImages.embed(template, baseDir)` turns local `<img src>` values into `cid:` references plus core-valid inline images, with `morimail` in compile scope since 07-04 (provided-scope only at 07-01), a scoped release build and CI line for both published modules, and a green Temurin 17 round-trip.**
 
 ## Performance
 
@@ -128,7 +128,7 @@ status: complete
 
 ## Accomplishments
 
-- `de.morisoft:morimail-html` exists in the reactor with `morimail` as its only non-test dependency (provided), `Automatic-Module-Name: de.morisoft.morimail.html`, and a module release profile that unbinds the three test executions so `./mvnw -Prelease clean verify -Dgpg.skip -pl morimail,morimail-html -am` builds main, sources and Javadoc jars (doclint all, failOnWarnings).
+- `de.morisoft:morimail-html` exists in the reactor with `morimail` as its only non-test dependency (provided at 07-01, compile scope since 07-04), `Automatic-Module-Name: de.morisoft.morimail.html`, and a module release profile that unbinds the three test executions so `./mvnw -Prelease clean verify -Dgpg.skip -pl morimail,morimail-html -am` builds main, sources and Javadoc jars (doclint all, failOnWarnings).
 - `HtmlImages.embed` rewrites only the `src` of `<img>` elements in the HTML part, keeps quoting and case, leaves `cid:`, `data:`, `http(s):`, unknown schemes and `$$` values unchanged, and fails with `img src "SRC": REASON` for local sources that are outside the base directory (traversal, percent-encoded, absolute, `file:`, symlink, `base-evil` prefix), missing, unreadable, non-image or invalid.
 - Content IDs follow the file name, pass `build()`, get numeric suffixes in document order against hand-written `cid:` IDs, and one real path gives one image; the converted template sent for two recipients to `recording` passes `build()` in both mails (HTML-06).
 - 19 rule tests plus 2 end-to-end tests pin all of it, including the hostile-markup bound (T-07-04) and eight-thread equality.
@@ -145,7 +145,7 @@ status: complete
 ## Files Created/Modified
 
 - `pom.xml` - module entry after `morimail`; release comment names the scoped line
-- `morimail-html/pom.xml` - provided `morimail`, test-only dependencies, `Automatic-Module-Name`, release profile with three unbound test executions
+- `morimail-html/pom.xml` - `morimail` (provided at 07-01, compile scope since 07-04), test-only dependencies, `Automatic-Module-Name`, release profile with three unbound test executions
 - `.github/workflows/ci.yml` - the release step builds `-pl morimail,morimail-html -am`
 - `morimail-html/src/main/java/de/morisoft/morimail/html/HtmlImages.java` - `HtmlImages`, `HtmlImages.Result`, `embed(MailTemplate, Path)`
 - `morimail-html/src/test/java/de/morisoft/morimail/html/EmbedThroughRecordingTest.java` - HTML-06 end-to-end through `Mailer` and `recording`

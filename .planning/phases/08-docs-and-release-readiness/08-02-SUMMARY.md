@@ -7,7 +7,7 @@ status: complete
 
 requires:
   - phase: 08-docs-and-release-readiness
-    provides: 08-01 README sentence under Coordinates (0.2.0 not on Central yet, 0.1.0 current), named by release.md step 8
+    provides: 08-01 README sentence under Coordinates (0.2.0 not on Central yet, 0.1.0 current; superseded, the owner has since released 0.2.0 as tag v0.2.0), named by release.md step 8
   - phase: 07-html-image-helper-module
     provides: morimail-html module and its release profile (tests bound to phase none), the scoped release line in CI
 provides:
@@ -101,7 +101,7 @@ The 08-01 items:
 
 1. `send --help` is not a declared option. It prints "Missing required options" and the usage on stderr with exit code 2, because the sample has no help option (D-09 forbids a new option).
 2. Spec 8.1 and 8.3 got lines that D-05 to D-07 did not list (the `inline/` line and the dry-run paragraph).
-3. The Coordinates block shows 0.2.0 before 0.2.0 is on Central (D-04). Release.md step 8 names the sentence under Coordinates to update after publishing.
+3. The Coordinates block shows 0.2.0 before 0.2.0 is on Central (D-04). Release.md step 8 names the sentence under Coordinates to update after publishing. Superseded: the owner has since released 0.2.0 (tag v0.2.0), and README.md now says 0.2.0 is the current release on Maven Central.
 4. Spec 10.3, the Sample bullet, changed per D-07 as amended on 2026-11-23: "Dry-run writes the images next to the rendered HTML" became "Dry-run copies each inline image once into `inline/` under `--out`".
 
 New in this plan:
