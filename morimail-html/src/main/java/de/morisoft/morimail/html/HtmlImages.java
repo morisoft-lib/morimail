@@ -117,7 +117,7 @@ public final class HtmlImages {
     private static final System.Logger LOG = System.getLogger(HtmlImages.class.getName());
 
     // Copy of Mail.Builder.CID_REFERENCE: "cid:" in any case, not after a letter or digit; the id ends
-    // at a quote, whitespace, ")", "<" or ">". Keep both equal (cidPatternAgreesWithTheCore).
+    // at a quote, ASCII white space, ")", "<" or ">". Keep both equal (cidPatternAgreesWithTheCore).
     static final Pattern CID_REFERENCE =
             Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)<>]*)");
 
