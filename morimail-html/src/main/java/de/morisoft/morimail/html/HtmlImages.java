@@ -20,12 +20,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -54,8 +54,16 @@ import java.util.regex.Pattern;
  * extension, with every character outside {@code A-Z a-z 0-9 . _ -} replaced by one {@code -}
  * (an empty result becomes {@code image}). A second image with the same ID gets {@code -2},
  * {@code -3} and so on, and an ID that the template already uses as a {@code cid:} reference
- * counts as taken. The same file, however it is written, gives one image and one ID: the first
- * name in document order wins. The file name shown to the recipient is that same name.
+ * counts as taken. IDs are compared without regard to case, so {@code logo.png} after
+ * {@code Logo.png} gets {@code logo-2}, and a {@code cid:LOGO} reference in the template takes
+ * {@code logo} as well. The same file, however it is written, gives one image and one ID: the
+ * first name in document order wins. The file name shown to the recipient is that same name.
+ *
+ * <p>The helper knows only the {@code cid:} references in the template. An inline image that the
+ * caller adds to the mail itself, for example with {@code Mail.Builder.inline(Path, String)}, can
+ * get the same content ID as a generated one, and {@code build()} then rejects the mail for a
+ * duplicate inline content ID. To keep such an ID free, write its {@code cid:} reference into the
+ * template before calling {@code embed}.
  *
  * <p>Remote images are opt-in: only {@link #embed(MailTemplate, Path, Path)} makes network
  * requests, and only for {@code http:} and {@code https:} sources without {@code $$}. Each image is
@@ -333,7 +341,7 @@ public final class HtmlImages {
         if (html == null) {
             return new Result(template, List.of());
         }
-        Set<String> taken = new HashSet<>();
+        Set<String> taken = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         Matcher references = CID_REFERENCE.matcher(html);
         while (references.find()) {
             if (!references.group(1).isEmpty()) {

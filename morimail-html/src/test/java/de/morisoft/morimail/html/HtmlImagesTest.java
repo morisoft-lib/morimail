@@ -350,7 +350,11 @@ class HtmlImagesTest {
         image("u/Logo.png", 7);
         image("l/logo.png", 8);
         HtmlImages.Result cases = embed(img("u/Logo.png") + img("l/logo.png"));
-        assertThat(ids(cases)).containsExactly("Logo", "logo");
+        assertThat(ids(cases)).containsExactly("Logo", "logo-2");
+
+        HtmlImages.Result reserved = embed(img("cid:LOGO") + img("l/logo.png"));
+        assertThat(reserved.template().html()).isEqualTo(img("cid:LOGO") + img("cid:logo-2"));
+        assertThat(ids(reserved)).containsExactly("logo-2");
     }
 
     @Test
