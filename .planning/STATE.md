@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v0.2.0
 status: Awaiting next milestone
 stopped_at: Phase 09 complete — all phases complete
-last_updated: "2026-11-24T15:51:04.514Z"
+last_updated: "2026-11-24T16:43:12.814Z"
 last_activity: 2026-11-24
 last_activity_desc: Milestone v0.2.0 completed and archived
-state_head: 940d6d02f550e8da439a90e2d35280bb43e2eabd
+state_head: b49dc7af852cf9450baef12057d4540d74247fac
 progress:
   total_phases: 5
   completed_phases: 5
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-24 after v0.2.0 milestone)
 Phase: Milestone v0.2.0 complete
 Plan: —
 Status: Awaiting next milestone
-Last activity: 2026-11-24 - Completed quick task 261124-hfx: Development .env for the samples and the live test (MORIMAIL_DEV_*)
+Last activity: 2026-11-24 - Completed quick task 261124-my2: two dev account files and the secretEnv hint
 
 ## Performance Metrics
 
@@ -131,6 +131,7 @@ None yet.
 | 261124-hfx | Development .env for the samples and the live test (MORIMAIL_DEV_*) | 2026-11-24 | 24e8847 | [261124-hfx-development-env-for-the-samples-and-the-](./quick/261124-hfx-development-env-for-the-samples-and-the-/) |
 | 2 | Hints in .env.sample on where to find or create each MORIMAIL_DEV_* value | 2026-11-24 | a87f771 | — |
 | 3 | Build the morimail test-jar even with -Dmaven.test.skip=true, so a fresh clone builds | 2026-11-24 | 940d6d0 | — |
+| 261124-my2 | Two dev account files (certificate, secret) instead of a toggle, plus a hint when secretEnv holds a value | 2026-11-24 | b49dc7a | [261124-my2-dev-account-files-without-toggles-plus-a](./quick/261124-my2-dev-account-files-without-toggles-plus-a/) |
 
 ### Roadmap Evolution
 
