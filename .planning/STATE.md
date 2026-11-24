@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v0.2.0
 status: Awaiting next milestone
 stopped_at: Phase 09 complete — all phases complete
-last_updated: "2026-11-24T12:53:47.569Z"
+last_updated: "2026-11-24T13:12:48.413Z"
 last_activity: 2026-11-24
 last_activity_desc: Milestone v0.2.0 completed and archived
-state_head: 24e88471f830dfee88fa790f5d0bfcc94a7ad950
+state_head: a87f7713dc74950bc41821bdefb5e99a76435b04
 progress:
   total_phases: 5
   completed_phases: 5
@@ -129,6 +129,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 261124-hfx | Development .env for the samples and the live test (MORIMAIL_DEV_*) | 2026-11-24 | 24e8847 | [261124-hfx-development-env-for-the-samples-and-the-](./quick/261124-hfx-development-env-for-the-samples-and-the-/) |
+| 2 | Hints in .env.sample on where to find or create each MORIMAIL_DEV_* value | 2026-11-24 | a87f771 | — |
 
 ### Roadmap Evolution
 
