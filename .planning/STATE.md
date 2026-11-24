@@ -5,10 +5,10 @@ milestone_name: Inline Images
 current_phase: 09
 status: completed
 stopped_at: Phase 09 complete — all phases complete
-last_updated: "2026-11-24T06:24:46.231Z"
+last_updated: "2026-11-24T07:12:48.973Z"
 last_activity: 2026-11-24
 last_activity_desc: Phase 09 complete
-state_head: 7fc2681f897a0e178f47163a1aa65c750e6b43a3
+state_head: d150c1c3c1e2364f272488bf3a00e7533d1bcceb
 progress:
   total_phases: 5
   completed_phases: 4
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 8)
 Phase: 09
 Plan: Not started
 Status: All phases complete
-Last activity: 2026-11-24 - Completed quick task 261124-8os: Fix 09 review IN-01/IN-02 wording and quote the 09-02/09-03 SUMMARY frontmatter
+Last activity: 2026-11-24 - Completed quick task 261124-9og: v0.2.0 audit cleanup (06 review triage, cid: agreement cases, helper ID case and caller-ID note)
 
 Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 plans)
 
@@ -162,6 +162,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 261123-ubm | fix IN-01 to IN-03 in docs/release.md | 2026-11-23 | 9f15ca1 | [261123-ubm-fix-in-01-to-in-03-in-docs-release-md](./quick/261123-ubm-fix-in-01-to-in-03-in-docs-release-md/) |
 | 261124-8os | Fix 09 review IN-01/IN-02 wording and quote the 09-02/09-03 SUMMARY frontmatter | 2026-11-24 | 7fc2681 | [261124-8os-fix-09-review-in-01-in-02-wording-and-qu](./quick/261124-8os-fix-09-review-in-01-in-02-wording-and-qu/) |
+| 261124-9og | v0.2.0 audit cleanup: 06 IN-01..03 triaged, CampaignTest cid: cases, case-insensitive helper IDs, caller .inline ID note | 2026-11-24 | d150c1c | [261124-9og-v0-2-0-audit-cleanup-phase-6-review-tria](./quick/261124-9og-v0-2-0-audit-cleanup-phase-6-review-tria/) |
 
 ### Roadmap Evolution
 
