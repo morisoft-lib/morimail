@@ -46,7 +46,7 @@ record Campaign(MailTemplate template, List<Row> rows, List<Path> attachments,
      * pre-flight scan agree with build(); keep both equal.
      */
     static final Pattern CID_REFERENCE =
-            Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)>]*)");
+            Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)<>]*)");
 
     private static final String IMAGE_PREFIX = "image/";
 

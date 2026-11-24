@@ -436,7 +436,8 @@ class CampaignTest {
                 Map.entry("<p>Folic acid: 5 mg, xcid:logo</p>", Set.<String>of()),
                 Map.entry("<a href=\"cid:\">x</a>", Set.<String>of()),
                 Map.entry("<img src=\"cid:a\"><img src=\"cid:b\">", Set.of("a", "b")),
-                Map.entry("<img src=\"cid:logo\"> and cid:logo again", Set.of("logo")));
+                Map.entry("<img src=\"cid:logo\"> and cid:logo again", Set.of("logo")),
+                Map.entry("<p>cid:logo</p>", Set.of("logo")));
 
         for (Map.Entry<String, Set<String>> entry : cases) {
             Set<String> found = new HashSet<>();

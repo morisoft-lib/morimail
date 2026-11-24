@@ -280,7 +280,8 @@ class HtmlImagesTest {
                 Map.entry("<img src=\"cid:logo\"> and cid:logo again", Set.of("logo")),
                 Map.entry("<p>(cid:a)</p>", Set.of("a")),
                 Map.entry("<p>cid:a\"b</p>", Set.of("a")),
-                Map.entry("<p>1cid:a and \u00e9cid:b</p>", Set.<String>of()));
+                Map.entry("<p>1cid:a and \u00e9cid:b</p>", Set.<String>of()),
+                Map.entry("<p>cid:logo</p>", Set.of("logo")));
 
         for (Map.Entry<String, Set<String>> entry : cases) {
             Set<String> found = new HashSet<>();

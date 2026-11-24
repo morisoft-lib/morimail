@@ -43,10 +43,12 @@ public record Mail(String accountId, MailMessage message) {
      */
     public static final class Builder {
 
-        // A cid: reference in any case, not preceded by a letter or digit; its id ends at a quote, whitespace, ) or > (D-04 as amended 2026-11-22, D-05, D-06).
-        // The serial mail sample copies this pattern (Campaign.CID_REFERENCE); keep both equal.
+        // A cid: reference is "cid:" in any case that does not follow a letter or digit. Its id ends at
+        // a quote, ASCII whitespace, ")", "<" or ">", so an unquoted src=cid:logo/> reads the id "logo/".
+        // Copies: Campaign.CID_REFERENCE in the serial mail sample and HtmlImages.CID_REFERENCE in the
+        // HTML image helper; keep all three equal.
         private static final Pattern CID_REFERENCE =
-                Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)>]*)");
+                Pattern.compile("(?i)(?<![\\p{L}\\p{N}])cid:([^\"'\\s)<>]*)");
 
         private static final Map<String, String> CONTENT_TYPES = Map.ofEntries(
                 Map.entry("pdf", "application/pdf"),
@@ -358,10 +360,10 @@ public record Mail(String accountId, MailMessage message) {
          * image, then an inline image without a reference).
          *
          * <p>A reference is {@code cid:} in any case that does not follow a letter or a digit.
-         * Its id ends at a quote, whitespace, {@code )} or {@code >}, is compared exactly and is
-         * never decoded. An empty id is ignored. Only the HTML body is read, so an HTML body
-         * with such a reference fails even in a mail without inline images. The HTML body is
-         * never rewritten.
+         * Its id ends at a quote, whitespace, {@code )}, {@code <} or {@code >}, is compared
+         * exactly and is never decoded. An empty id is ignored. Only the HTML body is read, so
+         * an HTML body with such a reference fails even in a mail without inline images. The
+         * HTML body is never rewritten.
          *
          * <p>The message names the field and never repeats the rejected value; the inline-image
          * messages name the content id, and an id read from the HTML body is cut at
