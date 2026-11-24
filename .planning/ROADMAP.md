@@ -35,6 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo (completed 2026-11-23)
 - [x] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images; plus a storable `data:` URI form that `embed` turns back into inline images (completed 2026-11-23)
 - [x] **Phase 8: Docs and Release Readiness** - README inline and helper examples, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green for `morimail` and `morimail-html` at `0.2.0-SNAPSHOT` (completed 2026-11-23)
+- [ ] **Phase 9: v0.2.0 tech debt cleanup**
 
 > **Owner checkpoint after Phase 5 (live inline test).** Once Phase 5 is verified and committed, report to the owner. Claude does not run the live test and sends no real mail. The owner runs the `live` test with `-Plive` and checks that the image shows inline in a mail client and not as a separate attachment. Phases 6 and 7 do not wait for this. Phase 8 needs the result. If the owner has not run the test by then, Phase 8 asks the owner whether to record it as "not yet confirmed live". A Graph correction found by the live run becomes an inserted Phase 5.1.
 
@@ -181,3 +182,25 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 | 6. Inline Images in the Serial-Mail Sample | v0.2.0 | 2/2 | Complete    | 2026-11-23 |
 | 7. HTML Image Helper Module | v0.2.0 | 4/4 | Complete    | 2026-11-23 |
 | 8. Docs and Release Readiness | v0.2.0 | 3/3 | Complete    | 2026-11-23 |
+
+### Phase 9: v0.2.0 tech debt cleanup
+
+**Goal:** Close the open tech debt found by the v0.2.0 milestone audit (`.planning/v0.2.0-MILESTONE-AUDIT.md`), so the milestone can be archived with no known loose ends:
+- Phase 5 (core and Graph): WR-01, remove control characters from a `cid:` value taken from rendered HTML before it goes into an error message. WR-02 (open, documented), the `cid:` scan reads the whole HTML, so stray text like `ref=cid:123` fails a mail. IN-01, image types other than png/jpg/jpeg/gif depend on how the platform detects content types. IN-03, content IDs are compared case-sensitively.
+- Phase 6 (sample): pre-flight checks only the first mail against the size limits (`SendCommand.java:210`), so a later row with a larger body can still fail at send time (dates from v0.1.0).
+- Phase 7 (helper): IN-01, `strip()` trims more white space than HTML does. IN-02, the error-rethrow branch has no test. Fix the `07-01-SUMMARY.md` frontmatter so gsd-tools can parse it, and update its out-of-date "provided scope" text.
+- Phase 8 (docs): `08-02-SUMMARY.md` still says 0.2.0 isn't on Maven Central.
+- Not in scope: the audit's info note that the three `cid:` pattern copies have no test keeping them equal is wrong (the sample and the helper each have a `cidPatternAgreesWithTheCore` test), so it needs no work. The two milestone chores (main 25 commits ahead of origin/main, so Temurin 17 CI has not run on the latest `docs/release.md`; untracked `07-PATTERNS.md` and `state.json`) are git housekeeping for the owner, not phase work.
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 3 plans
+
+Plans:
+**Wave 1**
+- [ ] 09-01-PLAN.md — Tracer: `<` ends a `cid:` id in the core, the sample and the helper copy (`<p>cid:logo</p>` refers to logo), then the echoed id shows control, separator and format characters as `?`, then webp/bmp/svg in both type tables, the case note and the rewritten §10.3 architecture row (D-01 to D-09)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+- [ ] 09-02-PLAN.md — Tracer: pre-flight validates every built mail and reports a message once with its row lines, proven with the real Graph transport for a later oversize row, then the shared-limit grouping test and spec §8.3 step 2 (D-10 to D-12)
+
+**Wave 3** *(blocked on Wave 2 completion)*
+- [ ] 09-03-PLAN.md — Tracer: the helper's src white-space rule documented and 07 IN-01/IN-02 closed, then the 07-01 and 08-02 summaries repaired, the 05 review settled and the phase gate (D-13 to D-17)
