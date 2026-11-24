@@ -7,9 +7,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Properties;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * The values of an {@code account.properties} file. A blank value counts as absent (null).
+ * The values of an {@code account.properties} file. A blank value counts as absent (null). A value
+ * may hold {@code ${NAME}} references, each replaced by the environment variable NAME.
  *
  * <p>Immutable and safe to share between threads.
  *
@@ -25,12 +29,16 @@ import java.util.Properties;
 record AccountFile(String id, String tenantId, String clientId, String from,
         String certificatePath, String certificatePasswordEnv, String secretEnv) {
 
+    private static final Pattern REFERENCE = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)\\}");
+
     /**
      * Reads the file and adds one message to {@code problems} for every defect. A message names
-     * the file and the key, never a value. Returns null when the file cannot be read at all;
-     * otherwise returns the record even when keys are missing.
+     * the file, the key and for a reference the variable, never a value. Every {@code ${NAME}} in a
+     * value is replaced by {@code env.apply(NAME)}, taken literally. Returns null when the file
+     * cannot be read at all or a reference cannot be expanded; otherwise returns the record even
+     * when keys are missing.
      */
-    static AccountFile read(Path file, List<String> problems) {
+    static AccountFile read(Path file, Function<String, String> env, List<String> problems) {
         Path fileName = file.getFileName();
         String name = fileName == null ? file.toString() : fileName.toString();
         if (!Files.isRegularFile(file)) {
@@ -54,14 +62,16 @@ record AccountFile(String id, String tenantId, String clientId, String from,
             problems.add(name + ": contains a malformed unicode escape");
             return null;
         }
+        int before = problems.size();
         AccountFile account = new AccountFile(
-                value(properties, "account.id"),
-                value(properties, "tenantId"),
-                value(properties, "clientId"),
-                value(properties, "from"),
-                value(properties, "certificate.path"),
-                value(properties, "certificate.passwordEnv"),
-                value(properties, "secretEnv"));
+                value(properties, "account.id", env, name, problems),
+                value(properties, "tenantId", env, name, problems),
+                value(properties, "clientId", env, name, problems),
+                value(properties, "from", env, name, problems),
+                value(properties, "certificate.path", env, name, problems),
+                value(properties, "certificate.passwordEnv", env, name, problems),
+                value(properties, "secretEnv", env, name, problems));
+        boolean unresolved = problems.size() > before;
         require(name, "account.id", account.id, problems);
         require(name, "tenantId", account.tenantId, problems);
         require(name, "clientId", account.clientId, problems);
@@ -78,14 +88,24 @@ record AccountFile(String id, String tenantId, String clientId, String from,
         } else if (!hasSecret && hasPath != hasPasswordEnv) {
             problems.add(name + ": certificate.path and certificate.passwordEnv must be set together");
         }
-        return account;
+        return unresolved ? null : account;
     }
 
-    private static String value(Properties properties, String key) {
+    private static String value(Properties properties, String key, Function<String, String> env,
+            String name, List<String> problems) {
         String value = properties.getProperty(key);
         if (value == null) {
             return null;
         }
+        value = REFERENCE.matcher(value).replaceAll(match -> {
+            String replacement = env.apply(match.group(1));
+            if (replacement != null && !replacement.isBlank()) {
+                return Matcher.quoteReplacement(replacement);
+            }
+            problems.add(name + ": key '" + key + "' uses " + match.group()
+                    + ", which is not set or is blank");
+            return Matcher.quoteReplacement(match.group());
+        });
         value = value.trim();
         return value.isEmpty() ? null : value;
     }

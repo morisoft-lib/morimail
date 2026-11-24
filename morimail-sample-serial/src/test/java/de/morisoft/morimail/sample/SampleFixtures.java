@@ -90,9 +90,15 @@ final class SampleFixtures {
 
     /** Runs the same command tree as main, with the given factory and a recording sleep. */
     static Run run(Function<AccountFile, Mailer> factory, List<Duration> waits, String... args) {
+        return run(name -> null, factory, waits, args);
+    }
+
+    /** The same with an injected environment. */
+    static Run run(Function<String, String> env, Function<AccountFile, Mailer> factory,
+            List<Duration> waits, String... args) {
         StringWriter out = new StringWriter();
         StringWriter err = new StringWriter();
-        CommandLine commandLine = SerialMail.commandLine(factory, waits::add);
+        CommandLine commandLine = SerialMail.commandLine(factory, waits::add, env);
         commandLine.setOut(new PrintWriter(out, true));
         commandLine.setErr(new PrintWriter(err, true));
         int exit = commandLine.execute(args);

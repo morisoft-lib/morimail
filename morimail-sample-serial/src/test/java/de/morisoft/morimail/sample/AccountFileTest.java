@@ -34,7 +34,7 @@ class AccountFileTest {
     private final List<String> problems = new ArrayList<>();
 
     private AccountFile read(String content) throws IOException {
-        return AccountFile.read(SampleFixtures.writeAccount(root, content), problems);
+        return AccountFile.read(SampleFixtures.writeAccount(root, content), name -> null, problems);
     }
 
     @Test
@@ -117,7 +117,7 @@ class AccountFileTest {
         Files.write(file, new byte[] {'a', 'c', 'c', 'o', 'u', 'n', 't', '.', 'i', 'd', '=', 'G', 'r',
                 (byte) 0xFC, 'e', '\n'});
 
-        assertThat(AccountFile.read(file, problems)).isNull();
+        assertThat(AccountFile.read(file, name -> null, problems)).isNull();
 
         assertThat(problems).containsExactly("account.properties is not valid UTF-8");
     }
@@ -142,7 +142,7 @@ class AccountFileTest {
 
     @Test
     void missingFileIsAProblem() {
-        assertThat(AccountFile.read(root.resolve("account.properties"), problems)).isNull();
+        assertThat(AccountFile.read(root.resolve("account.properties"), name -> null, problems)).isNull();
 
         assertThat(problems).containsExactly("account.properties: file not found");
     }
@@ -159,7 +159,7 @@ class AccountFileTest {
         Path account = SampleFixtures.writeAccount(root, content);
         Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
 
-        AccountFile.read(account, problems);
+        AccountFile.read(account, name -> null, problems);
         SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
                 new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
                 campaign.toString());

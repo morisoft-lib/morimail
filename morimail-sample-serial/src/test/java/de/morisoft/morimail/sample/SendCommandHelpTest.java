@@ -10,7 +10,7 @@ class SendCommandHelpTest {
 
     @Test
     void sendUsageNamesTheCampaignFilesAndTheInlineRules() {
-        String usage = SerialMail.commandLine(SerialMail::realMailer, sleep -> { })
+        String usage = SerialMail.commandLine(SerialMail::realMailer, sleep -> { }, name -> null)
                 .getSubcommands().get("send").getUsageMessage(CommandLine.Help.Ansi.OFF);
         // picocli wraps long text, so compare with the line breaks and indentation collapsed.
         String flat = usage.replaceAll("\\s+", " ");
