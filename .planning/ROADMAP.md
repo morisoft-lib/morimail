@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Inline Images in the Serial-Mail Sample** - Optional `inline/` campaign directory, pre-flight inline checks, dry-run with images and relative paths, example campaign with a logo (completed 2026-11-23)
 - [x] **Phase 7: HTML Image Helper Module** - New module `morimail-html` with `HtmlImages`: rewrites `<img src>` (local under a base directory, `http(s)` opt-in) in a template to `cid:` and returns the inline images; plus a storable `data:` URI form that `embed` turns back into inline images (completed 2026-11-23)
 - [x] **Phase 8: Docs and Release Readiness** - README inline and helper examples, Graph inline property names and live status in spec §6 and `docs/architecture.md`, sample docs for `inline/`, release build green for `morimail` and `morimail-html` at `0.2.0-SNAPSHOT` (completed 2026-11-23)
-- [ ] **Phase 9: v0.2.0 tech debt cleanup**
+- [x] **Phase 9: v0.2.0 tech debt cleanup** (completed 2026-11-24)
 
 > **Owner checkpoint after Phase 5 (live inline test).** Once Phase 5 is verified and committed, report to the owner. Claude does not run the live test and sends no real mail. The owner runs the `live` test with `-Plive` and checks that the image shows inline in a mail client and not as a separate attachment. Phases 6 and 7 do not wait for this. Phase 8 needs the result. If the owner has not run the test by then, Phase 8 asks the owner whether to record it as "not yet confirmed live". A Graph correction found by the live run becomes an inserted Phase 5.1.
 
@@ -193,7 +193,7 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 - Not in scope: the audit's info note that the three `cid:` pattern copies have no test keeping them equal is wrong (the sample and the helper each have a `cidPatternAgreesWithTheCore` test), so it needs no work. The two milestone chores (main 25 commits ahead of origin/main, so Temurin 17 CI has not run on the latest `docs/release.md`; untracked `07-PATTERNS.md` and `state.json`) are git housekeeping for the owner, not phase work.
 **Requirements**: TBD
 **Depends on:** Phase 8
-**Plans:** 3/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 **Wave 1**
