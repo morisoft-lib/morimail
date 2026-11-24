@@ -69,15 +69,13 @@ public final class SerialMail {
         if (account.secretEnv() != null) {
             String secret = env.apply(account.secretEnv());
             if (secret == null || secret.isEmpty()) {
-                throw new IllegalStateException(
-                        "secretEnv: the environment variable it names is not set or is empty");
+                throw unsetVariable("secretEnv", account.secretEnv(), "secret");
             }
             credentials = EntraClientCredentials.withSecret(account.tenantId(), account.clientId(), secret);
         } else {
             String password = env.apply(account.certificatePasswordEnv());
             if (password == null || password.isEmpty()) {
-                throw new IllegalStateException(
-                        "certificate.passwordEnv: the environment variable it names is not set or is empty");
+                throw unsetVariable("certificate.passwordEnv", account.certificatePasswordEnv(), "password");
             }
             credentials = certificateCredentials(account, password);
         }
@@ -87,6 +85,18 @@ public final class SerialMail {
                 .option("baseUrl", graphBaseUrl)
                 .build();
         return Mailer.of(mailAccount);
+    }
+
+    /**
+     * The message for an unset or empty variable. When the key's value is not a variable name, it
+     * may be the secret itself, so the message says so; the value is never part of the message.
+     */
+    private static IllegalStateException unsetVariable(String key, String value, String holds) {
+        String message = key + ": the environment variable it names is not set or is empty";
+        if (!value.matches(AccountFile.VARIABLE_NAME)) {
+            message += "; " + key + " names an environment variable, it does not hold the " + holds + " itself";
+        }
+        return new IllegalStateException(message);
     }
 
     /**

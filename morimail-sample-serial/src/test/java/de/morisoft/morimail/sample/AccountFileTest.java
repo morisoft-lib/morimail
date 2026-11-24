@@ -186,7 +186,8 @@ class AccountFileTest {
 
         assertThat(run.exit()).isEqualTo(2);
         assertThat(run.errLines()).contains(
-                "account: secretEnv: the environment variable it names is not set or is empty");
+                "account: secretEnv: the environment variable it names is not set or is empty; "
+                        + "secretEnv names an environment variable, it does not hold the secret itself");
         assertThat(run.err()).doesNotContain(SENTINEL);
         assertThat(run.out()).doesNotContain(SENTINEL);
     }

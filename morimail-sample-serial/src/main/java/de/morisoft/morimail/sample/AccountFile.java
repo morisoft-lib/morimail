@@ -29,7 +29,10 @@ import java.util.regex.Pattern;
 record AccountFile(String id, String tenantId, String clientId, String from,
         String certificatePath, String certificatePasswordEnv, String secretEnv) {
 
-    private static final Pattern REFERENCE = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)\\}");
+    /** The NAME rule of spec section 8.1: a letter or underscore, then letters, digits and underscores. */
+    static final String VARIABLE_NAME = "[A-Za-z_][A-Za-z0-9_]*";
+
+    private static final Pattern REFERENCE = Pattern.compile("\\$\\{(" + VARIABLE_NAME + ")\\}");
 
     /**
      * Reads the file and adds one message to {@code problems} for every defect. A message names

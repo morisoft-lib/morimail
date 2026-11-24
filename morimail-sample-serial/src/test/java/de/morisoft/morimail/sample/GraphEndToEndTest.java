@@ -267,6 +267,32 @@ class GraphEndToEndTest {
     }
 
     @Test
+    void secretValueInSecretEnvGetsAHint() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, CERT_ACCOUNT + "secretEnv=Sentinel~secret.9c1e\n");
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"), Map.of());
+
+        assertPreflight(run, root.resolve("journal.jsonl"),
+                "account: secretEnv: the environment variable it names is not set or is empty; "
+                        + "secretEnv names an environment variable, it does not hold the secret itself",
+                "Sentinel~secret.9c1e");
+    }
+
+    @Test
+    void passwordValueInPasswordEnvGetsAHint() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, CERT_ACCOUNT
+                + "certificate.path=" + keyStore.toString().replace('\\', '/') + "\n"
+                + "certificate.passwordEnv=Sentinel.pw-9c1e\n");
+
+        SampleFixtures.Run run = runLimited(account, root.resolve("journal.jsonl"), Map.of());
+
+        assertPreflight(run, root.resolve("journal.jsonl"),
+                "account: certificate.passwordEnv: the environment variable it names is not set or is empty; "
+                        + "certificate.passwordEnv names an environment variable, it does not hold the password itself",
+                "Sentinel.pw-9c1e");
+    }
+
+    @Test
     void missingKeyStoreFileIsAPreflightProblemWithoutThePath() throws IOException {
         Path missing = root.resolve("keys").resolve("missing.p12");
         Path account = SampleFixtures.writeAccount(root, CERT_ACCOUNT
