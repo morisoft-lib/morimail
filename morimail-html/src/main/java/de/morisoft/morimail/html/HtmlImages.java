@@ -350,8 +350,8 @@ public final class HtmlImages {
         while (m.find()) {
             int g = m.start(1) >= 0 ? 1 : m.start(2) >= 0 ? 2 : 3;
             String raw = m.group(g);
-            // strip() removes Unicode white space, a wider set than the ASCII white space HTML strips from a URL;
-            // raw stays as written for messages and the span.
+            // strip() removes Unicode white space (Character.isWhitespace), which is not the same set as the
+            // C0 controls and space that browsers strip from a URL; raw stays as written for messages and the span.
             String value = raw.replace("&amp;", "&").strip();
             if (value.contains("$$")) {
                 continue;

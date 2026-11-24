@@ -366,7 +366,7 @@ public record Mail(String accountId, MailMessage message) {
          * image, then an inline image without a reference).
          *
          * <p>A reference is {@code cid:} in any case that does not follow a letter or a digit.
-         * Its id ends at a quote, whitespace, {@code )}, {@code <} or {@code >}, is compared
+         * Its id ends at a quote, ASCII white space, {@code )}, {@code <} or {@code >}, is compared
          * exactly and is never decoded. An empty id is ignored. Only the HTML body is read, so
          * an HTML body with such a reference fails even in a mail without inline images. The
          * HTML body is never rewritten. A {@code /} belongs to the id, so an unquoted value
