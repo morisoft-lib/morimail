@@ -2,38 +2,36 @@
 gsd_state_version: "1.0"
 milestone: v0.2.0
 milestone_name: Inline Images
-current_phase: 09
-status: completed
+status: Awaiting next milestone
 stopped_at: Phase 09 complete — all phases complete
-last_updated: "2026-11-24T09:33:16.422Z"
+last_updated: "2026-11-24T09:38:16.935Z"
 last_activity: 2026-11-24
-last_activity_desc: Phase 09 complete
-state_head: ef87f9e69a9ae336994c4b4c94188d550e2b9c73
+last_activity_desc: Milestone v0.2.0 completed and archived
+state_head: 44d653598bc52d00511c1fe2c9653ee640de5109
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 14
   completed_plans: 14
-  percent: 80
+  percent: 100
+current_phase: 09
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-11-23 after Phase 8)
+See: .planning/PROJECT.md (updated 2026-11-24 after v0.2.0 milestone)
 
 **Core value:** A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
-**Current focus:** Phase 09 — v0.2.0 tech debt cleanup
+**Current focus:** Planning next milestone
 
 ## Current Position
 
-Phase: 09
-Plan: Not started
-Status: All phases complete
-Last activity: 2026-11-24 - Completed quick task 261124-d10: Fix 09 review IN-01 and IN-03 wording, defer WR-01 and IN-02
-
-Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 plans)
+Phase: Milestone v0.2.0 complete
+Plan: —
+Status: Awaiting next milestone
+Last activity: 2026-11-24 — Milestone v0.2.0 completed and archived
 
 ## Performance Metrics
 
@@ -107,44 +105,14 @@ Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 p
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-v0.1.0 decisions are archived in milestones/v0.1.0-ROADMAP.md, the phase files in milestones/v0.1.0-phases/ and the PROJECT.md Key Decisions table. Ones that still affect future work:
+v0.1.0 and v0.2.0 decisions are archived in milestones/v0.1.0-ROADMAP.md, milestones/v0.2.0-ROADMAP.md, the phase files in milestones/v0.1.0-phases/ and milestones/v0.2.0-phases/, and the PROJECT.md Key Decisions table. Ones that still affect future work:
 
-- Release builds use `-pl morimail -am` (D-20); the test-jar is reactor-only and never published.
+- Release builds are scoped: `-Prelease ... -pl morimail,morimail-html -am` (D-20); the test-jar is reactor-only and never published.
 - Graph failure messages carry the HTTP status, code and request-id only.
-- `Attachment.contentId` exists and `build()` rejects it until inline images are built (spec §10.3). Phase 5 replaces that rejection with the INLN-01..05 checks.
-
-v0.2.0 roadmap (2026-11-22):
-
-- Three phases: core and Graph together (Phase 5), then the sample (Phase 6), then docs and release readiness (Phase 7). Core checks come before Graph and the sample, and docs come last.
-- Owner checkpoint after Phase 5 for the live inline test. It does not block Phase 6, which runs against `recording`. Phase 7 records the owner's result, or asks the owner whether to record "not yet confirmed live".
-- Spec §10.3 says "a transport that cannot send inline images rejects them in `validate`". This needs no code: both in-repo transports handle inline images (Rule 0).
-- [Phase 05]: Reference pattern implements D-04 as amended 2026-11-22 (owner-approved): cid: in any case, not after a letter or digit, empty ID skipped; ID read from HTML cut at 64 code points in the message
-- [Phase 05]: Graph gets a bare contentId (no angle brackets, no contentLocation, no isInline false on regular attachments); unconfirmed until the owner live run in 05-02
-- [Phase 05]: 05-02: No production change for inline images in Graph limits; validate already counts every attachment (D-15 to D-17), tests pin it
-- [Phase 05]: UAT 2026-11-23: inline image renders inline live through Graph with the bare contentId; Temurin 17 CI green on the 05-02 commits
-- [Phase 05]: 05-02: docs/spec.md untouched; deviation rows in docs/architecture.md record that spec 5 and 5.1 still describe the MVP (Phase 8 updates them)
-- [Phase 06]: 06-01: dry-run src is new URI(null, null, "inline/"+name, null).toASCIIString() with & written as &amp;; the cid: pattern is copied into Campaign and pinned byte-equal to the core's; inline: stdout line follows attachments: and only appears with inline images
-- [Phase 06]: 06-01: Temurin 17 CI green on 2633e3a (verify, scoped release build, offline build); Task 2 needed no source fix; until 06-02 inline problems are reported only by build() per row
-- [Phase 06]: Inline scan uses two probe mails per file through the core's build() (resolved type, and content-ID rule under fixed image/png) instead of a copied type table; each defect of a file is its own pre-flight line
-- [Phase 06]: An inline finding makes Campaign.read return null (D-01); row-level build() and mailer.validate findings show only after inline problems are fixed (A2, owner-confirmed)
-- [Phase 06]: Example campaign ships a generated 166-byte inline/logo.png (IHDR/IDAT/IEND only); attachments/logo.png renamed to sample.png
-- [Phase 06]: UAT 2026-11-23: Temurin 17 CI green on 4ea76d8 (run 45149609185); dry-run logo shown in all five rendered mails; re-review 0 critical / 0 warning / 3 info (open in 06-REVIEW-DISPOSITION.md); SECURITY threats_open 0
-- [Phase 07]: 07-01: morimail-html module with morimail provided-only; HtmlImages.embed local images; A1 (C:\ is an unknown scheme, unchanged), A5 (empty src fails as not a readable file), A7 (only the scoped release line -pl morimail,morimail-html -am), P1-P4 applied; Task 2 needed no source fix
-- [Phase 07]: 07-01: Temurin 17 CI green on cce3625 (run 45194793703: verify, scoped release build, offline build)
-- [Phase 07]: 07-02: HtmlImages.embed(template, baseDir, workDir) downloads http(s) images into the work directory; A2 (3,145,728 bytes or more refused, as Graph refuses them), A3 (unnamed statuses are Invalid with the status only, 408 Invalid), A6 (no cleanup), P5-P9 applied; Task 2 needed no source fix
-- [Phase 07]: 07-02: one Duration is the whole budget of a download, close() of the response stream ends the reader (no extra thread or interrupt); JDK re-arms HttpRequest.timeout per redirect hop (owner review, not built)
-- [Phase 07]: 07-03 A2: toDataUris and data: decoding refuse exactly 3 MiB (3,145,728 bytes), 3,145,727 passes, the GraphTransport.validate comparison
-- [Phase 07]: 07-03 A4/A6/P10: toDataUris never writes the work directory; no cleanup after a failed decode; decoded images are named ID.SUBTYPE
-- [Phase 07]: 07-04 (G-07-2): morimail-html declares morimail in compile scope (owner decision in UAT, D-02 and D-03 amended 2026-11-23); runtime classpath morimail plus Jackson through morimail; morimail jar unchanged
-- [Phase 07]: UAT 2026-11-23: Temurin 17 CI green on 44206a9 (run 45229673247); owner accepted A1-A7, P1-P10 and review IN-01/IN-02 as-is (deferred in 07-REVIEW-DISPOSITION.md); SECURITY threats_open 0
-- [Phase 08]: 08-01: README inline, morimail-html and Serial-mail sample sections with compiled snippets; spec 5/5.1/6.2/8.1/8.3/10.3/10.4/12 and docs/architecture.md describe 0.2.0 with the live result of 2026-11-23; send usage names inline/ and cid:NAME, pinned by SendCommandHelpTest; no new option
-- [Phase 08]: 08-02: docs/release.md version-neutral (VERSION/NEXT, four POMs, -pl morimail,morimail-html -am as in CI, 54-entry bundle listed with the VERSION variable); rehearsed 2026-11-23 with a throwaway key, upload skipped, cleanup of the key and of the local de/morisoft artifacts; offline verify and scoped release build green with zero warning lines
-- [Phase 08]: 08-03 (G-08-2): release.md step 5 chains both deploy commands behind `! grep -- -SNAPSHOT` over the three published POMs; a SNAPSHOT deploy goes to Central's snapshots repository unless -DskipUpload; docs only; the owner reported the 0.2.0 release as working on 2026-11-23 (tag v0.2.0 on 2c4ea80), the guard applies from the next release
-- [Phase 08]: UAT 2026-11-23 complete (4 pass, G-08-2 resolved by 08-03); review fixes WR-01 (guard `; [ $? -eq 1 ] &&` stops on grep error) and WR-02 (defaults VERSION=0.3.0, NEXT=0.4.0-SNAPSHOT); re-review 0 critical / 0 warning / 3 info (open in 08-REVIEW-DISPOSITION.md); SECURITY threats_open 0; re-verification passed
-- [Phase 09]: 09-01: a cid: id ends at < in the core, sample and helper copies; shownId cleans control, separator and format characters of the echoed id; ids stay case-sensitive, documented
-- [Phase 09]: 09-02: pre-flight validates every non-null built mail; messages grouped by text with row lines via invalidMail, reported after build problems
-- [Phase 09]: 09-02: later-row and shared-limit pre-flight tests use the real graph transport at http://localhost:1/v1.0 with a counting token provider asserted zero
-- [Phase 09]: v0.2.0 tech debt closed: < ends a cid: id in all three copies, echoed id shows control/separator/format characters as ?, webp/bmp/svg in both tables, pre-flight validates every mail, helper white-space rule documented; 05 and 07 dispositions settled (07 IN-02 skipped, no seam; 05 IN-03 deferred); 07-01 and 08-02 summaries parse
+- Graph inline images use `isInline` plus a bare `contentId` (confirmed live, Phase 5 UAT).
+- The `cid:` pattern lives in the core and is copied into the sample (`Campaign`) and the helper (`HtmlImages`); each copy is pinned equal by a `cidPatternAgreesWithTheCore` test. A `cid:` id ends at `<`.
+- `morimail-html` depends on `morimail` in compile scope (G-07-2).
+- `docs/release.md` deploys are guarded against `-SNAPSHOT` POMs; `main` is at `0.3.0-SNAPSHOT` and Phase 9 work ships with 0.3.0.
 
 ### Pending Todos
 
@@ -160,10 +128,6 @@ None yet.
 
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
-| 261123-ubm | fix IN-01 to IN-03 in docs/release.md | 2026-11-23 | 9f15ca1 | [261123-ubm-fix-in-01-to-in-03-in-docs-release-md](./quick/261123-ubm-fix-in-01-to-in-03-in-docs-release-md/) |
-| 261124-8os | Fix 09 review IN-01/IN-02 wording and quote the 09-02/09-03 SUMMARY frontmatter | 2026-11-24 | 7fc2681 | [261124-8os-fix-09-review-in-01-in-02-wording-and-qu](./quick/261124-8os-fix-09-review-in-01-in-02-wording-and-qu/) |
-| 261124-9og | v0.2.0 audit cleanup: 06 IN-01..03 triaged, CampaignTest cid: cases, case-insensitive helper IDs, caller .inline ID note | 2026-11-24 | d150c1c | [261124-9og-v0-2-0-audit-cleanup-phase-6-review-tria](./quick/261124-9og-v0-2-0-audit-cleanup-phase-6-review-tria/) |
-| 261124-d10 | Fix 09 review IN-01 and IN-03 wording, defer WR-01 and IN-02 | 2026-11-24 | ef87f9e | [261124-d10-fix-in-01-and-in-03-wording-defer-the-re](./quick/261124-d10-fix-in-01-and-in-03-wording-defer-the-re/) |
 
 ### Roadmap Evolution
 
@@ -176,14 +140,16 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 | Category | Item | Status | Deferred At | Milestone |
 |----------|------|--------|-------------|-----------|
+| verification_gaps | Phases 5-9 VERIFICATION.md stale (covered files changed after verification) | passed, stale | 2026-11-24 | v0.2.0 |
 | verification_gaps | Phases 1-4 VERIFICATION.md stale (covered files changed after verification) | passed, stale | 2026-11-22 | v0.1.0 |
 
 ## Session Continuity
 
 Last session: 2026-11-24T05:54:29.169Z
-Stopped at: Phase 09 complete — all phases complete
+Stopped at: Milestone v0.2.0 archived
 Resume file: None
 
 ## Operator Next Steps
 
-- Audit the milestone with /gsd-audit-milestone, then close it with /gsd-complete-milestone
+
+- Start the next milestone with /gsd-new-milestone

@@ -2,7 +2,7 @@
 
 ## What This Is
 
-morimail is a small open-source Java 17 library (`de.morisoft:morimail`) that sends templated mail through pluggable transports, one mail at a time. The MVP ships one built-in transport, Microsoft Graph, authenticated as an Entra app (client credentials with a certificate or client secret, no user sign-in). The same repository ships a command-line sample (`morimail-sample-serial`) that sends a serial mail: one template, one CSV of recipients, shared attachments, one mail per recipient, with a send journal so a rerun never sends twice.
+morimail is a small open-source Java 17 library (`de.morisoft:morimail`) that sends templated mail through pluggable transports, one mail at a time. The MVP ships one built-in transport, Microsoft Graph, authenticated as an Entra app (client credentials with a certificate or client secret, no user sign-in). Since 0.2.0 a mail can carry inline images referenced by `cid:`, and the optional helper module `morimail-html` (`de.morisoft:morimail-html`) turns ordinary `<img src>` URLs in a template into `cid:` references plus inline images. The same repository ships a command-line sample (`morimail-sample-serial`) that sends a serial mail: one template, one CSV of recipients, shared attachments, one mail per recipient, with a send journal so a rerun never sends twice. Its campaigns can add an optional `inline/` image directory.
 
 The full, binding specification is `spec.md` (moved to `docs/spec.md` in the first phase). Where this document and the spec disagree, the spec wins.
 
@@ -10,17 +10,11 @@ The full, binding specification is `spec.md` (moved to `docs/spec.md` in the fir
 
 A consumer can send one templated mail with attachments through Microsoft Graph as an Entra app, using only the JDK and Jackson, and get back a clear error category (transient / permanent / auth-required) that tells them what to do next.
 
-## Current Milestone: v0.2.0 Inline Images
+## Current State
 
-**Goal:** A consumer can embed images in a templated HTML mail with `cid:` references and send it through Graph with the images shown inline (spec §10.3).
+**Shipped:** v0.2.0 Inline Images (archived 2026-11-24; the owner released `0.2.0` and tagged `v0.2.0`). `main` is at `0.3.0-SNAPSHOT`, and the Phase 9 tech-debt fixes ship with the next release.
 
-**Target features:**
-- Builder `.inline(Path image, String contentId)`; `build()` checks every `cid:` reference against the inline attachments both ways, unique content IDs, image content types only
-- Graph transport sends inline images as file attachments marked inline (property names verified against the current `fileAttachment` docs); inline images count toward the existing 3 MiB / 4 MiB limits
-- Sample: optional `inline/` campaign directory (file name without extension = content ID); dry-run writes the images next to the rendered HTML and rewrites `cid:` to relative paths in the dry-run output only
-- Docs updated and release-ready (`-Prelease verify -Dgpg.skip` green); the owner runs the live inline test, the deploy and the tag
-
-Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
+**Next milestone:** not defined yet. Start it with `/gsd-new-milestone`.
 
 ## Requirements
 
@@ -53,11 +47,13 @@ Out of this milestone: the v0.1.0 tech-debt items (owner's choice, 2026-11-22).
 
 - ✓ Docs and release readiness: README inline-image, `morimail-html` and sample sections with compiled snippets; spec and `docs/architecture.md` describe 0.2.0 with the live result; `docs/release.md` is one version-neutral procedure for parent, `morimail` and `morimail-html`, with both deploy commands guarded against SNAPSHOT versions; the owner released 0.2.0 (tag `v0.2.0`) — v0.2.0 Phase 8 (DOCS-05..07)
 
-Everything above this line except the Phase 5 to 8 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
+- ✓ v0.2.0 tech-debt cleanup: `<` ends a `cid:` id in the core, the sample and the helper; the echoed id is cleaned of control, separator and format characters; webp, bmp and svg resolve in both type tables; sample pre-flight validates every row's mail through the transport, not only the first — v0.2.0 Phase 9 (ships with 0.3.0)
+
+Everything above this line except the Phase 5 to 9 entries shipped in v0.1.0 (released 2026-11-22, `de.morisoft:morimail:0.1.0` on Maven Central).
 
 ### Active
 
-None. All v0.2.0 requirements are validated; the next milestone defines new ones.
+None. All 23 v0.2.0 requirements are validated; the next milestone defines new ones.
 
 ### Out of Scope
 
@@ -76,12 +72,13 @@ None. All v0.2.0 requirements are validated; the next milestone defines new ones
 
 ## Context
 
-- Shipped v0.1.0 (2026-11-22): about 3,350 lines of main Java and 10,600 lines in total with tests, in the library and the sample. Java 17, Maven 3.10.1 wrapper, Jackson 2.23.0 only at runtime, picocli in the sample, JUnit 6, AssertJ and WireMock for tests.
+- Shipped v0.1.0 (2026-11-22) and v0.2.0 (2026-11-24). At the v0.2.0 close: about 4,400 lines of main Java and 14,500 lines in total with tests, across the library, `morimail-html` and the sample. Java 17, Maven 3.10.1 wrapper, Jackson 2.23.0 only at runtime, picocli in the sample, JUnit 6, AssertJ and WireMock for tests.
 - Repository: https://github.com/morisoft-lib/morimail. Public from the first commit; git history is permanent. The owner set the `v0.1.0` and `v0.2.0` tags on the CI-green release commits; `main` is now at `0.3.0-SNAPSHOT`.
 - Published artifacts: `de.morisoft:morimail-parent`, `de.morisoft:morimail` and (from 0.2.0) `de.morisoft:morimail-html`. The sample and the test-jar are not published. The release build only works scoped (`-Prelease ... -pl morimail,morimail-html -am`).
-- Microsoft docs to read before coding against an endpoint: Graph `user: sendMail` and `fileAttachment` (inline properties are unverified), Entra client-credentials flow, certificate credentials (PS256, `x5t#S256`), Exchange RBAC for Applications.
+- Microsoft docs to read before coding against an endpoint: Graph `user: sendMail` and `fileAttachment` (inline `isInline` + bare `contentId` confirmed live in Phase 5), Entra client-credentials flow, certificate credentials (PS256, `x5t#S256`), Exchange RBAC for Applications.
 - The live test confirmed PS256, the 403/404 error rows and the binary MiB limits. The spec §6.3 table has a live-status column.
 - Known tech debt (v0.1.0 audit): a quoted local part is not redacted; `isHeaderSafe` duplicates Graph's `requireToken`; Entra messages can name app and tenant IDs; settable timeouts and authority/`baseUrl` keys in `account.properties` are deferred; `SerialMail` duplicates the Graph base URL constant; `TransportRegistry.load()` runs on every account build.
+- Known tech debt (v0.2.0 audit): pre-flight prints one line per distinct 4 MiB request-size message, because the message carries the per-row estimate (09 WR-01, noise only); content IDs are compared case-sensitively in the core (05 IN-03, deferred until a live test shows a need); decomposed file names in `inline/` on macOS (06 IN-03, deferred).
 
 ## Constraints
 
@@ -119,6 +116,9 @@ None. All v0.2.0 requirements are validated; the next milestone defines new ones
 | Sample inline scan probes each `inline/` file through the core's `build()` instead of copying its type table; the `cid:` pattern is copied into `Campaign` and pinned equal to the core's | One source of truth for the rules; the sample stays small (Rule 0) | ✓ Good — dry-run logo shown in all five mails (Phase 6 UAT) |
 | `morimail-html` declares `morimail` in compile scope, not `provided` (reverses D-02) | Nearest-wins lets a consumer's direct `morimail` override it anyway; compile scope keeps the version link, so a pre-0.2.0 core without inline-image support is not silently used | ✓ Owner decision (Phase 7 UAT, G-07-2) |
 | Release deploys in `docs/release.md` are chained behind `grep -- -SNAPSHOT ...; [ $? -eq 1 ] &&` | A SNAPSHOT deploy uploads to Central's snapshots repository (the 401 in Phase 8 UAT); the guard also stops on a grep error (review WR-01) | ✓ Good — G-08-2 closed, re-verified (Phase 8) |
+| `<` ends a `cid:` id, with the same pattern copied into the sample and the helper and pinned equal by tests | `<p>cid:logo</p>` must refer to `logo`; one rule in three places, each guarded by a `cidPatternAgreesWithTheCore` test | ✓ Good (Phase 9) |
+| Sample pre-flight runs the transport's `validate` on every row's mail and groups messages | A later row with a larger body could pass pre-flight and fail at send time | ✓ Good — proven with the real Graph transport (Phase 9); output noise is WR-01 |
+| Helper content IDs compared case-insensitively, core IDs case-sensitively | The helper derives IDs from file names (`Logo.png` then `logo.png` gives `logo-2`); the core keeps the 0.2.0 behaviour | — Pending — revisit after a live test (05 IN-03) |
 
 ## Evolution
 
@@ -138,4 +138,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-11-23 after Phase 8*
+*Last updated: 2026-11-24 after v0.2.0 milestone*

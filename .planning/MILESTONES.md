@@ -1,5 +1,33 @@
 # Milestones
 
+## v0.2.0 Inline Images (Shipped: 2026-11-24)
+
+**Phases completed:** 5 phases, 14 plans, 19 tasks
+
+**Key accomplishments:**
+- `Mail.Builder.inline(Path, String)` with build()-time content-ID, image-type, duplicate and two-way `cid:` checks, and Graph `fileAttachment` nodes carrying `isInline` and `contentId`, proven through Mailer, Entra stub and WireMock
+- Five tests that put inline images under the unchanged 3 MiB / 4 MiB Graph rules before any token request, the owner-run `LiveGraphTest.sendsOneMailWithAnInlineImage` with a run-time PNG, and the Graph inline property names, live status and three spec deviations in `docs/architecture.md`
+- An optional `inline/` directory in a campaign now becomes inline images in every sent mail (content ID = file name without its last extension), and the dry run copies them once to `out/inline/` with percent-encoded, HTML-safe relative `src` paths while sent mails keep `cid:`.
+- Pre-flight now reports every inline defect (a `cid:` with no image, an image with no `cid:`, a taken content ID, a non-image file, a file name that gives an invalid content ID) as its own line of the one report with exit 2 and nothing written, and the shipped example campaign shows a generated 96 x 48 `inline/logo.png` in all five dry-run mails and on the Graph wire.
+- New `morimail-html` module whose `HtmlImages.embed(template, baseDir)` turns local `<img src>` values into `cid:` references plus core-valid inline images, with `morimail` in compile scope since 07-04 (provided-scope only at 07-01), a scoped release build and CI line for both published modules, and a green Temurin 17 round-trip.
+- `HtmlImages.embed(template, baseDir, workDir)` downloads `http(s)` images into the caller's work directory with one 30 s budget for headers and body, a hard 3 MiB cap (3,145,728 bytes refused, as Graph refuses them), an `image/` content type check and transient/invalid categories by cause, all pinned offline against WireMock.
+- `HtmlImages.toDataUris` stores a template as one plain HTML string with `data:TYPE;base64,PAYLOAD` images, `embed` with a work directory decodes it back into inline images with the original bytes (strict base64, 3 MiB cap checked before and after decoding, failures named by position and never by payload), and the phase gate proves the `morimail` jar byte-identical to the one built from f9b2f57.
+- `morimail-html` now declares `morimail` with Maven's default compile scope, so the helper's published POM names the core version it is built against; docs, Javadoc and 07-CONTEXT.md agree, and the `morimail` jar is byte-identical to the one from f9b2f57.
+- README, spec, architecture page and `send` usage text now describe inline images, the `morimail-html` helper and the sample's `inline/` directory for 0.2.0, with both README Java snippets compiled as written.
+- `docs/release.md` is now one version-neutral procedure for the parent POM, `morimail` and `morimail-html`. Its step 4 and the skipUpload check, run as written with a throwaway key, built exactly the 54-entry bundle it lists, and nothing was uploaded.
+- docs/release.md step 5 now chains both deploy commands behind `! grep -- -SNAPSHOT pom.xml morimail/pom.xml morimail-html/pom.xml &&`, and its SNAPSHOT note states the plugin's real behaviour (snapshots repository, only `-DskipUpload=true` stops the upload).
+- A `cid:` id now ends at `<` in the core, the serial mail sample and the HTML image helper, the id echoed by `build()` is cleaned of control, separator and format characters, and webp, bmp and svg resolve from both content-type tables.
+- A serial run now stops in pre-flight, exit 2, when any row's mail is refused by the transport's validate (for Graph: a body estimate above 4 MiB or an attachment of 3 MiB or more), and a limit that every row breaks is one line ending `(all N rows)`.
+- HtmlImages now documents that white space around a src value is ignored and no longer claims the HTML rule for strip(); the 05 and 07 review dispositions are settled (open 0), the 07-01 and 08-02 summaries parse again, and both builds are green on the combined tree.
+
+**Release:** `0.2.0` released and tagged `v0.2.0` by the owner (release commit 2c4ea80). Phase 9 work postdates the tag and ships with 0.3.0.
+**Git range:** v0.1.0..9c79893 plus the quick-261124-d10 docs, 242 commits, 2026-11-22 → 2026-11-24.
+**Milestone audit:** tech_debt (23/23 requirements, 17/17 integration seams, 4/4 flows). Open debt: 09 WR-01 (pre-flight prints one line per distinct 4 MiB size message, noise only); see `milestones/v0.2.0-MILESTONE-AUDIT.md`.
+**Closeout type:** override_closeout. All five phase VERIFICATION.md reports (phases 5-9) passed, but the verifier marks them stale: later phases and quick tasks edited files they cover. The owner chose to close anyway on 2026-11-24.
+**Known verification overrides:** 5 newly acknowledged (stale reports for phases 5-9), 0 carried forward. The open-artifact audit was clear.
+
+---
+
 ## v0.1.0 MVP (Shipped: 2026-11-22)
 
 **Phases completed:** 4 phases, 22 plans, 42 tasks
