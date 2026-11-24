@@ -166,7 +166,7 @@ campaign/
   inline/          optional; every file is an inline image of every mail
 ```
 
-The content ID of a file in `inline/` is its name without the last extension, so `body.html` refers to `logo.png` as `cid:logo`, and the match is exact. Pre-flight checks the campaign before the first mail and stops with exit code 2, sending nothing, when a `cid:` has no image in `inline/`, an image is not referenced, two files share a base name or a file is not an image. Dot-files such as `.DS_Store` are skipped. Run `send --help` for every option.
+The content ID of a file in `inline/` is its name without the last extension, so `body.html` refers to `logo.png` as `cid:logo`, and the match is exact. Pre-flight checks the campaign before the first mail and stops with exit code 2, sending nothing, when a `cid:` has no image in `inline/`, an image is not referenced, two files share a base name or a file is not an image. It accepts names such as `50%.png` and `a&b.png`, but a mail client may decode the `%` or `&` in the `cid:` reference and then not find the image, so name inline files with ASCII letters, digits, `-`, `_` and `.` only. Dot-files such as `.DS_Store` are skipped. Run `send --help` for every option.
 
 You can try the sample without any account. It renders the example campaign to files and sends nothing:
 
