@@ -193,7 +193,7 @@ Phases execute in numeric order: 5 → (owner live checkpoint, non-blocking for 
 - Not in scope: the audit's info note that the three `cid:` pattern copies have no test keeping them equal is wrong (the sample and the helper each have a `cidPatternAgreesWithTheCore` test), so it needs no work. The two milestone chores (main 25 commits ahead of origin/main, so Temurin 17 CI has not run on the latest `docs/release.md`; untracked `07-PATTERNS.md` and `state.json`) are git housekeeping for the owner, not phase work.
 **Requirements**: TBD
 **Depends on:** Phase 8
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans executed
 
 Plans:
 **Wave 1**
@@ -203,4 +203,4 @@ Plans:
 - [x] 09-02-PLAN.md — Tracer: pre-flight validates every built mail and reports a message once with its row lines, proven with the real Graph transport for a later oversize row, then the shared-limit grouping test and spec §8.3 step 2 (D-10 to D-12)
 
 **Wave 3** *(blocked on Wave 2 completion)*
-- [ ] 09-03-PLAN.md — Tracer: the helper's src white-space rule documented and 07 IN-01/IN-02 closed, then the 07-01 and 08-02 summaries repaired, the 05 review settled and the phase gate (D-13 to D-17)
+- [x] 09-03-PLAN.md — Tracer: the helper's src white-space rule documented and 07 IN-01/IN-02 closed, then the 07-01 and 08-02 summaries repaired, the 05 review settled and the phase gate (D-13 to D-17)

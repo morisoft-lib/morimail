@@ -4,17 +4,17 @@ milestone: v0.2.0
 milestone_name: Inline Images
 current_phase: 09
 current_phase_name: v0.2.0 tech debt cleanup
-status: executing
-stopped_at: Completed 09-02-PLAN.md
-last_updated: "2026-11-24T05:51:51.252Z"
+status: verifying
+stopped_at: Completed 09-03-PLAN.md
+last_updated: "2026-11-24T05:54:29.567Z"
 last_activity: 2026-11-24
 last_activity_desc: Phase 09 execution started
-state_head: 9f6387287018efd5835f01769ba0eeaf9c4ab028
+state_head: 7620fae121349dd4189c728053fa3f69180ed73c
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
   percent: 80
 ---
 
@@ -31,7 +31,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 8)
 
 Phase: 09 (v0.2.0 tech debt cleanup) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-11-24 — Phase 09 execution started
 
 Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 plans)
@@ -100,6 +100,7 @@ Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 p
 | Phase 08 P03 | 12 min | 2 tasks | 1 files |
 | Phase 09 P01 | 20 min | 3 tasks | 7 files |
 | Phase 09 P02 | 15 min | 2 tasks | 3 files |
+| Phase 09 P03 | about 15 min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -143,6 +144,7 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 09]: 09-01: a cid: id ends at < in the core, sample and helper copies; shownId cleans control, separator and format characters of the echoed id; ids stay case-sensitive, documented
 - [Phase 09]: 09-02: pre-flight validates every non-null built mail; messages grouped by text with row lines via invalidMail, reported after build problems
 - [Phase 09]: 09-02: later-row and shared-limit pre-flight tests use the real graph transport at http://localhost:1/v1.0 with a counting token provider asserted zero
+- [Phase 09]: v0.2.0 tech debt closed: < ends a cid: id in all three copies, echoed id shows control/separator/format characters as ?, webp/bmp/svg in both tables, pre-flight validates every mail, helper white-space rule documented; 05 and 07 dispositions settled (07 IN-02 skipped, no seam; 05 IN-03 deferred); 07-01 and 08-02 summaries parse
 
 ### Pending Todos
 
@@ -175,8 +177,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-24T05:51:50.882Z
-Stopped at: Completed 09-02-PLAN.md
+Last session: 2026-11-24T05:54:29.169Z
+Stopped at: Completed 09-03-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
