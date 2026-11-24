@@ -58,6 +58,13 @@
             <goals>
               <goal>test-jar</goal>
             </goals>
+            <configuration>
+              <!--
+                Build it even with -Dmaven.test.skip=true (it is empty then), so the modules that use
+                it still resolve it and a fresh clone builds without a published test-jar.
+              -->
+              <skip>false</skip>
+            </configuration>
           </execution>
         </executions>
       </plugin>

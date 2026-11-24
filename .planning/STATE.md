@@ -3,10 +3,10 @@ gsd_state_version: "1.0"
 milestone: v0.2.0
 status: Awaiting next milestone
 stopped_at: Phase 09 complete — all phases complete
-last_updated: "2026-11-24T13:12:48.413Z"
+last_updated: "2026-11-24T15:51:04.514Z"
 last_activity: 2026-11-24
 last_activity_desc: Milestone v0.2.0 completed and archived
-state_head: a87f7713dc74950bc41821bdefb5e99a76435b04
+state_head: 940d6d02f550e8da439a90e2d35280bb43e2eabd
 progress:
   total_phases: 5
   completed_phases: 5
@@ -130,6 +130,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 261124-hfx | Development .env for the samples and the live test (MORIMAIL_DEV_*) | 2026-11-24 | 24e8847 | [261124-hfx-development-env-for-the-samples-and-the-](./quick/261124-hfx-development-env-for-the-samples-and-the-/) |
 | 2 | Hints in .env.sample on where to find or create each MORIMAIL_DEV_* value | 2026-11-24 | a87f771 | — |
+| 3 | Build the morimail test-jar even with -Dmaven.test.skip=true, so a fresh clone builds | 2026-11-24 | 940d6d0 | — |
 
 ### Roadmap Evolution
 
