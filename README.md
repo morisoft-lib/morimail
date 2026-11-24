@@ -173,6 +173,8 @@ You can try the sample without any account. It renders the example campaign to f
 ```bash
 ./mvnw -B -ntp -DskipTests package -pl morimail-sample-serial -am
 java -jar morimail-sample-serial/target/morimail-sample-serial-*.jar send --account morimail-sample-serial/example-campaign/account.properties --campaign morimail-sample-serial/example-campaign --dry-run --out out
+# or, with the client secret:
+java -jar morimail-sample-serial/target/morimail-sample-serial-*.jar send --account morimail-sample-serial/dev-account-secret.properties --campaign morimail-sample-serial/example-campaign --dry-run --out out
 ```
 
 This writes the rendered mails to `out/` and needs no secrets. For a real send, follow [docs/entra-setup.md](docs/entra-setup.md). The sample sends no `saveToSentItems`, so Graph's default applies and every campaign mail also lands in the sender's Sent Items.
@@ -195,14 +197,14 @@ The live test sends real mail to `MORIMAIL_DEV_TO`:
 ./mvnw -B -ntp -Plive test -pl morimail
 ```
 
-The sample reads the same variables through `morimail-sample-serial/dev-account.properties`:
+The sample reads the same variables through one of two account files: `morimail-sample-serial/dev-account.properties` for the certificate and `morimail-sample-serial/dev-account-secret.properties` for the client secret:
 
 ```bash
 ./mvnw -B -ntp -DskipTests package -pl morimail-sample-serial -am
 java -jar morimail-sample-serial/target/morimail-sample-serial-*.jar send --account morimail-sample-serial/dev-account.properties --campaign morimail-sample-serial/example-campaign --dry-run --out out
 ```
 
-The dry run stops with exit code 2 and names every key whose variable is unset. A real send drops `--dry-run` and points `--campaign` at a copy with your own test recipients, as in [docs/entra-setup.md](docs/entra-setup.md). To use a client secret, swap the certificate lines of `dev-account.properties` for its commented `secretEnv` line.
+The dry run stops with exit code 2 and names every key whose variable is unset. A real send drops `--dry-run` and points `--campaign` at a copy with your own test recipients, as in [docs/entra-setup.md](docs/entra-setup.md).
 
 ## What morimail is not
 

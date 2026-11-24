@@ -301,7 +301,7 @@ account.properties
 
 Secrets and passwords are read from the named environment variables only. Ship one complete example campaign under `morimail-sample-serial/example-campaign/` with three placeholder fields, two small generated attachments (a PDF and a PNG, under 100 KB each) and five rows using `example.org` addresses.
 
-A value in `account.properties` may contain `${NAME}` references, NAME being a letter or `_` followed by letters, digits and `_`. Each is replaced by that environment variable's value. An unset or blank variable is a pre-flight problem that names the key and the variable, never a value. There is no default, nesting or escape syntax, and other text stays as written. `morimail-sample-serial/dev-account.properties` uses this for the `MORIMAIL_DEV_*` variables of the root `.env.sample`.
+A value in `account.properties` may contain `${NAME}` references, NAME being a letter or `_` followed by letters, digits and `_`. Each is replaced by that environment variable's value. An unset or blank variable is a pre-flight problem that names the key and the variable, never a value. There is no default, nesting or escape syntax, and other text stays as written. `morimail-sample-serial/dev-account.properties` (certificate) and `morimail-sample-serial/dev-account-secret.properties` (client secret) use this for the `MORIMAIL_DEV_*` variables of the root `.env.sample`.
 
 ### 8.2 Command
 
