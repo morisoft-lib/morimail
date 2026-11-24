@@ -453,7 +453,8 @@ class MailBuilderTest {
             "<div style=\"background:url(cid:logo)\">",
             "<img src=\"CID:logo\">",
             "<img src=\"Cid:logo\">",
-            "<p>see cid:logo here</p>"})
+            "<p>see cid:logo here</p>",
+            "<p>cid:logo</p>"})
     void referenceIsFoundInAnyAttributeStyleOrCase(String html) throws Exception {
         Path png = file("logo.png");
 
@@ -528,6 +529,47 @@ class MailBuilderTest {
         assertThatThrownBy(() -> valid().html("<img src=\"cid:" + id + "\">").build())
                 .isInstanceOf(InvalidMailException.class)
                 .hasMessage("no inline image for cid:" + "a".repeat(64) + "...");
+    }
+
+    @Test
+    void longReferenceIsCutAtWholeCodePoints() {
+        String emoji = "😀";
+        String id = emoji.repeat(70);
+
+        assertThatThrownBy(() -> valid().html("<img src=\"cid:" + id + "\">").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:" + emoji.repeat(64) + "...");
+    }
+
+    @Test
+    void controlCharactersInAReferenceAreNotEchoed() {
+        // ESC, NEL, LINE SEPARATOR and RIGHT-TO-LEFT OVERRIDE (a format character) come in as
+        // recipient data through the template, which escapes only & < > " '.
+        MailTemplate template = new MailTemplate("Hello", "<p>$$note$$</p>", null);
+        String note = "cid:a\u001bb\u0085c\u2028d\u202ee";
+
+        assertThatThrownBy(() -> Mail.using("main").to("reader@example.org")
+                .template(template, Map.of("note", note)).build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:a?b?c?d?e")
+                .message()
+                .doesNotContain("\u001b")
+                .doesNotContain("\u0085")
+                .doesNotContain("\u2028")
+                .doesNotContain("\u202e");
+    }
+
+    @Test
+    void unquotedSrcBeforeASlashKeepsTheSlashInTheId() throws Exception {
+        Path png = file("logo.png");
+
+        assertThatThrownBy(() -> valid().html("<img src=cid:logo/>").inline(png, "logo").build())
+                .isInstanceOf(InvalidMailException.class)
+                .hasMessage("no inline image for cid:logo/");
+        assertThat(valid().html("<img src=cid:logo/>").inline(png, "logo/").build()
+                .message().attachments()).hasSize(1);
+        assertThat(valid().html("<img src=\"cid:logo\"/>").inline(png, "logo").build()
+                .message().attachments()).hasSize(1);
     }
 
     @Test

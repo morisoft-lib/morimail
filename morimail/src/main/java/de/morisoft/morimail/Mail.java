@@ -363,12 +363,15 @@ public record Mail(String accountId, MailMessage message) {
          * Its id ends at a quote, whitespace, {@code )}, {@code <} or {@code >}, is compared
          * exactly and is never decoded. An empty id is ignored. Only the HTML body is read, so
          * an HTML body with such a reference fails even in a mail without inline images. The
-         * HTML body is never rewritten.
+         * HTML body is never rewritten. A {@code /} belongs to the id, so an unquoted value
+         * directly followed by {@code />}, as in {@code <img src=cid:logo/>},
+         * refers to {@code logo/}; quoting the value avoids this.
          *
          * <p>The message names the field and never repeats the rejected value; the inline-image
          * messages name the content id, and an id read from the HTML body is cut at
-         * 64 code points. Calling this method does not change the builder, so it can be called
-         * again.
+         * 64 code points, with each control, line separator, paragraph separator and format
+         * character shown as {@code ?}. Calling this method does not change the builder, so it
+         * can be called again.
          *
          * @return the mail
          * @throws InvalidMailException if the mail cannot be sent as it is
@@ -521,9 +524,7 @@ public record Mail(String accountId, MailMessage message) {
             }
             for (String id : referenced) {
                 if (!inlineIds.contains(id)) {
-                    String shown = id.codePointCount(0, id.length()) <= 64
-                            ? id : id.substring(0, id.offsetByCodePoints(0, 64)) + "...";
-                    throw new InvalidMailException("no inline image for cid:" + shown);
+                    throw new InvalidMailException("no inline image for cid:" + shownId(id));
                 }
             }
             for (String id : inlineIds) {
@@ -532,6 +533,25 @@ public record Mail(String accountId, MailMessage message) {
                             "inline image " + id + " is not referenced in the HTML body");
                 }
             }
+        }
+
+        // An id read from the HTML can come from recipient data: show its first 64 code points, with
+        // every control, line separator, paragraph separator and format character shown as "?".
+        private static String shownId(String id) {
+            StringBuilder shown = new StringBuilder();
+            id.codePoints().limit(64).forEach(cp -> {
+                int type = Character.getType(cp);
+                if (Character.isISOControl(cp) || type == Character.LINE_SEPARATOR
+                        || type == Character.PARAGRAPH_SEPARATOR || type == Character.FORMAT) {
+                    shown.append('?');
+                } else {
+                    shown.appendCodePoint(cp);
+                }
+            });
+            if (id.codePointCount(0, id.length()) > 64) {
+                shown.append("...");
+            }
+            return shown.toString();
         }
 
         private static String contentTypeOf(Path file, String filename) {
