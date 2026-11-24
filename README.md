@@ -179,6 +179,31 @@ This writes the rendered mails to `out/` and needs no secrets. For a real send, 
 
 The example campaign has `inline/logo.png`. The dry run copies it once to `out/inline/` and the written HTML points at it by relative path, so a browser shows the logo, while a real send keeps the `cid:` reference.
 
+## Development setup
+
+One file on the development machine holds every value the live test and the sample need. Use a test tenant and a test app registration, never production credentials.
+
+```bash
+cp .env.sample .env
+# fill in .env
+set -a; . ./.env; set +a
+```
+
+The live test sends real mail to `MORIMAIL_DEV_TO`:
+
+```bash
+./mvnw -B -ntp -Plive test -pl morimail
+```
+
+The sample reads the same variables through `morimail-sample-serial/dev-account.properties`:
+
+```bash
+./mvnw -B -ntp -DskipTests package -pl morimail-sample-serial -am
+java -jar morimail-sample-serial/target/morimail-sample-serial-*.jar send --account morimail-sample-serial/dev-account.properties --campaign morimail-sample-serial/example-campaign --dry-run --out out
+```
+
+The dry run stops with exit code 2 and names every key whose variable is unset. A real send drops `--dry-run` and points `--campaign` at a copy with your own test recipients, as in [docs/entra-setup.md](docs/entra-setup.md). To use a client secret, swap the certificate lines of `dev-account.properties` for its commented `secretEnv` line.
+
 ## What morimail is not
 
 - Not a bulk mailer or campaign tool. It sends one mail per call, with no batching, queues, scheduling or retries; those belong to the consumer.

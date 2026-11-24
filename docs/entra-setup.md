@@ -226,7 +226,7 @@ A stopped or interrupted run is resumed by running the same command again. Rows 
 
 The journal is `journal.jsonl` in the campaign copy. Its keys start with the campaign id, which defaults to the name of the campaign directory. A new directory name starts a new journal.
 
-To run the live test of the library itself, use `./mvnw -B -ntp -Plive test -pl morimail` with the `MORIMAIL_LIVE_*` variables that `LiveGraphTest` describes. It sends real mail, so only the owner runs it.
+To run the live test of the library itself, use `./mvnw -B -ntp -Plive test -pl morimail` with the `MORIMAIL_DEV_*` variables that `LiveGraphTest` describes and the root `.env.sample` lists. It sends real mail, so only the owner runs it.
 
 ## Not yet verified live
 

@@ -23,19 +23,20 @@ import org.junit.jupiter.api.io.TempDir;
  * {@code ./mvnw -Plive test -pl morimail}; the default build excludes it, so it never runs in
  * {@code verify} or in CI.
  *
- * <p>Environment variables:
+ * <p>Environment variables (a developer sets them from a copy of the root {@code .env.sample}, see
+ * the README, Development setup):
  *
  * <ul>
- *   <li>{@code MORIMAIL_LIVE_TENANT_ID}, {@code MORIMAIL_LIVE_CLIENT_ID}: the Entra tenant and app
+ *   <li>{@code MORIMAIL_DEV_TENANT_ID}, {@code MORIMAIL_DEV_CLIENT_ID}: the Entra tenant and app
  *       (required).
- *   <li>{@code MORIMAIL_LIVE_FROM}: the mailbox the app may send from; {@code MORIMAIL_LIVE_TO}: the
+ *   <li>{@code MORIMAIL_DEV_FROM}: the mailbox the app may send from; {@code MORIMAIL_DEV_TO}: the
  *       recipient (both required).
- *   <li>{@code MORIMAIL_LIVE_CERT_PATH} with {@code MORIMAIL_LIVE_CERT_PASSWORD}: a PKCS12 file and
- *       its password; or {@code MORIMAIL_LIVE_SECRET}: a client secret. One credential is required;
+ *   <li>{@code MORIMAIL_DEV_CERT_PATH} with {@code MORIMAIL_DEV_CERT_PASSWORD}: a PKCS12 file and
+ *       its password; or {@code MORIMAIL_DEV_SECRET}: a client secret. One credential is required;
  *       the certificate is used when both are set.
- *   <li>{@code MORIMAIL_LIVE_OUT_OF_SCOPE_FROM} (optional): a mailbox the app must not send from;
+ *   <li>{@code MORIMAIL_DEV_OUT_OF_SCOPE_FROM} (optional): a mailbox the app must not send from;
  *       enables the out-of-scope probe, which expects a rejected sender.
- *   <li>{@code MORIMAIL_LIVE_BIG_ATTACHMENT} (optional): the path of a file of about 2.9 MB;
+ *   <li>{@code MORIMAIL_DEV_BIG_ATTACHMENT} (optional): the path of a file of about 2.9 MB;
  *       enables the big-attachment probe.
  * </ul>
  *
@@ -70,31 +71,31 @@ class LiveGraphTest {
 
     @BeforeAll
     static void readEnvironment() {
-        tenantId = env("MORIMAIL_LIVE_TENANT_ID");
-        clientId = env("MORIMAIL_LIVE_CLIENT_ID");
-        from = env("MORIMAIL_LIVE_FROM");
-        to = env("MORIMAIL_LIVE_TO");
-        certPath = env("MORIMAIL_LIVE_CERT_PATH");
-        certPassword = env("MORIMAIL_LIVE_CERT_PASSWORD");
-        secret = env("MORIMAIL_LIVE_SECRET");
-        outOfScopeFrom = env("MORIMAIL_LIVE_OUT_OF_SCOPE_FROM");
-        bigAttachment = env("MORIMAIL_LIVE_BIG_ATTACHMENT");
+        tenantId = env("MORIMAIL_DEV_TENANT_ID");
+        clientId = env("MORIMAIL_DEV_CLIENT_ID");
+        from = env("MORIMAIL_DEV_FROM");
+        to = env("MORIMAIL_DEV_TO");
+        certPath = env("MORIMAIL_DEV_CERT_PATH");
+        certPassword = env("MORIMAIL_DEV_CERT_PASSWORD");
+        secret = env("MORIMAIL_DEV_SECRET");
+        outOfScopeFrom = env("MORIMAIL_DEV_OUT_OF_SCOPE_FROM");
+        bigAttachment = env("MORIMAIL_DEV_BIG_ATTACHMENT");
 
         List<String> missing = new ArrayList<>();
         if (tenantId == null) {
-            missing.add("MORIMAIL_LIVE_TENANT_ID");
+            missing.add("MORIMAIL_DEV_TENANT_ID");
         }
         if (clientId == null) {
-            missing.add("MORIMAIL_LIVE_CLIENT_ID");
+            missing.add("MORIMAIL_DEV_CLIENT_ID");
         }
         if (from == null) {
-            missing.add("MORIMAIL_LIVE_FROM");
+            missing.add("MORIMAIL_DEV_FROM");
         }
         if (to == null) {
-            missing.add("MORIMAIL_LIVE_TO");
+            missing.add("MORIMAIL_DEV_TO");
         }
         if ((certPath == null || certPassword == null) && secret == null) {
-            missing.add("MORIMAIL_LIVE_CERT_PATH and MORIMAIL_LIVE_CERT_PASSWORD, or MORIMAIL_LIVE_SECRET");
+            missing.add("MORIMAIL_DEV_CERT_PATH and MORIMAIL_DEV_CERT_PASSWORD, or MORIMAIL_DEV_SECRET");
         }
         if (!missing.isEmpty()) {
             throw new IllegalStateException(
@@ -168,7 +169,7 @@ class LiveGraphTest {
 
     @Test
     void outOfScopeMailboxIsRejected() throws IOException, InvalidMailException {
-        Assumptions.assumeTrue(outOfScopeFrom != null, "MORIMAIL_LIVE_OUT_OF_SCOPE_FROM is not set");
+        Assumptions.assumeTrue(outOfScopeFrom != null, "MORIMAIL_DEV_OUT_OF_SCOPE_FROM is not set");
         Mail mail = Mail.using("live").from(outOfScopeFrom).to(to).subject("morimail live test")
                 .text("This mail must be rejected.").build();
         Mailer mailer = mailer();
@@ -185,7 +186,7 @@ class LiveGraphTest {
 
     @Test
     void bigAttachmentIsAccepted() throws IOException, MailException {
-        Assumptions.assumeTrue(bigAttachment != null, "MORIMAIL_LIVE_BIG_ATTACHMENT is not set");
+        Assumptions.assumeTrue(bigAttachment != null, "MORIMAIL_DEV_BIG_ATTACHMENT is not set");
         Path file = Path.of(bigAttachment);
         long size = Files.size(file);
         Mail mail = Mail.using("live").from(from).to(to).subject("morimail live test, big attachment")
