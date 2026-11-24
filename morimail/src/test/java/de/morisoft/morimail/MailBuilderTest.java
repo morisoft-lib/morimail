@@ -725,6 +725,20 @@ class MailBuilderTest {
         assertThat(attachment.filename()).isEqualTo("Report.PDF");
     }
 
+    @ParameterizedTest
+    @CsvSource({
+            "logo.webp,image/webp",
+            "logo.bmp,image/bmp",
+            "logo.svg,image/svg+xml",
+            "LOGO.WEBP,image/webp"})
+    void resolvesTheAddedImageTypesOnEveryPlatform(String name, String type) throws Exception {
+        Path image = file(name);
+
+        Mail mail = valid().html("<img src=\"cid:logo\">").inline(image, "logo").build();
+
+        assertThat(mail.message().attachments().get(0).contentType()).isEqualTo(type);
+    }
+
     @Test
     void keepsExplicitContentType() throws Exception {
         Path pdf = file("data.pdf");

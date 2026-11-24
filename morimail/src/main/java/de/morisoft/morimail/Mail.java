@@ -56,6 +56,9 @@ public record Mail(String accountId, MailMessage message) {
                 Map.entry("jpg", "image/jpeg"),
                 Map.entry("jpeg", "image/jpeg"),
                 Map.entry("gif", "image/gif"),
+                Map.entry("webp", "image/webp"),
+                Map.entry("bmp", "image/bmp"),
+                Map.entry("svg", "image/svg+xml"),
                 Map.entry("txt", "text/plain"),
                 Map.entry("html", "text/html"),
                 Map.entry("htm", "text/html"),
@@ -277,11 +280,12 @@ public record Mail(String accountId, MailMessage message) {
         /**
          * Attaches a file. The file name shown to the recipient is the last element of the path,
          * and the content type is resolved in {@link #build()}: first from a built-in table of
-         * twelve extensions (pdf, png, jpg, jpeg, gif, txt, html, htm, csv, zip, docx, xlsx,
-         * matched case-insensitively), which gives the same type on every system. For any other
-         * extension the type comes from {@link Files#probeContentType(Path)}, which depends on
-         * the detectors installed on the platform and is best effort; the final fallback is
-         * {@code application/octet-stream}. The file is checked in {@code build()}, not here.
+         * fifteen extensions (pdf, png, jpg, jpeg, gif, webp, bmp, svg, txt, html, htm, csv, zip,
+         * docx, xlsx, matched case-insensitively), which gives the same type on every system.
+         * For any other extension the type comes from {@link Files#probeContentType(Path)},
+         * which depends on the detectors installed on the platform and is best effort; the final
+         * fallback is {@code application/octet-stream}. The file is checked in {@code build()},
+         * not here.
          *
          * @param file the file to attach
          * @return this builder
@@ -334,7 +338,9 @@ public record Mail(String accountId, MailMessage message) {
          * id is not blank and holds no whitespace, quote, parenthesis or angle bracket, that the
          * content type is an {@code image/} type, that content ids are unique in the mail, and
          * that the HTML body refers to every inline image and every {@code cid:} reference in it
-         * has one. For a file name or content type of your choice pass an {@link Attachment} with
+         * has one. Content ids are compared exactly, so {@code Logo} and {@code logo} are two
+         * different images; to be safe in every mail client, do not use two ids that
+         * differ only in case. For a file name or content type of your choice pass an {@link Attachment} with
          * a content id to {@link #attach(Attachment)}. The file is checked in {@code build()},
          * not here.
          *

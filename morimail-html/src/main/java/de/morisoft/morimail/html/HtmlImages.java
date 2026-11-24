@@ -130,12 +130,15 @@ public final class HtmlImages {
     // An image type for the attachment: the image/ prefix plus a subtype of letters, digits and . + - only (P1).
     private static final Pattern IMAGE_TYPE = Pattern.compile("(?i)image/[a-z0-9][a-z0-9.+-]*");
 
-    // The image entries of Mail.Builder.CONTENT_TYPES (D-12); HtmlImagesTest pins the result against build().
+    // The image entries of Mail.Builder.CONTENT_TYPES; HtmlImagesTest pins the result against build().
     private static final Map<String, String> CONTENT_TYPES = Map.ofEntries(
             Map.entry("png", "image/png"),
             Map.entry("jpg", "image/jpeg"),
             Map.entry("jpeg", "image/jpeg"),
-            Map.entry("gif", "image/gif"));
+            Map.entry("gif", "image/gif"),
+            Map.entry("webp", "image/webp"),
+            Map.entry("bmp", "image/bmp"),
+            Map.entry("svg", "image/svg+xml"));
 
     private HtmlImages() {
         // Static methods only, no instances.

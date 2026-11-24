@@ -245,7 +245,8 @@ class HtmlImagesTest {
     @Test
     void localTypeAgreesWithTheCore() throws Exception {
         Map<String, String> expected = Map.of("logo.png", "image/png", "photo.jpg", "image/jpeg",
-                "photo.jpeg", "image/jpeg", "anim.gif", "image/gif", "LOGO.PNG", "image/png");
+                "photo.jpeg", "image/jpeg", "anim.gif", "image/gif", "LOGO.PNG", "image/png",
+                "pic.webp", "image/webp", "pic.bmp", "image/bmp", "icon.svg", "image/svg+xml");
         for (Map.Entry<String, String> entry : expected.entrySet()) {
             Path file = image(entry.getKey(), 3);
 
