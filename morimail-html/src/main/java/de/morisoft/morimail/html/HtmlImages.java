@@ -47,7 +47,8 @@ import java.util.regex.Pattern;
  * a local image: the file must lie inside the base directory, must be readable and must be an
  * image, otherwise the call fails with an {@link InvalidMailException} that names the {@code src}
  * as written. The only character reference that is decoded is {@code &amp;}. A percent-encoded
- * value is decoded once, and a query and a fragment are dropped.
+ * value is decoded once, and a query and a fragment are dropped. White space before and after a
+ * {@code src} value is ignored.
  *
  * <p>The content ID of an image is the file name as written in the {@code src}, without its last
  * extension, with every character outside {@code A-Z a-z 0-9 . _ -} replaced by one {@code -}
@@ -349,7 +350,8 @@ public final class HtmlImages {
         while (m.find()) {
             int g = m.start(1) >= 0 ? 1 : m.start(2) >= 0 ? 2 : 3;
             String raw = m.group(g);
-            // Browsers and mail clients strip surrounding whitespace from a src; raw stays as written for messages and the span.
+            // strip() removes Unicode white space, a wider set than the ASCII white space HTML strips from a URL;
+            // raw stays as written for messages and the span.
             String value = raw.replace("&amp;", "&").strip();
             if (value.contains("$$")) {
                 continue;
