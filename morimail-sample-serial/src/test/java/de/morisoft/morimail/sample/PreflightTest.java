@@ -11,6 +11,7 @@ import de.morisoft.morimail.MailTemplate;
 import de.morisoft.morimail.Mailer;
 import de.morisoft.morimail.test.RecordingTransport;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -96,6 +97,31 @@ class PreflightTest {
                 .endsWith(" bytes is above the limit of 4 MiB (4194304 bytes)");
         assertThat(run.errLines().get(1))
                 .isEqualTo("Pre-flight failed with 1 problem(s); nothing was sent.");
+        assertThat(tokenCalls).hasValue(0);
+        assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
+    }
+
+    @Test
+    void limitProblemOfEveryRowIsOneLine() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, SampleFixtures.THREE_ROWS);
+        // A sparse file: exactly 3 MiB long, nothing written.
+        try (RandomAccessFile big = new RandomAccessFile(
+                campaign.resolve("attachments").resolve("big.bin").toFile(), "rw")) {
+            big.setLength(3L * 1024 * 1024);
+        }
+        AtomicInteger tokenCalls = new AtomicInteger();
+        MailAccount graph = graphAccount(tokenCalls);
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(graph), new ArrayList<>(),
+                "send", "--account", account.toString(), "--campaign", campaign.toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.out()).isEmpty();
+        assertThat(run.errLines()).containsExactly(
+                "mailer.validate rejected the mail: attachment big.bin has 3145728 bytes; "
+                        + "Graph takes attachments below 3 MiB (3145728 bytes) (all 3 rows)",
+                "Pre-flight failed with 1 problem(s); nothing was sent.");
         assertThat(tokenCalls).hasValue(0);
         assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
     }

@@ -318,7 +318,7 @@ serial-mail send
 ### 8.3 Behaviour
 
 1. Read the account file, build the token provider, the account and the `Mailer`. Read the template and CSV.
-2. Check everything before the first send: all placeholders in the template exist as CSV columns, every row has a syntactically valid email, and `mailer.validate` passes for the first row's mail. Report all problems at once and exit with code 2.
+2. Check everything before the first send: all placeholders in the template exist as CSV columns, every row has a syntactically valid email, and `mailer.validate` passes for every row's mail. Report all problems at once and exit with code 2.
 3. For each row: render, build, send.
 4. Journal key: `campaignId + ":" + lowercase(email)`. Skip rows the journal records as accepted.
 5. After each attempt, append one JSON line to the journal: key, email, timestamp, outcome, error class and message if any. Flush after every line.
