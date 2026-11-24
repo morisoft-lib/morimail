@@ -118,7 +118,7 @@ final class SendCommand implements Callable<Integer> {
                 : e.getClass().getSimpleName() + ": " + e.getMessage();
     }
 
-    /** One pre-flight problem for an {@code InvalidMailException} message and the rows it hit. */
+    /** One pre-flight problem for a {@code build()} or {@code mailer.validate} message and the rows it hit. */
     private static String invalidMail(String message, List<Integer> lines, int rows) {
         if (lines.size() == 1) {
             return "recipients.csv line " + lines.get(0) + ": " + message;
@@ -205,12 +205,22 @@ final class SendCommand implements Callable<Integer> {
                 problems.add("account: " + e.getMessage());
             }
         }
-        if (mailer != null && !mails.isEmpty() && mails.get(0) != null) {
-            try {
-                mailer.validate(mails.get(0));
-            } catch (PermanentMailException e) {
-                problems.add("recipients.csv line " + campaign.rows().get(0).line()
-                        + ": mailer.validate rejected the first mail: " + e.getMessage());
+        if (mailer != null) {
+            Map<String, List<Integer>> rejected = new LinkedHashMap<>();
+            // Every built mail, because a later row with a larger body can break a limit the first keeps.
+            for (int i = 0; i < mails.size(); i++) {
+                if (mails.get(i) == null) {
+                    continue;
+                }
+                try {
+                    mailer.validate(mails.get(i));
+                } catch (PermanentMailException e) {
+                    rejected.computeIfAbsent("mailer.validate rejected the mail: " + e.getMessage(),
+                            m -> new ArrayList<>()).add(campaign.rows().get(i).line());
+                }
+            }
+            for (Map.Entry<String, List<Integer>> entry : rejected.entrySet()) {
+                problems.add(invalidMail(entry.getKey(), entry.getValue(), campaign.rows().size()));
             }
         }
 

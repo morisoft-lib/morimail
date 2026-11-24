@@ -57,9 +57,46 @@ class PreflightTest {
                 PLACEHOLDER_CITY,
                 DUPLICATE,
                 INVALID_ADDRESS,
-                "recipients.csv line 2: mailer.validate rejected the first mail: too large for the test",
+                "mailer.validate rejected the mail: too large for the test (recipients.csv lines 2, 4)",
                 "Pre-flight failed with 4 problem(s); nothing was sent.");
         assertThat(transport.attempts()).isZero();
+        assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
+    }
+
+    // The Graph account's validate runs locally. A send by mistake would call the token provider
+    // and then localhost port 1, so no real host is reached.
+    private static MailAccount graphAccount(AtomicInteger tokenCalls) {
+        return MailAccount.builder("main").transport("graph")
+                .option("baseUrl", "http://localhost:1/v1.0")
+                .auth(scope -> {
+                    tokenCalls.incrementAndGet();
+                    return "token";
+                })
+                .build();
+    }
+
+    @Test
+    void laterRowThatGraphRejectsStopsPreflight() throws IOException {
+        Path account = SampleFixtures.writeAccount(root, ACCOUNT);
+        Path campaign = SampleFixtures.writeCampaign(root, "email,firstName,city\n"
+                + "anna@example.org,Anna,Berlin\n"
+                + "ben@example.org,Ben,Hamburg\n"
+                + "clara@example.org,Clara," + "x".repeat(4_200_000) + "\n");
+        AtomicInteger tokenCalls = new AtomicInteger();
+        MailAccount graph = graphAccount(tokenCalls);
+
+        SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(graph), new ArrayList<>(),
+                "send", "--account", account.toString(), "--campaign", campaign.toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.out()).isEmpty();
+        assertThat(run.errLines()).hasSize(2);
+        assertThat(run.errLines().get(0))
+                .startsWith("recipients.csv line 4: mailer.validate rejected the mail: estimated request size ")
+                .endsWith(" bytes is above the limit of 4 MiB (4194304 bytes)");
+        assertThat(run.errLines().get(1))
+                .isEqualTo("Pre-flight failed with 1 problem(s); nothing was sent.");
+        assertThat(tokenCalls).hasValue(0);
         assertThat(campaign.resolve("journal.jsonl")).doesNotExist();
     }
 
