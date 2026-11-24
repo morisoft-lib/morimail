@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -129,7 +130,7 @@ class ExampleCampaignTest {
     void accountFileHoldsOnlyExampleValues() {
         List<String> problems = new ArrayList<>();
 
-        AccountFile account = AccountFile.read(ACCOUNT, problems);
+        AccountFile account = AccountFile.read(ACCOUNT, name -> null, problems);
 
         assertThat(problems).isEmpty();
         assertThat(account.id()).isEqualTo("entra-main");
@@ -139,6 +140,63 @@ class ExampleCampaignTest {
         assertThat(account.certificatePath()).isEqualTo("/path/app.p12");
         assertThat(account.certificatePasswordEnv()).isEqualTo("MAIL_CERT_PASSWORD");
         assertThat(account.secretEnv()).isNull();
+    }
+
+    private static final Path DEV_ACCOUNT = Path.of("dev-account.properties");
+    private static final Map<String, String> DEV_ENV = Map.of(
+            "MORIMAIL_DEV_TENANT_ID", "00000000-0000-0000-0000-000000000000",
+            "MORIMAIL_DEV_CLIENT_ID", "00000000-0000-0000-0000-000000000000",
+            "MORIMAIL_DEV_FROM", "sender@example.com",
+            "MORIMAIL_DEV_CERT_PATH", "/path/to/test-app.p12");
+
+    @Test
+    void devAccountFileReadsTheDevelopmentVariables() {
+        List<String> problems = new ArrayList<>();
+
+        AccountFile account = AccountFile.read(DEV_ACCOUNT, DEV_ENV::get, problems);
+
+        assertThat(problems).isEmpty();
+        assertThat(account.id()).isEqualTo("entra-dev");
+        assertThat(account.tenantId()).isEqualTo("00000000-0000-0000-0000-000000000000");
+        assertThat(account.clientId()).isEqualTo("00000000-0000-0000-0000-000000000000");
+        assertThat(account.from()).isEqualTo("sender@example.com");
+        assertThat(account.certificatePath()).isEqualTo("/path/to/test-app.p12");
+        assertThat(account.certificatePasswordEnv()).isEqualTo("MORIMAIL_DEV_CERT_PASSWORD");
+        assertThat(account.secretEnv()).isNull();
+    }
+
+    @Test
+    void devAccountDryRunNamesEveryUnsetVariable() {
+        SampleFixtures.Run run = SampleFixtures.run(a -> {
+            throw new AssertionError("a dry run must not build a Mailer");
+        }, new ArrayList<>(), "send", "--dry-run", "--account", DEV_ACCOUNT.toString(),
+                "--campaign", CAMPAIGN.toString(), "--out", root.resolve("out").toString());
+
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.errLines()).containsExactly(
+                "dev-account.properties: key 'tenantId' uses ${MORIMAIL_DEV_TENANT_ID}, "
+                        + "which is not set or is blank",
+                "dev-account.properties: key 'clientId' uses ${MORIMAIL_DEV_CLIENT_ID}, "
+                        + "which is not set or is blank",
+                "dev-account.properties: key 'from' uses ${MORIMAIL_DEV_FROM}, "
+                        + "which is not set or is blank",
+                "dev-account.properties: key 'certificate.path' uses ${MORIMAIL_DEV_CERT_PATH}, "
+                        + "which is not set or is blank",
+                "Pre-flight failed with 4 problem(s); nothing was sent.");
+    }
+
+    @Test
+    void devAccountDryRunUsesTheDevelopmentVariables() {
+        AtomicInteger factoryCalls = new AtomicInteger();
+
+        SampleFixtures.Run run = SampleFixtures.run(DEV_ENV::get, a -> {
+            factoryCalls.incrementAndGet();
+            throw new AssertionError("a dry run must not build a Mailer");
+        }, new ArrayList<>(), "send", "--dry-run", "--account", DEV_ACCOUNT.toString(),
+                "--campaign", CAMPAIGN.toString(), "--out", root.resolve("out").toString());
+
+        assertThat(run.exit()).as(run.err()).isZero();
+        assertThat(factoryCalls).hasValue(0);
     }
 
     @Test

@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,7 +35,11 @@ class AccountFileTest {
     private final List<String> problems = new ArrayList<>();
 
     private AccountFile read(String content) throws IOException {
-        return AccountFile.read(SampleFixtures.writeAccount(root, content), problems);
+        return AccountFile.read(SampleFixtures.writeAccount(root, content), name -> null, problems);
+    }
+
+    private AccountFile read(String content, Map<String, String> env) throws IOException {
+        return AccountFile.read(SampleFixtures.writeAccount(root, content), env::get, problems);
     }
 
     @Test
@@ -117,7 +122,7 @@ class AccountFileTest {
         Files.write(file, new byte[] {'a', 'c', 'c', 'o', 'u', 'n', 't', '.', 'i', 'd', '=', 'G', 'r',
                 (byte) 0xFC, 'e', '\n'});
 
-        assertThat(AccountFile.read(file, problems)).isNull();
+        assertThat(AccountFile.read(file, name -> null, problems)).isNull();
 
         assertThat(problems).containsExactly("account.properties is not valid UTF-8");
     }
@@ -142,7 +147,7 @@ class AccountFileTest {
 
     @Test
     void missingFileIsAProblem() {
-        assertThat(AccountFile.read(root.resolve("account.properties"), problems)).isNull();
+        assertThat(AccountFile.read(root.resolve("account.properties"), name -> null, problems)).isNull();
 
         assertThat(problems).containsExactly("account.properties: file not found");
     }
@@ -159,7 +164,7 @@ class AccountFileTest {
         Path account = SampleFixtures.writeAccount(root, content);
         Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
 
-        AccountFile.read(account, problems);
+        AccountFile.read(account, name -> null, problems);
         SampleFixtures.Run run = SampleFixtures.run(a -> Mailer.of(SampleFixtures.recordingAccount()),
                 new ArrayList<>(), "send", "--account", account.toString(), "--campaign",
                 campaign.toString());
@@ -223,5 +228,84 @@ class AccountFileTest {
         assertThat(run.errLines()).containsExactly(
                 "account.properties: missing key 'clientId'",
                 "Pre-flight failed with 1 problem(s); nothing was sent.");
+    }
+
+    @Test
+    void referenceIsReplacedByTheEnvironmentValue() throws IOException {
+        String content = "account.id=main\n"
+                + "tenantId=${MORIMAIL_TEST_TENANT_ID}\n"
+                + "clientId=" + ZERO_GUID + "\n"
+                + "from=newsletter@example.com\n"
+                + "certificate.path=${MORIMAIL_TEST_DIR}/test.p12\n"
+                + "certificate.passwordEnv=MAIL_CERT_PASSWORD\n";
+
+        AccountFile account = read(content,
+                Map.of("MORIMAIL_TEST_TENANT_ID", ZERO_GUID, "MORIMAIL_TEST_DIR", "/path/certs"));
+
+        assertThat(problems).isEmpty();
+        assertThat(account.tenantId()).isEqualTo(ZERO_GUID);
+        assertThat(account.certificatePath()).isEqualTo("/path/certs/test.p12");
+        assertThat(account.certificatePasswordEnv()).isEqualTo("MAIL_CERT_PASSWORD");
+    }
+
+    @Test
+    void unsetReferenceIsAProblemThatNamesTheKey() throws IOException {
+        AccountFile account = read(REQUIRED.replace("tenantId=" + ZERO_GUID,
+                "tenantId=${MORIMAIL_TEST_UNSET_VARIABLE}") + CERTIFICATE, Map.of());
+
+        assertThat(account).isNull();
+        assertThat(problems).containsExactly("account.properties: key 'tenantId' uses "
+                + "${MORIMAIL_TEST_UNSET_VARIABLE}, which is not set or is blank");
+    }
+
+    @Test
+    void blankReferenceIsAProblemThatNamesTheKey() throws IOException {
+        AccountFile account = read(REQUIRED.replace("from=newsletter@example.com",
+                "from=${MORIMAIL_TEST_BLANK}") + CERTIFICATE, Map.of("MORIMAIL_TEST_BLANK", "   "));
+
+        assertThat(account).isNull();
+        assertThat(problems).containsExactly("account.properties: key 'from' uses "
+                + "${MORIMAIL_TEST_BLANK}, which is not set or is blank");
+    }
+
+    @Test
+    void environmentValueIsInsertedLiterally() throws IOException {
+        String content = "account.id=$main-${1X}-${not a reference}\n"
+                + "tenantId=" + ZERO_GUID + "\n"
+                + "clientId=" + ZERO_GUID + "\n"
+                + "from=newsletter@example.com\n"
+                + "certificate.path=${MORIMAIL_TEST_DIR}/test.p12\n"
+                + "certificate.passwordEnv=MAIL_CERT_PASSWORD\n";
+
+        AccountFile account = read(content, Map.of("MORIMAIL_TEST_DIR", "C:\\certs$1"));
+
+        assertThat(problems).isEmpty();
+        assertThat(account.certificatePath()).isEqualTo("C:\\certs$1/test.p12");
+        assertThat(account.id()).isEqualTo("$main-${1X}-${not a reference}");
+    }
+
+    @Test
+    void referenceProblemsNeverEchoAValue() throws IOException {
+        String content = "account.id=main\n"
+                + "tenantId=${MORIMAIL_TEST_SET}\n"
+                + "clientId=${MORIMAIL_TEST_UNSET}\n"
+                + "from=${MORIMAIL_TEST_BLANK}\n"
+                + "secretEnv=MAIL_CLIENT_SECRET\n";
+        Map<String, String> env = Map.of("MORIMAIL_TEST_SET", SENTINEL, "MORIMAIL_TEST_BLANK", "  ");
+        Path account = SampleFixtures.writeAccount(root, content);
+        Path campaign = SampleFixtures.writeCampaign(root, THREE_ROWS);
+
+        AccountFile.read(account, env::get, problems);
+        SampleFixtures.Run run = SampleFixtures.run(env::get, a -> {
+            throw new AssertionError("a dry run must not build a Mailer");
+        }, new ArrayList<>(), "send", "--dry-run", "--account", account.toString(), "--campaign",
+                campaign.toString(), "--out", root.resolve("out").toString());
+
+        assertThat(problems).hasSize(2).noneMatch(problem -> problem.contains(SENTINEL));
+        assertThat(problems.get(0)).contains("'clientId'");
+        assertThat(problems.get(1)).contains("'from'");
+        assertThat(run.exit()).isEqualTo(2);
+        assertThat(run.err()).isNotEmpty().doesNotContain(SENTINEL);
+        assertThat(run.out()).doesNotContain(SENTINEL);
     }
 }

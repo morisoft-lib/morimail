@@ -36,16 +36,18 @@ public final class SerialMail {
      * @param args the command-line arguments
      */
     public static void main(String[] args) {
-        System.exit(commandLine(SerialMail::realMailer, SerialMail::sleep).execute(args));
+        System.exit(commandLine(SerialMail::realMailer, SerialMail::sleep, System::getenv).execute(args));
     }
 
     /**
      * Builds the command tree. {@code main} and the tests build the same tree; the tests pass a
-     * Mailer over the recording transport and a recording sleep.
+     * Mailer over the recording transport, a recording sleep and an injected environment, which
+     * {@code main} takes from the process.
      */
     static CommandLine commandLine(Function<AccountFile, Mailer> mailerFactory,
-            Consumer<Duration> sleep) {
-        return new CommandLine(new SerialMail()).addSubcommand(new SendCommand(mailerFactory, sleep));
+            Consumer<Duration> sleep, Function<String, String> env) {
+        return new CommandLine(new SerialMail())
+                .addSubcommand(new SendCommand(mailerFactory, sleep, env));
     }
 
     /**

@@ -101,10 +101,13 @@ final class SendCommand implements Callable<Integer> {
 
     private final Function<AccountFile, Mailer> mailerFactory;
     private final Consumer<Duration> sleep;
+    private final Function<String, String> env;
 
-    SendCommand(Function<AccountFile, Mailer> mailerFactory, Consumer<Duration> sleep) {
+    SendCommand(Function<AccountFile, Mailer> mailerFactory, Consumer<Duration> sleep,
+            Function<String, String> env) {
         this.mailerFactory = mailerFactory;
         this.sleep = sleep;
+        this.env = env;
     }
 
     /** The time between two send attempts for a rate in mails per minute, rounded up. */
@@ -164,7 +167,7 @@ final class SendCommand implements Callable<Integer> {
         String id = campaignId != null ? campaignId : dirName == null ? null : dirName.toString();
 
         int before = problems.size();
-        AccountFile account = AccountFile.read(accountFile, problems);
+        AccountFile account = AccountFile.read(accountFile, env, problems);
         boolean accountOk = account != null && problems.size() == before;
         Campaign campaign = Campaign.read(campaignDir, problems);
 
