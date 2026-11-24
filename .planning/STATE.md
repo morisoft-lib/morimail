@@ -5,16 +5,16 @@ milestone_name: Inline Images
 current_phase: 09
 current_phase_name: v0.2.0 tech debt cleanup
 status: executing
-stopped_at: Completed 09-01-PLAN.md
-last_updated: "2026-11-24T05:48:04.328Z"
+stopped_at: Completed 09-02-PLAN.md
+last_updated: "2026-11-24T05:51:51.252Z"
 last_activity: 2026-11-24
 last_activity_desc: Phase 09 execution started
-state_head: 0e3fe76b8fb4f8a8142c345859478326e049d16e
+state_head: 9f6387287018efd5835f01769ba0eeaf9c4ab028
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 14
-  completed_plans: 12
+  completed_plans: 13
   percent: 80
 ---
 
@@ -30,7 +30,7 @@ See: .planning/PROJECT.md (updated 2026-11-23 after Phase 8)
 ## Current Position
 
 Phase: 09 (v0.2.0 tech debt cleanup) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-11-24 — Phase 09 execution started
 
@@ -99,6 +99,7 @@ Progress (v0.2.0): [██████████] 100% (4 of 4 phases, 11/11 p
 | Phase 08 P02 | 15 min | 2 tasks | 1 files |
 | Phase 08 P03 | 12 min | 2 tasks | 1 files |
 | Phase 09 P01 | 20 min | 3 tasks | 7 files |
+| Phase 09 P02 | 15 min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -140,6 +141,8 @@ v0.2.0 roadmap (2026-11-22):
 - [Phase 08]: 08-03 (G-08-2): release.md step 5 chains both deploy commands behind `! grep -- -SNAPSHOT` over the three published POMs; a SNAPSHOT deploy goes to Central's snapshots repository unless -DskipUpload; docs only; the owner reported the 0.2.0 release as working on 2026-11-23 (tag v0.2.0 on 2c4ea80), the guard applies from the next release
 - [Phase 08]: UAT 2026-11-23 complete (4 pass, G-08-2 resolved by 08-03); review fixes WR-01 (guard `; [ $? -eq 1 ] &&` stops on grep error) and WR-02 (defaults VERSION=0.3.0, NEXT=0.4.0-SNAPSHOT); re-review 0 critical / 0 warning / 3 info (open in 08-REVIEW-DISPOSITION.md); SECURITY threats_open 0; re-verification passed
 - [Phase 09]: 09-01: a cid: id ends at < in the core, sample and helper copies; shownId cleans control, separator and format characters of the echoed id; ids stay case-sensitive, documented
+- [Phase 09]: 09-02: pre-flight validates every non-null built mail; messages grouped by text with row lines via invalidMail, reported after build problems
+- [Phase 09]: 09-02: later-row and shared-limit pre-flight tests use the real graph transport at http://localhost:1/v1.0 with a counting token provider asserted zero
 
 ### Pending Todos
 
@@ -172,8 +175,8 @@ Items acknowledged and deferred at milestone close, most recent first:
 
 ## Session Continuity
 
-Last session: 2026-11-24T05:48:03.943Z
-Stopped at: Completed 09-01-PLAN.md
+Last session: 2026-11-24T05:51:50.882Z
+Stopped at: Completed 09-02-PLAN.md
 Resume file: None
 
 ## Operator Next Steps
