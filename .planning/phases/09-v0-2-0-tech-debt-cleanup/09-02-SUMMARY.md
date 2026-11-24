@@ -7,9 +7,9 @@ status: complete
 
 requires:
   - phase: 06-inline-images-in-the-serial-mail-sample
-    provides: SendCommand pre-flight and the invalidMail grouping helper (Phase 6 audit item: pre-flight validated only the first mail)
+    provides: "SendCommand pre-flight and the invalidMail grouping helper (Phase 6 audit item: pre-flight validated only the first mail)"
   - phase: 09-v0-2-0-tech-debt-cleanup
-    provides: plan 09-01 (core cid: rules); no file overlap, ordered for linear history
+    provides: "plan 09-01 (core cid: rules); no file overlap, ordered for linear history"
 provides:
   - pre-flight that runs mailer.validate on every built mail and groups identical messages with their row lines
   - spec section 8.3 step 2 in line with the code ("for every row's mail")

@@ -7,7 +7,7 @@ status: complete
 
 requires:
   - phase: 09-v0-2-0-tech-debt-cleanup
-    provides: plans 09-01 and 09-02 (core cid: rules, content types, pre-flight validation) in HEAD
+    provides: "plans 09-01 and 09-02 (core cid: rules, content types, pre-flight validation) in HEAD"
 provides:
   - HtmlImages class Javadoc sentence on white space around a src value, and a strip() comment that no longer claims the HTML rule
   - 07 and 05 review dispositions settled with a Source on every row, open 0
