@@ -135,6 +135,7 @@ class GraphRequestTest {
         ObjectNode m = expected.putObject("message");
         m.put("subject", "Quote \"x\" \\ <y> ü 😀");
         m.putObject("body").put("contentType", "HTML").put("content", "<p>Hi &amp; bye</p>");
+        m.set("from", recipient("newsletter@example.com", "News Team"));
         m.putArray("toRecipients").add(recipient("anna@example.org", "Anna Ä"))
                 .add(recipient("ben@example.org", null));
         m.putArray("ccRecipients").add(recipient("carl@example.org", null));
@@ -245,7 +246,7 @@ class GraphRequestTest {
         assertThat(m.has("attachments")).isFalse();
         assertThat(m.get("toRecipients")).hasSize(1);
         assertThat(bodyOf(sends().get(0)).has("from")).isFalse();
-        assertThat(m.has("from")).isFalse();
+        assertThat(m.get("from")).isEqualTo(recipient("newsletter@example.com", null));
     }
 
     @Test

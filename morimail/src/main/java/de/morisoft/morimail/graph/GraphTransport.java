@@ -144,6 +144,8 @@ final class GraphTransport implements MailTransport {
         message.put("subject", m.subject());
         message.putObject("body").put("contentType", html ? "HTML" : "Text")
                 .put("content", html ? m.html() : m.text());
+        // The URL names the mailbox; "from" lets Exchange keep an alias of that mailbox (needs SendFromAliasEnabled).
+        emailAddress(message.putObject("from"), m.from());
         addRecipients(message, "toRecipients", m.to());
         addRecipients(message, "ccRecipients", m.cc());
         addRecipients(message, "bccRecipients", m.bcc());
@@ -189,11 +191,16 @@ final class GraphTransport implements MailTransport {
         }
         ArrayNode array = message.putArray(key);
         for (MailAddress address : addresses) {
-            ObjectNode email = array.addObject().putObject("emailAddress");
-            email.put("address", address.email());
-            if (address.displayName() != null && !address.displayName().isEmpty()) {
-                email.put("name", address.displayName());
-            }
+            emailAddress(array.addObject(), address);
+        }
+    }
+
+    /** Writes a Graph recipient: {@code {"emailAddress": {"address": ..., "name": ...}}}. */
+    private static void emailAddress(ObjectNode recipient, MailAddress address) {
+        ObjectNode email = recipient.putObject("emailAddress");
+        email.put("address", address.email());
+        if (address.displayName() != null && !address.displayName().isEmpty()) {
+            email.put("name", address.displayName());
         }
     }
 
